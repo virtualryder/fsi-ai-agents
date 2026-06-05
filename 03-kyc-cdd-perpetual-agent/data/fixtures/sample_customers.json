@@ -1,0 +1,151 @@
+{
+  "CUST-001234": {
+    "customer_id": "CUST-001234",
+    "customer_name": "Meridian Trade Partners LLC",
+    "customer_type": "LLC",
+    "account_ids": ["ACC-001234-001", "ACC-001234-002"],
+    "relationship_manager_id": "RM-204",
+    "risk_tier": "MEDIUM",
+    "risk_score": 48.0,
+    "kyc_last_refreshed": "2024-02-15",
+    "edd_status": false,
+    "pep_flag": false,
+    "pep_category": null,
+    "beneficial_owners": [
+      {
+        "name": "Sarah Johnson",
+        "ownership_pct": 60.0,
+        "nationality": "US",
+        "pep_flag": false,
+        "dob": "1978-06-12",
+        "address": "47 Beacon St, Boston, MA 02108"
+      },
+      {
+        "name": "Michael Torres",
+        "ownership_pct": 40.0,
+        "nationality": "US",
+        "pep_flag": false,
+        "dob": "1972-11-30",
+        "address": "88 Commonwealth Ave, Boston, MA 02116"
+      }
+    ],
+    "business_type": "import_export",
+    "expected_transaction_profile": {
+      "monthly_volume_range": [100000, 750000],
+      "primary_transaction_types": ["wire", "ACH"],
+      "primary_counterparty_countries": ["US", "CA", "MX", "DE"],
+      "expected_cash_intensity": "LOW"
+    },
+    "jurisdiction_risk": "LOW"
+  },
+  "CUST-002891": {
+    "customer_id": "CUST-002891",
+    "customer_name": "Global Ventures International Corp",
+    "customer_type": "CORPORATION",
+    "account_ids": ["ACC-002891-001"],
+    "relationship_manager_id": "RM-317",
+    "risk_tier": "HIGH",
+    "risk_score": 71.5,
+    "kyc_last_refreshed": "2023-08-01",
+    "edd_status": true,
+    "pep_flag": true,
+    "pep_category": "DOMESTIC_PEP",
+    "beneficial_owners": [
+      {
+        "name": "Robert Vandenberg",
+        "ownership_pct": 55.0,
+        "nationality": "US",
+        "pep_flag": true,
+        "pep_category": "DOMESTIC_PEP",
+        "dob": "1965-03-08",
+        "address": "1 Government Center, Boston, MA 02201"
+      },
+      {
+        "name": "Lisa Park",
+        "ownership_pct": 45.0,
+        "nationality": "US",
+        "pep_flag": false,
+        "dob": "1970-09-22",
+        "address": "200 State St, Boston, MA 02109"
+      }
+    ],
+    "business_type": "real_estate",
+    "expected_transaction_profile": {
+      "monthly_volume_range": [500000, 5000000],
+      "primary_transaction_types": ["wire", "check"],
+      "primary_counterparty_countries": ["US", "UK", "UAE"],
+      "expected_cash_intensity": "LOW"
+    },
+    "jurisdiction_risk": "MEDIUM"
+  },
+  "CUST-003456": {
+    "customer_id": "CUST-003456",
+    "customer_name": "Sunrise Retail Solutions Inc",
+    "customer_type": "CORPORATION",
+    "account_ids": ["ACC-003456-001", "ACC-003456-002", "ACC-003456-003"],
+    "relationship_manager_id": "RM-112",
+    "risk_tier": "LOW",
+    "risk_score": 22.0,
+    "kyc_last_refreshed": "2023-11-20",
+    "edd_status": false,
+    "pep_flag": false,
+    "pep_category": null,
+    "beneficial_owners": [
+      {
+        "name": "Patricia Williams",
+        "ownership_pct": 100.0,
+        "nationality": "US",
+        "pep_flag": false,
+        "dob": "1985-04-17",
+        "address": "55 Summer St, Boston, MA 02110"
+      }
+    ],
+    "business_type": "retail_trade",
+    "expected_transaction_profile": {
+      "monthly_volume_range": [25000, 200000],
+      "primary_transaction_types": ["ACH", "check", "card_merchant"],
+      "primary_counterparty_countries": ["US"],
+      "expected_cash_intensity": "LOW"
+    },
+    "jurisdiction_risk": "LOW"
+  },
+  "CUST-004712": {
+    "customer_id": "CUST-004712",
+    "customer_name": "Pacific Rim Financial Services LLC",
+    "customer_type": "LLC",
+    "account_ids": ["ACC-004712-001"],
+    "relationship_manager_id": "RM-428",
+    "risk_tier": "VERY_HIGH",
+    "risk_score": 84.0,
+    "kyc_last_refreshed": "2024-01-10",
+    "edd_status": true,
+    "pep_flag": false,
+    "pep_category": null,
+    "beneficial_owners": [
+      {
+        "name": "James Chen",
+        "ownership_pct": 70.0,
+        "nationality": "CN",
+        "pep_flag": false,
+        "dob": "1962-07-25",
+        "address": "88 Kearny St, San Francisco, CA 94108"
+      },
+      {
+        "name": "Wei Liu",
+        "ownership_pct": 30.0,
+        "nationality": "CN",
+        "pep_flag": false,
+        "dob": "1975-12-03",
+        "address": "99 Pacific Ave, San Francisco, CA 94111"
+      }
+    ],
+    "business_type": "money_services",
+    "expected_transaction_profile": {
+      "monthly_volume_range": [1000000, 10000000],
+      "primary_transaction_types": ["wire", "ACH"],
+      "primary_counterparty_countries": ["US", "CN", "HK", "SG"],
+      "expected_cash_intensity": "MEDIUM"
+    },
+    "jurisdiction_risk": "HIGH"
+  }
+}

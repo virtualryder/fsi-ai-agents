@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for dir:*)",
+      "Bash(do echo:*)",
+      "Read(//c/DRyder/Best Go-To-Market Opportunity/02-aml-tms-enhancement-agent/**)",
+      "Bash(done)",
+      "Read(//c/Users/daryd/**)",
+      "Bash(printenv)",
+      "Bash(pip install:*)",
+      "Bash(cp .env.local.example .env.local)",
+      "Bash(npm install:*)",
+      "Bash(python -c \":*)",
+      "Bash(curl -s http://localhost:8000/health)",
+      "Bash(curl -s http://localhost:8000/api/alerts/pending)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(''''alerts:'''', d.get\\(''''count''''\\), [a[''''alert_id''''] for a in d.get\\(''''alerts'''',[]\\)]\\)\")",
+      "Bash(curl -s http://localhost:8001/health)",
+      "Bash(curl -sv http://localhost:8001/health)",
+      "Bash(curl -s http://localhost:8001/openapi.json)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(list\\(d.get\\(''''paths'''',{}\\).keys\\(\\)\\)[:10]\\)\")"
+    ]
+  }
+}

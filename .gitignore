@@ -1,0 +1,37 @@
+# Environment files
+.env
+.env.local
+*.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+dist/
+build/
+
+# Node / frontend
+node_modules/
+.next/
+out/
+
+# Data / runtime
+data/audit_log.jsonl
+*.db
+*.sqlite
+chroma_db/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Presidio playbook (internal use only — not for public repo)
+Presidio_FSI_Playbook/

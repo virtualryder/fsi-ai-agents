@@ -1,0 +1,9 @@
+services:
+  kyc-agent:
+    build: .
+    ports:
+      - "8503:8503"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./data:/app/data

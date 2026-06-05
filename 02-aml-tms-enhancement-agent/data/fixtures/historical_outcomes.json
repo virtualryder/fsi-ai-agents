@@ -1,0 +1,55 @@
+{
+  "rule_fp_rates": {
+    "CASH_STRUCTURING_10K": 0.87,
+    "CASH_STRUCTURING_5K": 0.79,
+    "WIRE_HRJX_01": 0.44,
+    "WIRE_HRJX_02": 0.38,
+    "CARD_VELOCITY_RAPID": 0.92,
+    "CARD_VELOCITY_DAILY": 0.88,
+    "LAYERING_001": 0.22,
+    "LAYERING_002": 0.31,
+    "PEP_WIRE_01": 0.18,
+    "DORMANT_REACTIVATION": 0.41,
+    "CTR_PROXIMITY": 0.83,
+    "ROUND_DOLLAR": 0.94,
+    "MULTIPLE_BRANCH": 0.76
+  },
+  "typology_fp_rates": {
+    "STRUCTURING": 0.84,
+    "HIGH_RISK_GEOGRAPHY": 0.46,
+    "VELOCITY": 0.91,
+    "RAPID_MOVEMENT": 0.29,
+    "DORMANT_ACCOUNT": 0.43,
+    "PEP_RELATED": 0.21,
+    "ROUND_DOLLAR": 0.93,
+    "MULTIPLE_BRANCH": 0.78
+  },
+  "peer_group_fp_rates": {
+    "restaurant_HIGH": 0.89,
+    "restaurant_MEDIUM": 0.91,
+    "retail_HIGH": 0.82,
+    "retail_MEDIUM": 0.86,
+    "individual_consumer_LOW": 0.93,
+    "individual_consumer_MEDIUM": 0.87,
+    "shell_company_HIGH": 0.18,
+    "shell_company_VERY_HIGH": 0.11,
+    "investment_firm_MEDIUM": 0.52,
+    "investment_firm_HIGH": 0.38,
+    "import_export_HIGH": 0.61,
+    "import_export_VERY_HIGH": 0.29
+  },
+  "customer_alert_history": {
+    "CUST-101": [
+      {"alert_id": "TMS-2024-003891", "alert_type": "STRUCTURING", "outcome": "FALSE_POSITIVE", "date": "2024-09-12"},
+      {"alert_id": "TMS-2024-002544", "alert_type": "STRUCTURING", "outcome": "FALSE_POSITIVE", "date": "2024-06-03"},
+      {"alert_id": "TMS-2023-008821", "alert_type": "CTR_PROXIMITY", "outcome": "FALSE_POSITIVE", "date": "2023-11-22"},
+      {"alert_id": "TMS-2023-004411", "alert_type": "STRUCTURING", "outcome": "FALSE_POSITIVE", "date": "2023-07-14"}
+    ],
+    "CUST-102": [],
+    "CUST-103": [
+      {"alert_id": "TMS-2024-001832", "alert_type": "VELOCITY", "outcome": "FALSE_POSITIVE", "date": "2024-03-18"},
+      {"alert_id": "TMS-2023-009341", "alert_type": "VELOCITY", "outcome": "FALSE_POSITIVE", "date": "2023-12-28"}
+    ],
+    "CUST-104": []
+  }
+}

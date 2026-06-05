@@ -1,0 +1,56 @@
+version: "3.9"
+
+# docker-compose.yml
+# Local development environment for the Financial Crime Investigation Agent.
+# Run: docker compose up
+#
+# Services:
+#   app: The Streamlit investigation dashboard
+#   postgres: PostgreSQL for persistent case management (production-like)
+#   redis: Optional caching layer for watchlist results
+
+services:
+  app:
+    build: .
+    ports:
+      - "8501:8501"
+    environment:
+      - PORT=8501
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DATABASE_URL=postgresql://aml_user:aml_pass@postgres:5432/aml_db
+      - LOG_LEVEL=INFO
+      - BANK_NAME=${BANK_NAME:-First National Bank Demo}
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data  # Mount fixture data for development
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: aml_db
+      POSTGRES_USER: aml_user
+      POSTGRES_PASSWORD: aml_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aml_user -d aml_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local

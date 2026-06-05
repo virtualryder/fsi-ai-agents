@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find . -type d ! -path ./.pytest_cache/* ! -path ./node_modules/* ! -path ./.git/* ! -path */__pycache__/*)",
+      "Bash(xargs cat:*)",
+      "Bash(wc -l agent/*.py tools/*.py app.py tests/*.py)",
+      "Bash(head -200 tools/*.py)",
+      "Bash(done)"
+    ]
+  }
+}

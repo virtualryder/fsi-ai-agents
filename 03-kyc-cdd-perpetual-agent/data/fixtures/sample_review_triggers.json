@@ -1,0 +1,34 @@
+[
+  {
+    "review_id": "KYC-REVIEW-20241115-001234",
+    "customer_id": "CUST-001234",
+    "trigger_type": "ADVERSE_MEDIA",
+    "trigger_description": "Reuters article published 2024-11-10: 'Meridian Trade Partners named in federal trade violations probe — undeclared imports from sanctioned entity'",
+    "trigger_event_date": "2024-11-10",
+    "scenario": "Adverse media trigger — moderate severity. Expected outcome: EDD_REQUIRED"
+  },
+  {
+    "review_id": "KYC-REVIEW-20241115-002891",
+    "customer_id": "CUST-002891",
+    "trigger_type": "SCHEDULED",
+    "trigger_description": "Annual scheduled review for HIGH risk customer. Last review: 2023-08-01.",
+    "trigger_event_date": "2024-11-15",
+    "scenario": "Scheduled annual review for PEP customer. Expected outcome: EDD_REQUIRED (PEP mandatory)"
+  },
+  {
+    "review_id": "KYC-REVIEW-20241115-003456",
+    "customer_id": "CUST-003456",
+    "trigger_type": "TRANSACTION_SPIKE",
+    "trigger_description": "Transaction monitoring alert: October 2024 transaction volume $847K vs. expected max $200K (323% above expected ceiling)",
+    "trigger_event_date": "2024-11-01",
+    "scenario": "Transaction spike trigger for LOW risk customer. Expected outcome: RISK_UPGRADE"
+  },
+  {
+    "review_id": "KYC-REVIEW-20241115-004712",
+    "customer_id": "CUST-004712",
+    "trigger_type": "WATCHLIST_HIT",
+    "trigger_description": "Refinitiv World-Check screening hit: beneficial owner Wei Liu (30% equity) matched to PEP list — newly appointed official",
+    "trigger_event_date": "2024-11-14",
+    "scenario": "Watchlist PEP hit for VERY_HIGH risk customer. Expected outcome: ESCALATE"
+  }
+]

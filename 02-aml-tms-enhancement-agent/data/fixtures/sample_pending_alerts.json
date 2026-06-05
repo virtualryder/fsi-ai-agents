@@ -1,0 +1,82 @@
+[
+  {
+    "alert_id": "TMS-2024-004521",
+    "customer_id": "CUST-101",
+    "alert_type": "STRUCTURING",
+    "triggered_rule": "CASH_STRUCTURING_10K",
+    "severity": "HIGH",
+    "amount": 19500.00,
+    "currency": "USD",
+    "alert_date": "2024-11-14",
+    "transaction_ids": ["TXN-9001", "TXN-9002", "TXN-9003"],
+    "tms_vendor": "actimize",
+    "raw_data": {
+      "transaction_count": 3,
+      "time_window_days": 5,
+      "branch_locations": ["Main St Branch", "Oak Ave Branch", "Downtown Branch"],
+      "transaction_amounts": [6500.00, 6800.00, 6200.00],
+      "transaction_types": ["CASH_DEPOSIT", "CASH_DEPOSIT", "CASH_DEPOSIT"]
+    }
+  },
+  {
+    "alert_id": "TMS-2024-004522",
+    "customer_id": "CUST-102",
+    "alert_type": "HIGH_RISK_GEOGRAPHY",
+    "triggered_rule": "WIRE_HRJX_01",
+    "severity": "HIGH",
+    "amount": 85000.00,
+    "currency": "USD",
+    "alert_date": "2024-11-14",
+    "transaction_ids": ["TXN-9010", "TXN-9011"],
+    "tms_vendor": "actimize",
+    "raw_data": {
+      "transaction_count": 2,
+      "time_window_days": 3,
+      "destination_countries": ["RU", "CY"],
+      "transaction_amounts": [50000.00, 35000.00],
+      "transaction_types": ["WIRE_OUT", "WIRE_OUT"],
+      "beneficiary_names": ["Volga Trading LLC", "Cyprus Meridian Holdings"]
+    }
+  },
+  {
+    "alert_id": "TMS-2024-004523",
+    "customer_id": "CUST-103",
+    "alert_type": "VELOCITY",
+    "triggered_rule": "CARD_VELOCITY_RAPID",
+    "severity": "MEDIUM",
+    "amount": 4320.00,
+    "currency": "USD",
+    "alert_date": "2024-11-14",
+    "transaction_ids": ["TXN-9020", "TXN-9021", "TXN-9022", "TXN-9023", "TXN-9024"],
+    "tms_vendor": "verafin",
+    "raw_data": {
+      "transaction_count": 5,
+      "time_window_days": 1,
+      "merchant_categories": ["AIRLINE", "HOTEL", "RESTAURANT", "TRANSPORT", "RETAIL"],
+      "transaction_amounts": [1200.00, 890.00, 340.00, 210.00, 1680.00],
+      "transaction_types": ["CARD_PURCHASE", "CARD_PURCHASE", "CARD_PURCHASE", "CARD_PURCHASE", "CARD_PURCHASE"],
+      "countries": ["US", "UK", "UK", "UK", "UK"]
+    }
+  },
+  {
+    "alert_id": "TMS-2024-004524",
+    "customer_id": "CUST-104",
+    "alert_type": "RAPID_MOVEMENT",
+    "triggered_rule": "LAYERING_001",
+    "severity": "HIGH",
+    "amount": 475000.00,
+    "currency": "USD",
+    "alert_date": "2024-11-14",
+    "transaction_ids": ["TXN-9030", "TXN-9031", "TXN-9032"],
+    "tms_vendor": "actimize",
+    "raw_data": {
+      "transaction_count": 3,
+      "time_window_days": 2,
+      "account_dormancy_days": 180,
+      "destination_countries": ["PA", "CY", "VG"],
+      "transaction_amounts": [200000.00, 150000.00, 125000.00],
+      "transaction_types": ["WIRE_OUT", "WIRE_OUT", "WIRE_OUT"],
+      "beneficiary_names": ["Sunrise Capital Partners", "Mediterranean Holdings Ltd", "BVI Investments Corp"]
+    }
+  }
+]
