@@ -1,5 +1,5 @@
 # Financial Services AI Agent Suite
-### Production-Grade Agentic AI for Regulated Financial Institutions
+### Agentic AI for Regulated Financial Institutions
 
 > Built for banks, broker-dealers, credit unions, and wealth management firms navigating the intersection of AI capability and regulatory obligation. Every agent in this suite ships with working code, documented regulatory controls, AWS reference architecture, and quantified ROI.
 
@@ -255,9 +255,9 @@ docker compose up
 
 ## About
 
-Built by [David Ryder](https://github.com/virtualryder) as part of a production-grade agentic AI portfolio for financial services.
+Built by [David Ryder](https://github.com/virtualryder) as part of a "art of the possible", production-grade agentic AI portfolio for financial services.
 
-All agents are designed for real deployment — not toy demos. Every regulatory citation is accurate. Every integration point reflects actual FSI system landscapes (Actimize, Verafin, Fiserv, FIS, Refinitiv, LexisNexis).
+All agents are designed for real deployment — customization, security,  and verification are a user responsibility. Every regulatory citation is accurate. Every integration point reflects actual FSI system landscapes (Actimize, Verafin, Fiserv, FIS, Refinitiv, LexisNexis).
 
 **Target buyers:** BSA Officers · Chief Compliance Officers · Financial Crime Operations Leaders · CIOs at banks, credit unions, and broker-dealers
 
