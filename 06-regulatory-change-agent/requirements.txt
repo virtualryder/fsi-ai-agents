@@ -1,0 +1,25 @@
+# Core
+langgraph>=0.2.28
+langchain>=0.3.0
+langchain-openai>=0.2.0
+langchain-core>=0.3.0
+
+# UI
+streamlit>=1.43.0
+plotly>=5.24.0
+
+# Data / utilities
+pydantic>=2.9.0
+python-dotenv>=1.0.0
+requests>=2.32.0
+feedparser>=6.0.11
+beautifulsoup4>=4.12.0
+
+# Testing
+pytest>=8.3.0
+pytest-asyncio>=0.24.0
+
+# Production extras (optional)
+# psycopg2-binary>=2.9.0       # PostgreSQL checkpointer for durable state
+# boto3>=1.35.0                 # AWS DynamoDB audit log
+# aiohttp>=3.10.0               # Async feed ingestion

@@ -1,0 +1,112 @@
+[
+  {
+    "authority": "FinCEN",
+    "full_name": "Financial Crimes Enforcement Network",
+    "regulator_type": "FEDERAL",
+    "tier": "TIER_2_FEDERAL_SECONDARY",
+    "primary_domains": ["BSA_AML", "CROSS_BORDER"],
+    "feed_url": "https://www.fincen.gov/resources/statutes-and-regulations/rss-feeds",
+    "homepage_url": "https://www.fincen.gov",
+    "change_types_published": ["FINAL_RULE", "PROPOSED_RULE", "ADVISORY", "GUIDANCE", "FAQ"],
+    "active": true,
+    "poll_frequency_hours": 24
+  },
+  {
+    "authority": "OCC",
+    "full_name": "Office of the Comptroller of the Currency",
+    "regulator_type": "FEDERAL",
+    "tier": "TIER_1_FEDERAL_PRIMARY",
+    "primary_domains": ["BSA_AML", "CAPITAL_SAFETY_SOUNDNESS", "CONSUMER_COMPLIANCE", "TECHNOLOGY_OPERATIONS"],
+    "feed_url": "https://www.occ.gov/tools-forms/rss-feeds/index-rss-feeds.html",
+    "homepage_url": "https://www.occ.gov",
+    "change_types_published": ["FINAL_RULE", "PROPOSED_RULE", "BULLETIN", "GUIDANCE", "ENFORCEMENT_ACTION", "EXAMINATION_PROCEDURE"],
+    "active": true,
+    "poll_frequency_hours": 24
+  },
+  {
+    "authority": "Federal Reserve",
+    "full_name": "Board of Governors of the Federal Reserve System",
+    "regulator_type": "FEDERAL",
+    "tier": "TIER_1_FEDERAL_PRIMARY",
+    "primary_domains": ["BSA_AML", "CAPITAL_SAFETY_SOUNDNESS", "CONSUMER_COMPLIANCE", "TECHNOLOGY_OPERATIONS"],
+    "feed_url": "https://www.federalreserve.gov/feeds/h15.xml",
+    "homepage_url": "https://www.federalreserve.gov",
+    "change_types_published": ["FINAL_RULE", "PROPOSED_RULE", "GUIDANCE", "ENFORCEMENT_ACTION"],
+    "active": true,
+    "poll_frequency_hours": 24
+  },
+  {
+    "authority": "FDIC",
+    "full_name": "Federal Deposit Insurance Corporation",
+    "regulator_type": "FEDERAL",
+    "tier": "TIER_1_FEDERAL_PRIMARY",
+    "primary_domains": ["BSA_AML", "CAPITAL_SAFETY_SOUNDNESS", "CONSUMER_COMPLIANCE", "TECHNOLOGY_OPERATIONS"],
+    "feed_url": "https://www.fdic.gov/resources/regulations/financial-institution-letters/index.html",
+    "homepage_url": "https://www.fdic.gov",
+    "change_types_published": ["FINAL_RULE", "PROPOSED_RULE", "BULLETIN", "GUIDANCE", "ENFORCEMENT_ACTION"],
+    "active": true,
+    "poll_frequency_hours": 24
+  },
+  {
+    "authority": "CFPB",
+    "full_name": "Consumer Financial Protection Bureau",
+    "regulator_type": "FEDERAL",
+    "tier": "TIER_1_FEDERAL_PRIMARY",
+    "primary_domains": ["CONSUMER_COMPLIANCE", "FAIR_LENDING", "PRIVACY_DATA", "FRAUD_PAYMENTS"],
+    "feed_url": "https://www.consumerfinance.gov/feed/",
+    "homepage_url": "https://www.consumerfinance.gov",
+    "change_types_published": ["FINAL_RULE", "PROPOSED_RULE", "GUIDANCE", "ENFORCEMENT_ACTION", "CIRCULAR"],
+    "active": true,
+    "poll_frequency_hours": 12
+  },
+  {
+    "authority": "SEC",
+    "full_name": "U.S. Securities and Exchange Commission",
+    "regulator_type": "FEDERAL",
+    "tier": "TIER_2_FEDERAL_SECONDARY",
+    "primary_domains": ["INVESTMENT_PRODUCTS"],
+    "feed_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&type=rule&dateb=&owner=include&count=40&search_text=",
+    "homepage_url": "https://www.sec.gov",
+    "change_types_published": ["FINAL_RULE", "PROPOSED_RULE", "GUIDANCE", "ENFORCEMENT_ACTION"],
+    "active": true,
+    "poll_frequency_hours": 24
+  },
+  {
+    "authority": "FINRA",
+    "full_name": "Financial Industry Regulatory Authority",
+    "regulator_type": "SELF_REGULATORY",
+    "tier": "TIER_2_FEDERAL_SECONDARY",
+    "primary_domains": ["INVESTMENT_PRODUCTS"],
+    "feed_url": "https://www.finra.org/rules-guidance/notices/rss",
+    "homepage_url": "https://www.finra.org",
+    "change_types_published": ["CIRCULAR", "GUIDANCE", "ENFORCEMENT_ACTION", "FAQ"],
+    "active": true,
+    "poll_frequency_hours": 24
+  },
+  {
+    "authority": "NCUA",
+    "full_name": "National Credit Union Administration",
+    "regulator_type": "FEDERAL",
+    "tier": "TIER_1_FEDERAL_PRIMARY",
+    "primary_domains": ["BSA_AML", "CONSUMER_COMPLIANCE", "CAPITAL_SAFETY_SOUNDNESS"],
+    "feed_url": "https://www.ncua.gov/regulation-supervision/regulatory-alerts",
+    "homepage_url": "https://www.ncua.gov",
+    "change_types_published": ["FINAL_RULE", "PROPOSED_RULE", "BULLETIN", "GUIDANCE"],
+    "active": false,
+    "poll_frequency_hours": 48,
+    "notes": "Enable for credit union institutions only"
+  },
+  {
+    "authority": "FATF",
+    "full_name": "Financial Action Task Force",
+    "regulator_type": "INTERNATIONAL",
+    "tier": "TIER_4_INTERNATIONAL",
+    "primary_domains": ["BSA_AML", "CROSS_BORDER"],
+    "feed_url": "https://www.fatf-gafi.org/en/publications.html",
+    "homepage_url": "https://www.fatf-gafi.org",
+    "change_types_published": ["GUIDANCE", "ADVISORY"],
+    "active": true,
+    "poll_frequency_hours": 168,
+    "notes": "FATF guidance is advisory but influences U.S. regulatory expectations"
+  }
+]

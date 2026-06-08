@@ -1,0 +1,68 @@
+{
+  "BSA_AML": {
+    "primary": "BSA_OFFICER",
+    "secondary": ["CHIEF_COMPLIANCE_OFFICER", "GENERAL_COUNSEL"],
+    "business_units": ["HEAD_OF_OPERATIONS", "HEAD_OF_RETAIL_BANKING", "HEAD_OF_COMMERCIAL_BANKING"],
+    "board_notification_threshold": "HIGH"
+  },
+  "CONSUMER_COMPLIANCE": {
+    "primary": "CONSUMER_COMPLIANCE_OFFICER",
+    "secondary": ["CHIEF_COMPLIANCE_OFFICER", "GENERAL_COUNSEL"],
+    "business_units": ["HEAD_OF_RETAIL_BANKING", "HEAD_OF_MORTGAGE", "HEAD_OF_CREDIT_CARDS"],
+    "board_notification_threshold": "CRITICAL"
+  },
+  "CAPITAL_SAFETY_SOUNDNESS": {
+    "primary": "CHIEF_RISK_OFFICER",
+    "secondary": ["CFO", "CHIEF_COMPLIANCE_OFFICER"],
+    "business_units": ["HEAD_OF_COMMERCIAL_BANKING", "TREASURER"],
+    "board_notification_threshold": "HIGH"
+  },
+  "INVESTMENT_PRODUCTS": {
+    "primary": "INVESTMENT_COMPLIANCE_OFFICER",
+    "secondary": ["CHIEF_COMPLIANCE_OFFICER", "GENERAL_COUNSEL"],
+    "business_units": ["HEAD_OF_WEALTH_MANAGEMENT", "HEAD_OF_TRUST_SERVICES"],
+    "board_notification_threshold": "CRITICAL"
+  },
+  "TECHNOLOGY_OPERATIONS": {
+    "primary": "CHIEF_COMPLIANCE_OFFICER",
+    "secondary": ["CTO", "CHIEF_RISK_OFFICER", "CHIEF_INFORMATION_SECURITY_OFFICER"],
+    "business_units": ["CTO", "HEAD_OF_OPERATIONS"],
+    "board_notification_threshold": "CRITICAL"
+  },
+  "PRIVACY_DATA": {
+    "primary": "CHIEF_PRIVACY_OFFICER",
+    "secondary": ["CHIEF_COMPLIANCE_OFFICER", "GENERAL_COUNSEL", "CTO"],
+    "business_units": ["CTO", "HEAD_OF_MARKETING", "HEAD_OF_OPERATIONS"],
+    "board_notification_threshold": "HIGH"
+  },
+  "FRAUD_PAYMENTS": {
+    "primary": "CHIEF_RISK_OFFICER",
+    "secondary": ["BSA_OFFICER", "CHIEF_COMPLIANCE_OFFICER"],
+    "business_units": ["HEAD_OF_OPERATIONS", "HEAD_OF_RETAIL_BANKING"],
+    "board_notification_threshold": "CRITICAL"
+  },
+  "FAIR_LENDING": {
+    "primary": "CONSUMER_COMPLIANCE_OFFICER",
+    "secondary": ["CHIEF_COMPLIANCE_OFFICER", "GENERAL_COUNSEL"],
+    "business_units": ["HEAD_OF_RETAIL_BANKING", "HEAD_OF_MORTGAGE", "HEAD_OF_COMMERCIAL_BANKING"],
+    "board_notification_threshold": "HIGH"
+  },
+  "COMMUNITY_REINVESTMENT": {
+    "primary": "CRA_OFFICER",
+    "secondary": ["CHIEF_COMPLIANCE_OFFICER"],
+    "business_units": ["HEAD_OF_RETAIL_BANKING", "HEAD_OF_COMMUNITY_DEVELOPMENT"],
+    "board_notification_threshold": "CRITICAL"
+  },
+  "CROSS_BORDER": {
+    "primary": "BSA_OFFICER",
+    "secondary": ["CHIEF_COMPLIANCE_OFFICER", "GENERAL_COUNSEL"],
+    "business_units": ["HEAD_OF_INTERNATIONAL_BANKING", "HEAD_OF_COMMERCIAL_BANKING"],
+    "board_notification_threshold": "HIGH"
+  },
+  "OTHER": {
+    "primary": "CHIEF_COMPLIANCE_OFFICER",
+    "secondary": ["GENERAL_COUNSEL"],
+    "business_units": ["HEAD_OF_OPERATIONS"],
+    "board_notification_threshold": "CRITICAL"
+  }
+}

@@ -47,10 +47,16 @@ This suite delivers that reduction, use case by use case, in a way that satisfie
 │  │       $3.5M/yr (50 RMs) · FINRA 2210 · Reg BI · ERISA              │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
 │                                                                             │
+│  COMPLIANCE OPERATIONS                                                      │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │  06 · Regulatory Change Management Agent                            │   │
+│  │       12-node gap analysis + remediation · 9 regulatory sources     │   │
+│  │       $849K–$1.5M/yr · FFIEC · OCC · SR 11-7 · FDIC CMS           │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
 │  COMING SOON                                                                │
 │  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │  06 · Regulatory Change Management Agent    (UC15)                  │   │
-│  │  07 · Trading Surveillance Agent            (UC16)                  │   │
+│  │  07 · Trading Surveillance Agent                                    │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -264,7 +270,8 @@ Security:
 | 03 · KYC/CDD Perpetual | Manual refresh · exam findings | $1.5M+ (5,000 customer reviews/year) |
 | 04 · Real-Time Fraud Detection | $2.3M fraud losses · 360 analyst hrs/week | $2.1M+ (regional bank) |
 | 05 · Wealth & RM Copilot | 35-40% RM time on admin · Reg BI gaps | $3.5M+ (50 RMs) |
-| **Full suite** | **End-to-end financial crime + fraud + wealth** | **$13.5M+ annually** |
+| 06 · Regulatory Change Management | 200-400 changes/year · exam findings | $849K–$1.5M+ (regional bank) |
+| **Full suite** | **End-to-end financial crime + fraud + wealth + compliance ops** | **$14.5M+ annually** |
 
 Payback period for full suite deployment: **< 6 months**
 

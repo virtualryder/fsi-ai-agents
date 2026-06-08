@@ -1,0 +1,47 @@
+[
+  {
+    "change_id": "REG-CHANGE-2025-FINCEN-0001",
+    "change_title": "Anti-Money Laundering/Countering the Financing of Terrorism Program Effectiveness",
+    "change_type": "FINAL_RULE",
+    "regulatory_authority": "FinCEN",
+    "regulatory_domain": "BSA_AML",
+    "publication_date": "2025-01-14",
+    "effective_date": "2026-07-01",
+    "comment_deadline": null,
+    "citation": "31 CFR Parts 1010, 1020, 1021, 1022, 1023, 1024, 1025, 1026",
+    "docket_number": "FINCEN-2024-0001",
+    "source_url": "https://www.fincen.gov/sites/default/files/federal_register_notices/2025-01-14/FR_AMLA_FinalRule_2025.pdf",
+    "summary_text": "FinCEN finalizes amendments to the BSA's AML/CFT program rule, requiring financial institutions to establish risk assessment processes to identify and evaluate ML/TF risks and incorporate risk findings into their AML/CFT programs. The rule establishes effectiveness as the standard for BSA compliance, requiring programs to be commensurate with the institution's ML/TF risk profile.",
+    "full_text": "AGENCY: Financial Crimes Enforcement Network (FinCEN), Treasury. ACTION: Final rule. SUMMARY: FinCEN is issuing this final rule to strengthen and modernize financial institutions' anti-money laundering and countering the financing of terrorism (AML/CFT) programs..."
+  },
+  {
+    "change_id": "REG-CHANGE-2025-CFPB-0001",
+    "change_title": "Personal Financial Data Rights Rule — Section 1033",
+    "change_type": "FINAL_RULE",
+    "regulatory_authority": "CFPB",
+    "regulatory_domain": "PRIVACY_DATA",
+    "publication_date": "2024-10-22",
+    "effective_date": "2026-04-01",
+    "comment_deadline": null,
+    "citation": "12 CFR Part 1033",
+    "docket_number": "CFPB-2023-0052",
+    "source_url": "https://www.consumerfinance.gov/rules-policy/final-rules/personal-financial-data-rights/",
+    "summary_text": "The CFPB's Open Banking rule requires financial institutions to make consumer financial data available to authorized third parties upon consumer request. Institutions must implement consumer data portability APIs, establish authorization procedures, and comply with data accuracy and security requirements.",
+    "full_text": "The Bureau is finalizing a rule to implement section 1033 of the Consumer Financial Protection Act of 2010 (CFPA), which requires that covered persons make available to consumers certain data in their control or possession relating to consumers and their accounts..."
+  },
+  {
+    "change_id": "REG-CHANGE-2025-OCC-0001",
+    "change_title": "Third-Party Relationships: Risk Management Guidance",
+    "change_type": "GUIDANCE",
+    "regulatory_authority": "OCC",
+    "regulatory_domain": "TECHNOLOGY_OPERATIONS",
+    "publication_date": "2023-06-06",
+    "effective_date": "2023-06-06",
+    "comment_deadline": null,
+    "citation": "OCC Bulletin 2023-17",
+    "docket_number": null,
+    "source_url": "https://www.occ.gov/news-issuances/bulletins/2023/bulletin-2023-17.html",
+    "summary_text": "Revised interagency guidance on managing third-party relationships. Provides a framework for sound risk management of all phases of third-party relationships including planning, due diligence, contract negotiation, ongoing monitoring, and termination. Applies to all third-party arrangements including critical activities with fintechs.",
+    "full_text": "The OCC, Federal Reserve, and FDIC are issuing this joint guidance to help banking organizations manage risks associated with third-party relationships, including relationships with financial technology (fintech) companies..."
+  }
+]
