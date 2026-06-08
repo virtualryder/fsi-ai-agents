@@ -1,0 +1,9 @@
+version: "3.9"
+services:
+  wealth-rm-copilot:
+    build: .
+    ports:
+      - "8505:8505"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    restart: unless-stopped

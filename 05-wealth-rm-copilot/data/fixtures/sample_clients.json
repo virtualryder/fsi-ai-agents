@@ -1,0 +1,202 @@
+[
+  {
+    "client_id": "CUST-WM-001",
+    "_persona": "Margaret Chen — Retired executive, approaching RMDs, estate planning focus",
+    "profile": {
+      "full_name": "Margaret Chen",
+      "age": 71,
+      "marital_status": "Widowed",
+      "dependents": 0,
+      "employment_status": "Retired",
+      "annual_income": 185000,
+      "net_worth": 8400000,
+      "total_aum": 3200000,
+      "primary_goals": ["Income Generation", "Estate Planning", "Charitable Giving"],
+      "time_horizon_years": 20,
+      "risk_tolerance": "MODERATE_CONSERVATIVE",
+      "tax_bracket": "35%",
+      "state_of_domicile": "MA",
+      "is_retirement_account": true,
+      "liquidity_needs": "MEDIUM",
+      "esg_preference": true,
+      "restricted_securities": [],
+      "client_since_date": "2011-04-18",
+      "last_review_date": "2025-10-01",
+      "next_rmd_date": "2025-12-31",
+      "beneficiary_review_date": "2023-02-14"
+    },
+    "ips": {
+      "target_allocations": {
+        "US_EQUITY": 30,
+        "INTL_EQUITY": 10,
+        "FIXED_INCOME": 45,
+        "ALTERNATIVES": 10,
+        "CASH": 5
+      },
+      "rebalancing_bands": {
+        "US_EQUITY": 5,
+        "INTL_EQUITY": 4,
+        "FIXED_INCOME": 5,
+        "ALTERNATIVES": 3,
+        "CASH": 3
+      },
+      "return_objective": "5-6% annualized with emphasis on income and capital preservation",
+      "income_requirement": 120000,
+      "prohibited_securities": ["individual bonds <investment grade", "leveraged ETFs"],
+      "esg_screens": ["tobacco", "weapons", "coal"],
+      "benchmark": "Conservative Blended Benchmark (30/70)",
+      "last_updated": "2025-03-01",
+      "ips_version": "v4.2"
+    }
+  },
+  {
+    "client_id": "CUST-WM-002",
+    "_persona": "James & Sarah Thornton — Dual-income couple, college funding + retirement",
+    "profile": {
+      "full_name": "James & Sarah Thornton",
+      "age": 46,
+      "marital_status": "Married",
+      "dependents": 2,
+      "employment_status": "Employed",
+      "annual_income": 420000,
+      "net_worth": 2100000,
+      "total_aum": 875000,
+      "primary_goals": ["College Funding", "Retirement", "Home Purchase"],
+      "time_horizon_years": 18,
+      "risk_tolerance": "MODERATE_AGGRESSIVE",
+      "tax_bracket": "32%",
+      "state_of_domicile": "MA",
+      "is_retirement_account": false,
+      "liquidity_needs": "MEDIUM",
+      "esg_preference": false,
+      "restricted_securities": ["ACME_CORP"],
+      "client_since_date": "2019-07-22",
+      "last_review_date": "2025-09-15",
+      "next_rmd_date": null,
+      "beneficiary_review_date": "2025-01-10"
+    },
+    "ips": {
+      "target_allocations": {
+        "US_EQUITY": 50,
+        "INTL_EQUITY": 20,
+        "FIXED_INCOME": 20,
+        "ALTERNATIVES": 5,
+        "CASH": 5
+      },
+      "rebalancing_bands": {
+        "US_EQUITY": 6,
+        "INTL_EQUITY": 5,
+        "FIXED_INCOME": 5,
+        "ALTERNATIVES": 3,
+        "CASH": 3
+      },
+      "return_objective": "7-8% annualized to fund college and retirement goals",
+      "income_requirement": 0,
+      "prohibited_securities": ["ACME_CORP"],
+      "esg_screens": [],
+      "benchmark": "Moderate Growth Blended Benchmark (70/30)",
+      "last_updated": "2025-07-01",
+      "ips_version": "v2.0"
+    }
+  },
+  {
+    "client_id": "CUST-WM-003",
+    "_persona": "David Okafor — Business owner, $5.8M AUM, concentrated tech/private equity",
+    "profile": {
+      "full_name": "David Okafor",
+      "age": 53,
+      "marital_status": "Married",
+      "dependents": 3,
+      "employment_status": "Business Owner",
+      "annual_income": 1200000,
+      "net_worth": 14500000,
+      "total_aum": 5800000,
+      "primary_goals": ["Business Succession", "Retirement", "Estate Planning", "Tax Optimization"],
+      "time_horizon_years": 15,
+      "risk_tolerance": "AGGRESSIVE",
+      "tax_bracket": "37%",
+      "state_of_domicile": "MA",
+      "is_retirement_account": false,
+      "liquidity_needs": "LOW",
+      "esg_preference": false,
+      "restricted_securities": ["PRIV_CO_SHARES"],
+      "client_since_date": "2015-01-09",
+      "last_review_date": "2025-11-01",
+      "next_rmd_date": null,
+      "beneficiary_review_date": "2025-03-22"
+    },
+    "ips": {
+      "target_allocations": {
+        "US_EQUITY": 45,
+        "INTL_EQUITY": 15,
+        "FIXED_INCOME": 15,
+        "ALTERNATIVES": 20,
+        "CASH": 5
+      },
+      "rebalancing_bands": {
+        "US_EQUITY": 8,
+        "INTL_EQUITY": 5,
+        "FIXED_INCOME": 5,
+        "ALTERNATIVES": 8,
+        "CASH": 3
+      },
+      "return_objective": "8-10% annualized; willing to accept higher volatility for growth",
+      "income_requirement": 0,
+      "prohibited_securities": ["PRIV_CO_SHARES"],
+      "esg_screens": [],
+      "benchmark": "Aggressive Growth Benchmark (85/15)",
+      "last_updated": "2025-06-15",
+      "ips_version": "v5.1"
+    }
+  },
+  {
+    "client_id": "CUST-WM-004",
+    "_persona": "Martinez Family Trust — $12M, multi-generational, ESG focus",
+    "profile": {
+      "full_name": "Martinez Family Trust",
+      "age": 58,
+      "marital_status": "Trust",
+      "dependents": 4,
+      "employment_status": "Trust Beneficiary",
+      "annual_income": 480000,
+      "net_worth": 28000000,
+      "total_aum": 12000000,
+      "primary_goals": ["Wealth Preservation", "Multi-Generational Transfer", "Impact Investing"],
+      "time_horizon_years": 30,
+      "risk_tolerance": "MODERATE",
+      "tax_bracket": "37%",
+      "state_of_domicile": "MA",
+      "is_retirement_account": false,
+      "liquidity_needs": "LOW",
+      "esg_preference": true,
+      "restricted_securities": ["fossil_fuel_producers"],
+      "client_since_date": "2008-11-03",
+      "last_review_date": "2025-08-20",
+      "next_rmd_date": null,
+      "beneficiary_review_date": "2025-08-20"
+    },
+    "ips": {
+      "target_allocations": {
+        "US_EQUITY": 35,
+        "INTL_EQUITY": 25,
+        "FIXED_INCOME": 25,
+        "ALTERNATIVES": 12,
+        "CASH": 3
+      },
+      "rebalancing_bands": {
+        "US_EQUITY": 5,
+        "INTL_EQUITY": 5,
+        "FIXED_INCOME": 5,
+        "ALTERNATIVES": 4,
+        "CASH": 2
+      },
+      "return_objective": "6-7% annualized with ESG screens and impact overlay",
+      "income_requirement": 360000,
+      "prohibited_securities": ["fossil_fuel_producers", "tobacco", "weapons", "private_prisons"],
+      "esg_screens": ["fossil_fuels", "tobacco", "weapons", "private_prisons", "gambling"],
+      "benchmark": "ESG Balanced Benchmark",
+      "last_updated": "2025-08-15",
+      "ips_version": "v7.3"
+    }
+  }
+]

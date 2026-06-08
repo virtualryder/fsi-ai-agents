@@ -33,10 +33,22 @@ This suite delivers that reduction, use case by use case, in a way that satisfie
 │  │       90% reduction in manual KYC refresh hours · pKYC at scale     │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
 │                                                                             │
+│  PAYMENT FRAUD PREVENTION                                                   │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │  04 · Real-Time Fraud Detection Agent                               │   │
+│  │       Sub-200ms payment fraud prevention · 65% fraud loss reduction │   │
+│  │       Reg E automation · 7 fraud typologies · SAR flag routing      │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  WEALTH MANAGEMENT                                                          │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │  05 · Wealth & RM Copilot                                           │   │
+│  │       RM productivity · Reg BI documentation · Suitability (Python) │   │
+│  │       $3.5M/yr (50 RMs) · FINRA 2210 · Reg BI · ERISA              │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
 │  COMING SOON                                                                │
 │  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │  04 · Real-Time Fraud Detection Agent       (UC11)                  │   │
-│  │  05 · Wealth & Relationship Manager Copilot (UC13)                  │   │
 │  │  06 · Regulatory Change Management Agent    (UC15)                  │   │
 │  │  07 · Trading Surveillance Agent            (UC16)                  │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
@@ -112,6 +124,48 @@ Perpetual KYC at scale: risk-event-triggered CDD refresh, automated EDD package 
 
 ---
 
+### 04 · Real-Time Fraud Detection Agent
+**[`04-fraud-detection-agent/`](./04-fraud-detection-agent/)**
+
+Sub-200ms payment fraud prevention using a dual-path architecture: deterministic rule engine for real-time authorization decisions, LLM contextual synthesis for async enrichment and analyst review. Automates Reg E provisional credit disclosures and flags money laundering patterns for AML escalation.
+
+| What it does | The number |
+|---|---|
+| Annual fraud loss reduction | ~65% ($2.3M → ~$800K) |
+| False positive reduction | ~40% (4,200/mo → ~2,500/mo) |
+| Analyst hours saved | 80% (360 → 64 hrs/week) |
+| Reg E late disclosures | 83% reduction (12/year → ~2/year) |
+| Real-time path latency | Sub-200ms (card authorization window) |
+
+**Two-path architecture:** Real-time (<200ms): intake → context → features → rule pre-scoring. Async enrichment: device intelligence → behavioral analysis → LLM synthesis → composite scoring → routing (BLOCK / Step-Up / Review / Allow)
+
+**Fraud typologies covered:** Card testing, account takeover, card-not-present, authorized push payment, wire/BEC, structuring, elder financial exploitation
+
+**Regulatory coverage:** Reg E (EFTA), Nacha Rules, Visa/Mastercard reason codes, BSA (SAR flag routing), OFAC hard blocks, SR 11-7, CFPB Fair Lending (race/sex-neutral signals), GLBA (PII hashing)
+
+---
+
+### 05 · Wealth & RM Copilot
+**[`05-wealth-rm-copilot/`](./05-wealth-rm-copilot/)**
+
+AI copilot for relationship managers: automates meeting prep, proposal writing, portfolio reviews, and client communications while generating Reg BI documentation automatically. Suitability determination is Python — not LLM.
+
+| What it does | The number |
+|---|---|
+| Meeting prep time per RM | 2-3 hrs → 30 min (80% reduction) |
+| Proposal writing time | 3-4 hrs → 45 min (75% reduction) |
+| Annual RM hours saved (50 RMs) | 26,000 hrs |
+| Annual savings (50 RMs, $120/hr fully loaded) | ~$3.5M |
+| Compliance documentation gaps | ~15% → ~2% (87% reduction) |
+
+**Workflow:** RM request → client profile (CRM + IPS + portfolio) → portfolio analysis → market intelligence → **suitability check (Python — not LLM)** → recommendation engine → content drafting (GPT-4o) → FINRA 2210 compliance check → **RM approval gate** → archive
+
+**Request types:** Meeting prep · Rebalancing proposal · Investment proposal · Portfolio review · Client communication · Alert response
+
+**Regulatory coverage:** Reg BI (17 CFR 240.15l-1), FINRA Rule 2111, FINRA Rule 2210, FINRA Rule 4512, ERISA (29 U.S.C. § 1001), SEC Investment Advisers Act, SEC Rule 204-2 / FINRA 4511 (6-year retention), Form CRS, SR 11-7
+
+---
+
 ## Architecture Principles
 
 Every agent in this suite is built on the same opinionated architecture. Customers learn it once and deploy it everywhere.
@@ -177,20 +231,27 @@ Security:
 
 ## Regulatory Coverage Map
 
-| Regulation | Agent 01 | Agent 02 | Agent 03 |
-|---|:---:|:---:|:---:|
-| BSA 31 U.S.C. § 5318 (SAR filing) | ✅ | ✅ | ✅ |
-| FinCEN CDD Rule (31 CFR 1020.210) | ✅ | ✅ | ✅ |
-| OFAC IEEPA (SDN screening, 50% rule) | ✅ | ✅ | ✅ |
-| FATF R.10 (Customer due diligence) | ✅ | | ✅ |
-| FATF R.12 (PEP enhanced due diligence) | ✅ | ✅ | ✅ |
-| FATF R.20 (Suspicious transaction reporting) | ✅ | ✅ | |
-| USA PATRIOT Act § 326 (CIP) | ✅ | | ✅ |
-| FIN-2014-G001 (SAR narrative format) | ✅ | | |
-| SR 11-7 (Model risk management) | ✅ | ✅ | ✅ |
-| FFIEC BSA/AML Examination Manual | ✅ | ✅ | ✅ |
-| 18 U.S.C. § 1960 (No tipping off) | ✅ | | |
-| 5-year BSA record retention | ✅ | ✅ | ✅ |
+| Regulation | Agent 01 | Agent 02 | Agent 03 | Agent 04 | Agent 05 |
+|---|:---:|:---:|:---:|:---:|:---:|
+| BSA 31 U.S.C. § 5318 (SAR filing) | ✅ | ✅ | ✅ | ✅ | — |
+| FinCEN CDD Rule (31 CFR 1020.210) | ✅ | ✅ | ✅ | — | — |
+| OFAC IEEPA (SDN screening, 50% rule) | ✅ | ✅ | ✅ | ✅ | — |
+| FATF R.10 (Customer due diligence) | ✅ | — | ✅ | — | — |
+| FATF R.12 (PEP enhanced due diligence) | ✅ | ✅ | ✅ | — | — |
+| FATF R.20 (Suspicious transaction reporting) | ✅ | ✅ | — | ✅ | — |
+| USA PATRIOT Act § 326 (CIP) | ✅ | — | ✅ | — | — |
+| FIN-2014-G001 (SAR narrative format) | ✅ | — | — | — | — |
+| SR 11-7 (Model risk management) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| FFIEC BSA/AML Examination Manual | ✅ | ✅ | ✅ | — | — |
+| 18 U.S.C. § 1960 (No tipping off) | ✅ | — | — | — | ✅ |
+| 5-year BSA record retention | ✅ | ✅ | ✅ | ✅ | — |
+| Reg E (EFTA) — provisional credit | — | — | — | ✅ | — |
+| Nacha Rules (ACH fraud) | — | — | — | ✅ | — |
+| Reg BI (17 CFR 240.15l-1) | — | — | — | — | ✅ |
+| FINRA Rule 2111 (Suitability) | — | — | — | — | ✅ |
+| FINRA Rule 2210 (Communications) | — | — | — | — | ✅ |
+| ERISA (retirement account fiduciary) | — | — | — | — | ✅ |
+| GLBA (data privacy / PII) | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -201,7 +262,9 @@ Security:
 | 01 · Financial Crime Investigation | $10K–$25K per SAR · analyst time | $2.4M+ (1,000 SARs/year) |
 | 02 · AML/TMS Enhancement | 90% FP rate · 450 wasted hrs/day | $4M+ (10-analyst team) |
 | 03 · KYC/CDD Perpetual | Manual refresh · exam findings | $1.5M+ (5,000 customer reviews/year) |
-| **Full suite** | **End-to-end financial crime + CDD** | **$7.9M+ annually** |
+| 04 · Real-Time Fraud Detection | $2.3M fraud losses · 360 analyst hrs/week | $2.1M+ (regional bank) |
+| 05 · Wealth & RM Copilot | 35-40% RM time on admin · Reg BI gaps | $3.5M+ (50 RMs) |
+| **Full suite** | **End-to-end financial crime + fraud + wealth** | **$13.5M+ annually** |
 
 Payback period for full suite deployment: **< 6 months**
 
@@ -249,6 +312,18 @@ cd ../03-kyc-cdd-perpetual-agent
 cp .env.example .env
 docker compose up
 # Open: http://localhost:8503
+
+# Then try Agent 04 (Real-Time Fraud Detection)
+cd ../04-fraud-detection-agent
+cp .env.example .env
+docker compose up
+# Open: http://localhost:8504
+
+# Then try Agent 05 (Wealth & RM Copilot)
+cd ../05-wealth-rm-copilot
+cp .env.example .env
+docker compose up
+# Open: http://localhost:8505
 ```
 
 ---

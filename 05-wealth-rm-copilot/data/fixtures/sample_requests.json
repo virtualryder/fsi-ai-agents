@@ -1,0 +1,36 @@
+[
+  {
+    "_scenario": "SCENARIO 1: Meeting Prep — Margaret Chen quarterly review before year-end RMD",
+    "request_id": "RM-20260603-MEET001",
+    "rm_id": "RM-SMITH-001",
+    "client_id": "CUST-WM-001",
+    "request_type": "MEETING_PREP",
+    "request_context": "Q4 annual review. Margaret's first full year since husband passed. RMD deadline approaching 12/31. She mentioned interest in increasing charitable giving via DAF.",
+    "meeting_date": "2026-06-15"
+  },
+  {
+    "_scenario": "SCENARIO 2: Rebalancing Proposal — Thornton portfolio drifted after equity rally",
+    "request_id": "RM-20260603-REBAL002",
+    "rm_id": "RM-JOHNSON-002",
+    "client_id": "CUST-WM-002",
+    "request_type": "REBALANCING_PROPOSAL",
+    "request_context": "After the Q1 equity rally, US equities now ~62% of portfolio vs. 50% IPS target. Need to rebalance back to targets. Also have college funding milestone in 3 years — review fixed income ladder."
+  },
+  {
+    "_scenario": "SCENARIO 3: Investment Proposal — David Okafor private equity allocation",
+    "request_id": "RM-20260603-INVEST003",
+    "rm_id": "RM-WILLIAMS-003",
+    "client_id": "CUST-WM-003",
+    "request_type": "INVESTMENT_PROPOSAL",
+    "request_context": "Presenting Blackstone Private Credit Fund (BCRED) as alternatives sleeve addition. David has expressed interest in increasing alternatives exposure from current 12% to IPS target 20%.",
+    "investment_idea": "Blackstone Private Credit (BCRED) — private credit fund targeting 10-12% net returns. Accredited investor only. 5-year lockup. Monthly income distributions."
+  },
+  {
+    "_scenario": "SCENARIO 4: Client Communication — Martinez Trust inflation concerns letter",
+    "request_id": "RM-20260603-COMM004",
+    "rm_id": "RM-CHEN-004",
+    "client_id": "CUST-WM-004",
+    "request_type": "CLIENT_COMMUNICATION",
+    "request_context": "Trust beneficiaries have called twice asking about inflation impact on their portfolio. Want to draft a reassuring but honest letter explaining our positioning and what we're doing about it."
+  }
+]
