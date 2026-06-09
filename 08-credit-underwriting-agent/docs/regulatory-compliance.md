@@ -1,0 +1,238 @@
+# Regulatory Compliance Reference
+## Credit Underwriting Agent — Agent 08
+
+---
+
+## Overview
+
+The Credit Underwriting Agent is designed to comply with the full regulatory framework governing credit origination at U.S. depository institutions and non-bank lenders. Every compliance-critical decision is made by deterministic Python code — the LLM is used only for narrative synthesis.
+
+---
+
+## Equal Credit Opportunity Act (ECOA) / Regulation B
+**Citation:** 15 U.S.C. § 1691 et seq.; 12 CFR Part 1002
+
+| ECOA Requirement | Agent Control | Code Location |
+|-----------------|--------------|---------------|
+| No discrimination on prohibited bases | `fair_lending_check_node` screens for steering and geographic concentration | `nodes.py:fair_lending_check_node` |
+| Adverse action notice within 30 days | Python calculates 30-day deadline; LLM drafts notice | `nodes.py:adverse_action_node` |
+| Specific reasons for adverse action | `AdverseActionReason` enum maps to Reg B standard list | `state.py:AdverseActionReason` |
+| Max 4 adverse action reasons | Enforced in `adverse_action_node` with list slicing `[:4]` | `nodes.py:adverse_action_node` |
+| Credit score disclosure (FCRA § 615) | `credit_score_disclosure_required` flag set for all scored declines | `nodes.py:adverse_action_node` |
+| Notification of incomplete application | `INCOMPLETE_APPLICATION` reason available | `state.py:AdverseActionReason` |
+
+**Prohibited Bases:** Race, color, religion, national origin, sex, marital status, age (if 18+), receipt of public assistance, good-faith exercise of rights under CCPA.
+
+**Adverse Action Notice — Required Elements (12 CFR § 1002.9):**
+1. Statement that credit was denied / terms were changed
+2. ECOA statement (boilerplate included in LLM system prompt)
+3. Name and address of creditor (placeholder in template)
+4. Specific reasons or right to request reasons within 60 days
+5. Name and address of federal agency if creditor is a federal institution
+
+**Examination Readiness:**
+- All adverse action notices drafted by LLM with ECOA boilerplate included
+- `adverse_action_reasons` field in state maps exactly to Reg B standard list
+- Audit trail timestamps every decision with reviewer ID
+
+---
+
+## Fair Housing Act (FHA)
+**Citation:** 42 U.S.C. § 3601 et seq.; 24 CFR Part 100
+
+| FHA Requirement | Agent Control |
+|----------------|--------------|
+| No discrimination in residential mortgage lending | `fair_lending_check_node` — geographic flag for census tracts with elevated denial concentration |
+| Anti-redlining | `FLAGGED_CENSUS_TRACTS` constant in `nodes.py` — flagged tracts load from FFIEC geocoding database in production |
+| Anti-steering | Steering detection: FHA routing for conventionally-qualified applicants triggers fair lending flag |
+
+**Critical Design:** Any FHA flag sets `fair_lending_review_required = True`. This flag:
+1. Forces `human_review_required = True` in `routing_decision_node`
+2. Routes to `COMPLIANCE_OFFICER` escalation path
+3. Cannot be cleared by any downstream node or LLM call
+
+---
+
+## Home Mortgage Disclosure Act (HMDA)
+**Citation:** 12 U.S.C. § 2801 et seq.; 12 CFR Part 1003
+
+HMDA requires covered institutions to collect, record, and report data on mortgage loan applications.
+
+**Agent HMDA Controls:**
+
+| HMDA Data Point | Agent Field | Set By |
+|----------------|------------|--------|
+| Loan purpose | `loan_purpose` | Application intake |
+| Loan amount | `requested_amount` | Application intake |
+| Loan type | `loan_type` | Application intake |
+| Property location | `property_census_tract`, `property_county` | Application intake |
+| Action taken | `hmda_action_taken` | Python (`finalize_decision_node`) |
+| Action taken date | `decision_timestamp` | Python |
+
+**Action Taken Codes (Python-set, not LLM):**
+
+| Code | Meaning | When Applied |
+|------|---------|-------------|
+| 1 | Loan originated | APPROVED or CONDITIONALLY_APPROVED |
+| 3 | Application denied | DECLINED |
+| 5 | File closed — incomplete | REQUEST_MORE_INFO → WITHDRAWN |
+
+**HMDA Reportable Loan Types:** CONVENTIONAL_MORTGAGE, FHA_MORTGAGE, VA_MORTGAGE, JUMBO_MORTGAGE, HELOC.
+
+---
+
+## Community Reinvestment Act (CRA)
+**Citation:** 12 U.S.C. § 2901 et seq.; 12 CFR Part 25
+
+**Agent CRA Controls:**
+- `cra_eligible` flag set when: loan is in LMI census tract OR commercial loan ≤ $1M (small business)
+- CRA-eligible loans are surfaced in the Loan Register for CRA LAR reporting
+- Geographic flag analysis assists in identifying LMI geography
+
+**Examination Use:** CRA examiners review lending distribution by geography. The HMDA-reportable flag and `property_census_tract` enable generation of CRA performance data.
+
+---
+
+## Truth in Lending Act (TILA) / Regulation Z
+**Citation:** 15 U.S.C. § 1601 et seq.; 12 CFR Part 1026
+
+**Scope:** Agent generates loan structure documentation but does not generate TILA disclosures (Loan Estimate, Closing Disclosure). These are generated by the LOS/closing system.
+
+**Agent Contribution:**
+- `quoted_rate` is captured in state and surfaced in credit memo
+- `pricing_override` is flagged for fair lending monitoring and logged in audit trail
+- `proposed_monthly_payment` is calculated using standard amortization formula
+
+---
+
+## BSA / OFAC / Customer Identification Program
+**Citation:** 31 U.S.C. § 5311 et seq.; 31 CFR Chapter X; 31 CFR § 1020.220
+
+### OFAC Screening
+**Architecture:** OFAC check is performed in `credit_bureau_pull_node` — the first node to access applicant identity data.
+
+| OFAC Control | Implementation |
+|-------------|---------------|
+| Hard block on match | `ofac_hit = True` → sets `hard_decline_triggered = True` in `risk_scoring_node` |
+| Cannot be overridden | `OFAC_MATCH` adverse action reason selected; `sar_referral = True` in `finalize_decision_node` |
+| BSA Officer routing | `assigned_underwriter = "BSA_OFFICER"` in `routing_decision_node` |
+| SAR referral | `sar_referral = True` — BSA Officer initiates FinCEN filing evaluation |
+
+**Critical:** `ofac_hit = True` cannot be cleared by any downstream node. The field is set by `credit_bureau_pull_node` and only read (never written) by subsequent nodes.
+
+### Customer Identification Program (CIP)
+| CIP Requirement | Agent Control |
+|----------------|--------------|
+| Identity verification before credit decision | `document_verification_node`: `GOVERNMENT_ID` + `CREDIT_AUTHORIZATION` required; `identity_verified` flag set |
+| CIP method documented | `cip_method` field: `DOCUMENTARY` or `NON_DOCUMENTARY` |
+| Exception if ID not verified | CIP exception added to `document_exceptions`; surfaced to underwriter |
+
+---
+
+## SR 11-7 — Model Risk Management
+**Citation:** Federal Reserve SR 11-7 (April 2011); OCC Bulletin 2011-12; FDIC FIL-22-2017
+
+The credit risk scoring model in this agent is a "model" under SR 11-7 and requires governance controls.
+
+### 5-Factor Composite Model
+
+| Factor | Weight | Measurement | Rationale |
+|--------|--------|------------|-----------|
+| Credit Score | 30% | FICO to normalized 0–1 curve | Primary historical predictor of default |
+| DTI | 25% | Total DTI including proposed payment | Ability to repay (ATR) principal factor |
+| LTV | 20% | Loan-to-value at origination | Loss severity in default scenario |
+| Cash Flow / DSCR | 15% | DSCR (commercial) / residual income (consumer) | Ongoing repayment capacity |
+| Collateral | 10% | Collateral type risk weight | Recovery in default |
+
+### Hard Decline Rules (Not Model Outputs — Bright-Line Policy)
+
+```python
+# These are policy rules, not model outputs.
+# They are not subject to SR 11-7 model validation
+# but must be documented in credit policy.
+
+HARD_DECLINE_DTI_MAX = 0.50          # Total DTI
+FICO_MIN_CONVENTIONAL = 580          # FNMA/FHLMC minimum
+FICO_MIN_JUMBO = 680                 # Institution portfolio overlay
+BANKRUPTCY_CH7_SEASONING_YEARS = 2   # Chapter 7 minimum seasoning
+BANKRUPTCY_CH13_SEASONING_YEARS = 1  # Chapter 13 minimum seasoning
+# OFAC match → always hard decline + SAR referral
+```
+
+### SR 11-7 Required Controls
+
+| SR 11-7 Requirement | Agent Implementation |
+|--------------------|---------------------|
+| Model documentation | `underwriting_guidelines.json` — `sr_11_7_model_governance` section |
+| Factor weights documented | Fixed constants in `nodes.py`; replicated in `underwriting_guidelines.json` |
+| Decision thresholds documented | Tier bounds in `underwriting_guidelines.json` |
+| Factor-by-factor output | `score_breakdown` dict in state — logged to audit trail for every application |
+| Human override capability | HITL gate for REFER_TO_COMMITTEE, DECLINE, and fair lending flags |
+| Override documentation | `exception_approved` + `exception_authority` + `exceptions_narrative` (LLM-drafted) |
+| Annual validation | Backtesting against actual default outcomes — scheduled annually |
+| Conceptual soundness | Factor selection rationale documented in this file |
+
+### Examination Q&A
+
+**Q: How are model decisions explained to examiners?**
+A: Every application state includes `score_breakdown` — a factor-by-factor JSON document with weights and individual factor scores. The `audit_trail` links every model output to its inputs with timestamps.
+
+**Q: Can the model approve a loan that violates credit policy?**
+A: No. Hard decline rules (DTI > 50%, FICO minimums, OFAC, bankruptcy seasoning) are Python constants evaluated before the composite score tier is applied. A high composite score cannot override a hard decline.
+
+**Q: How are model overrides documented?**
+A: `exception_approved = True`, `exception_authority = reviewer_id`, and `exceptions_narrative` (LLM-drafted justification) are captured in state and logged to the audit trail. The `pricing_override` field captures rate changes for fair lending monitoring.
+
+**Q: What if the model's performance degrades over time?**
+A: SR 11-7 requires ongoing monitoring. In production: CloudWatch alarms on approval rate drift, decline rate by segment, and DSCR prediction accuracy. Annual backtesting against realized defaults.
+
+---
+
+## Regulation B — Adverse Action
+
+### Standard Adverse Action Reasons (12 CFR § 1002, Appendix C)
+
+The `AdverseActionReason` enum in `state.py` maps to the Reg B standard list:
+
+| Enum Value | Reg B Text |
+|-----------|-----------|
+| INSUFFICIENT_INCOME | Insufficient income |
+| EXCESSIVE_OBLIGATIONS | Excessive obligations in relation to income |
+| DTI_TOO_HIGH | Total obligations in relation to income |
+| CREDIT_SCORE_TOO_LOW | Credit score below minimum threshold |
+| BANKRUPTCY | Bankruptcy |
+| POOR_CREDIT_PERFORMANCE | Poor credit performance — delinquent obligations |
+| COLLECTION_ACTION_JUDGMENT | Collection action or judgment |
+| FORECLOSURE_REPOSSESSION | Foreclosure or repossession |
+| INADEQUATE_COLLATERAL | Inadequate collateral |
+| OFAC_MATCH | Unable to process — regulatory restriction |
+| INCOMPLETE_APPLICATION | Credit application incomplete |
+
+**Selection Logic:** Adverse action reasons are selected by `risk_scoring_node` based on which factors drove the decline. The LLM drafts the notice using these pre-selected reasons — it cannot add, remove, or rephrase them.
+
+---
+
+## SBA Lending
+
+### SBA 7(a) — 13 CFR Part 120; SOP 50 10 7
+- SBA guarantee (up to 75%) treated as collateral factor in scoring
+- `SBA_FORMS_1919_1920` required in document checklist
+- DSCR minimum 1.15 (below the 1.25 standard commercial threshold)
+- Environmental assessment not required for most SBA 7(a) equipment loans
+
+### SBA 504 — 13 CFR Part 120 Subpart D; SOP 50 55
+- First lien (bank) ≤ 50% LTV; CDC debenture 40%; borrower equity ≥ 10%
+- Project amount tracked separately from bank's loan amount
+- Job creation / retention requirement for project eligibility
+
+---
+
+## Fair Lending Examination Readiness
+
+When a fair lending examiner reviews this agent's output:
+
+1. **HMDA LAR** — `hmda_reportable` flag and `hmda_action_taken` code enable LAR generation
+2. **Pricing analysis** — `quoted_rate`, `pricing_override`, and `pricing_exception_flag` enable rate spread analysis
+3. **Geographic analysis** — `property_census_tract` enables denial concentration mapping
+4. **Steering analysis** — `steering_flag` documents cases where FHA was used when conventional may have been available
+5. **Adverse action consistency** — `adverse_action_reasons` are selected from the Reg B standard list; consistency across applications is auditable from the Loan Register

@@ -1,0 +1,199 @@
+{
+  "_metadata": {
+    "version": "1.0",
+    "effective_date": "2026-01-01",
+    "governance": "SR 11-7 Model Risk Management",
+    "approved_by": "Chief Credit Officer",
+    "next_review": "2027-01-01",
+    "description": "Credit underwriting policy thresholds by loan type. All hard limits are enforced in Python code (nodes.py). Threshold changes require model re-deployment and CCO approval."
+  },
+
+  "CONVENTIONAL_MORTGAGE": {
+    "max_total_dti": 0.43,
+    "hard_decline_dti": 0.50,
+    "max_front_end_dti": 0.28,
+    "min_fico": 580,
+    "max_ltv": 0.97,
+    "max_ltv_without_pmi": 0.80,
+    "min_reserves_months": 2,
+    "max_loan_amount": 766550,
+    "documentation": "FULL_DOC",
+    "regulatory_basis": ["FNMA B3-6-02", "FHLMC 5306.1", "12 CFR 1026 (Reg Z)", "12 CFR 1003 (HMDA)"]
+  },
+
+  "FHA_MORTGAGE": {
+    "max_total_dti": 0.43,
+    "hard_decline_dti": 0.50,
+    "max_front_end_dti": 0.31,
+    "min_fico_max_ltv": 580,
+    "min_fico_reduced_ltv": 500,
+    "max_ltv_580_plus": 0.965,
+    "max_ltv_500_579": 0.90,
+    "max_loan_amount": 498257,
+    "min_reserves_months": 0,
+    "documentation": "FULL_DOC",
+    "regulatory_basis": ["HUD Handbook 4000.1", "12 CFR 203 (HMDA)", "24 CFR Part 203"]
+  },
+
+  "VA_MORTGAGE": {
+    "max_total_dti": 0.41,
+    "hard_decline_dti": 0.50,
+    "max_front_end_dti": null,
+    "min_fico": 620,
+    "max_ltv": 1.00,
+    "funding_fee_required": true,
+    "residual_income_check": true,
+    "min_reserves_months": 0,
+    "documentation": "FULL_DOC",
+    "regulatory_basis": ["VA Lender's Handbook Ch.4", "38 CFR Part 36", "12 CFR 1003 (HMDA)"]
+  },
+
+  "JUMBO_MORTGAGE": {
+    "max_total_dti": 0.43,
+    "hard_decline_dti": 0.45,
+    "max_front_end_dti": 0.28,
+    "min_fico": 680,
+    "max_ltv": 0.85,
+    "max_ltv_without_pmi": 0.80,
+    "min_reserves_months": 6,
+    "documentation": "FULL_DOC",
+    "note": "Portfolio product — institution-specific overlays apply",
+    "regulatory_basis": ["OCC 12 CFR Part 34", "12 CFR 1003 (HMDA)", "12 CFR 1026 (Reg Z)"]
+  },
+
+  "HELOC": {
+    "max_cltv": 0.85,
+    "hard_decline_cltv": 0.95,
+    "min_fico": 660,
+    "max_total_dti": 0.43,
+    "hard_decline_dti": 0.50,
+    "max_line_amount": 500000,
+    "draw_period_months": 120,
+    "repayment_period_months": 240,
+    "regulatory_basis": ["12 CFR 1026.40 (Reg Z — HELOCs)", "12 CFR 1003 (HMDA)"]
+  },
+
+  "COMMERCIAL_REAL_ESTATE": {
+    "min_dscr": 1.25,
+    "target_dscr": 1.35,
+    "max_ltv": 0.75,
+    "hard_decline_ltv": 0.80,
+    "min_fico": 680,
+    "max_total_dti": 0.45,
+    "hard_decline_dti": 0.50,
+    "max_loan_amount": 15000000,
+    "min_occupancy_pct": 0.85,
+    "environmental_required": true,
+    "appraisal_required": true,
+    "committee_threshold": 2000000,
+    "regulatory_basis": ["OCC 12 CFR Part 34", "FDIC Part 365", "FFIEC CRE Guidance 2006"]
+  },
+
+  "COMMERCIAL_TERM_LOAN": {
+    "min_dscr": 1.25,
+    "target_dscr": 1.35,
+    "max_ltv": 0.80,
+    "min_fico": 680,
+    "max_total_dti": 0.45,
+    "hard_decline_dti": 0.50,
+    "max_loan_amount": 10000000,
+    "years_in_business_min": 2,
+    "committee_threshold": 2000000,
+    "regulatory_basis": ["OCC 12 CFR Part 30", "FDIC Part 323", "SR 11-7 (model governance)"]
+  },
+
+  "SBA_7A": {
+    "min_dscr": 1.15,
+    "target_dscr": 1.25,
+    "max_ltv": 0.90,
+    "min_fico": 640,
+    "max_loan_amount": 5000000,
+    "sba_guarantee_pct": 0.75,
+    "sba_fee": true,
+    "years_in_business_min": 0,
+    "committee_threshold": 1000000,
+    "regulatory_basis": ["15 U.S.C. § 636(a)", "13 CFR Part 120", "SOP 50 10 7"]
+  },
+
+  "SBA_504": {
+    "min_dscr": 1.20,
+    "max_ltv_first_lien": 0.50,
+    "max_ltv_total": 0.90,
+    "min_fico": 660,
+    "max_project_amount": 20000000,
+    "cdc_debenture_pct": 0.40,
+    "borrower_equity_pct": 0.10,
+    "regulatory_basis": ["15 U.S.C. § 695", "13 CFR Part 120 Subpart D", "SOP 50 55"]
+  },
+
+  "CONSUMER_PERSONAL": {
+    "max_total_dti": 0.43,
+    "hard_decline_dti": 0.50,
+    "min_fico": 600,
+    "max_loan_amount": 50000,
+    "max_term_months": 84,
+    "collateral": "UNSECURED",
+    "regulatory_basis": ["12 CFR 1026 (Reg Z)", "15 U.S.C. § 1691 (ECOA)", "12 CFR 1002 (Reg B)"]
+  },
+
+  "AUTO": {
+    "max_total_dti": 0.43,
+    "hard_decline_dti": 0.50,
+    "min_fico": 580,
+    "max_ltv": 1.25,
+    "max_loan_amount": 150000,
+    "max_term_months": 84,
+    "regulatory_basis": ["12 CFR 1026 (Reg Z)", "15 U.S.C. § 1691 (ECOA)"]
+  },
+
+  "CREDIT_CARD_LINE": {
+    "max_total_dti": 0.40,
+    "hard_decline_dti": 0.50,
+    "min_fico": 620,
+    "max_line_amount": 30000,
+    "regulatory_basis": ["12 CFR 1026 (Reg Z — Cards)", "15 U.S.C. § 1691 (ECOA)", "Card Act 2009"]
+  },
+
+  "fair_lending_policy": {
+    "geographic_review_tracts": ["17031838400", "06037207400", "36061010000"],
+    "pricing_exception_threshold_bps": 150,
+    "steering_dti_threshold": 0.43,
+    "steering_credit_score_threshold": 620,
+    "adverse_action_deadline_days": 30,
+    "adverse_action_max_reasons": 4,
+    "quarterly_fair_lending_review": true,
+    "hmda_reportable_types": ["CONVENTIONAL_MORTGAGE", "FHA_MORTGAGE", "VA_MORTGAGE", "JUMBO_MORTGAGE", "HELOC"],
+    "regulatory_basis": ["15 U.S.C. § 1691 (ECOA)", "12 CFR 1002 (Reg B)", "42 U.S.C. § 3601 (FHA)", "12 CFR 1003 (HMDA)", "12 U.S.C. § 2901 (CRA)"]
+  },
+
+  "sr_11_7_model_governance": {
+    "model_name": "credit-underwriting-composite-v1.0",
+    "model_type": "Credit Risk Scoring",
+    "weights": {
+      "credit_score_factor": 0.30,
+      "dti_factor": 0.25,
+      "ltv_factor": 0.20,
+      "cash_flow_factor": 0.15,
+      "collateral_factor": 0.10
+    },
+    "decision_thresholds": {
+      "APPROVE": {"min": 0.75, "max": 1.00},
+      "APPROVE_WITH_CONDITIONS": {"min": 0.55, "max": 0.749},
+      "REFER_TO_COMMITTEE": {"min": 0.35, "max": 0.549},
+      "DECLINE": {"min": 0.00, "max": 0.349}
+    },
+    "hard_decline_rules": [
+      "total_dti > 0.50",
+      "ofac_hit == true",
+      "fico < 580 AND loan_type IN (CONVENTIONAL_MORTGAGE, FHA_MORTGAGE)",
+      "fico < 680 AND loan_type == JUMBO_MORTGAGE",
+      "chapter_7_bankruptcy AND discharge_years < 2",
+      "chapter_13_bankruptcy AND discharge_years < 1"
+    ],
+    "model_owner": "Chief Credit Officer",
+    "last_validated": "2026-01-01",
+    "next_validation": "2027-01-01",
+    "validation_frequency": "Annual",
+    "override_documentation_required": true
+  }
+}

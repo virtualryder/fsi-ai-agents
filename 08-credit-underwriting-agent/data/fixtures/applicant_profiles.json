@@ -1,0 +1,81 @@
+{
+  "APP-001": {
+    "existing_relationship": true,
+    "existing_deposit_balance": 42500.00,
+    "credit_bureau": {
+      "credit_score": 742,
+      "credit_score_model": "FICO_8",
+      "derogatory_marks": 1,
+      "bankruptcy_flag": false,
+      "bankruptcy_chapter": null,
+      "bankruptcy_discharge_years": null,
+      "foreclosure_flag": false,
+      "collections_count": 1,
+      "collections_balance": 850.00,
+      "thin_file_flag": false,
+      "recent_inquiries_90d": 2,
+      "ofac_hit": false
+    },
+    "_notes": "Established customer with good credit, minor medical collection. Target: APPROVE_WITH_CONDITIONS for conventional mortgage."
+  },
+
+  "APP-002": {
+    "existing_relationship": false,
+    "existing_deposit_balance": 0.00,
+    "credit_bureau": {
+      "credit_score": 598,
+      "credit_score_model": "FICO_8",
+      "derogatory_marks": 4,
+      "bankruptcy_flag": true,
+      "bankruptcy_chapter": "CHAPTER_7",
+      "bankruptcy_discharge_years": 1.2,
+      "foreclosure_flag": false,
+      "collections_count": 3,
+      "collections_balance": 8750.00,
+      "thin_file_flag": false,
+      "recent_inquiries_90d": 5,
+      "ofac_hit": false
+    },
+    "_notes": "New applicant, Chapter 7 < 2 years ago. Target: DECLINE (hard rule: bankruptcy seasoning). Demonstrates adverse action notice flow."
+  },
+
+  "APP-003": {
+    "existing_relationship": true,
+    "existing_deposit_balance": 285000.00,
+    "credit_bureau": {
+      "credit_score": 781,
+      "credit_score_model": "FICO_8",
+      "derogatory_marks": 0,
+      "bankruptcy_flag": false,
+      "bankruptcy_chapter": null,
+      "bankruptcy_discharge_years": null,
+      "foreclosure_flag": false,
+      "collections_count": 0,
+      "collections_balance": 0.00,
+      "thin_file_flag": false,
+      "recent_inquiries_90d": 1,
+      "ofac_hit": false
+    },
+    "_notes": "Strong commercial applicant. DSCR calculated from NOI/debt service. Target: REFER_TO_COMMITTEE (loan size > $2M). Demonstrates committee HITL flow."
+  },
+
+  "APP-004": {
+    "existing_relationship": false,
+    "existing_deposit_balance": 0.00,
+    "credit_bureau": {
+      "credit_score": 715,
+      "credit_score_model": "FICO_8",
+      "derogatory_marks": 0,
+      "bankruptcy_flag": false,
+      "bankruptcy_chapter": null,
+      "bankruptcy_discharge_years": null,
+      "foreclosure_flag": false,
+      "collections_count": 0,
+      "collections_balance": 0.00,
+      "thin_file_flag": false,
+      "recent_inquiries_90d": 1,
+      "ofac_hit": false
+    },
+    "_notes": "SBA 7(a) applicant, clean credit, adequate DSCR. Target: APPROVE. Demonstrates auto-approval flow without HITL."
+  }
+}

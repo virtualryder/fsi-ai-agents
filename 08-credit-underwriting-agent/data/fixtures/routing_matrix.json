@@ -1,0 +1,105 @@
+{
+  "_metadata": {
+    "description": "Routing rules for credit applications — determines assigned reviewer and escalation path based on loan type, amount, risk tier, and flags.",
+    "governance": "Credit Policy — Delegation of Authority Matrix",
+    "approved_by": "Chief Credit Officer",
+    "effective_date": "2026-01-01"
+  },
+
+  "delegation_of_authority": {
+    "CONSUMER_UNDERWRITER": {
+      "max_loan_amount": 250000,
+      "eligible_loan_types": ["CONSUMER_PERSONAL", "AUTO", "CREDIT_CARD_LINE"],
+      "eligible_risk_tiers": ["APPROVE", "APPROVE_WITH_CONDITIONS"],
+      "hitl_required": false,
+      "description": "Consumer underwriter — auto-decision eligible for standard consumer products"
+    },
+    "RESIDENTIAL_UNDERWRITER": {
+      "max_loan_amount": 766550,
+      "eligible_loan_types": ["CONVENTIONAL_MORTGAGE", "FHA_MORTGAGE", "VA_MORTGAGE", "HELOC"],
+      "eligible_risk_tiers": ["APPROVE", "APPROVE_WITH_CONDITIONS"],
+      "hitl_required": false,
+      "description": "Residential underwriter — agency conforming products"
+    },
+    "SENIOR_RESIDENTIAL_UNDERWRITER": {
+      "max_loan_amount": 2000000,
+      "eligible_loan_types": ["JUMBO_MORTGAGE", "HELOC"],
+      "eligible_risk_tiers": ["APPROVE", "APPROVE_WITH_CONDITIONS", "REFER_TO_COMMITTEE"],
+      "hitl_required": true,
+      "description": "Senior underwriter — jumbo and high-value residential"
+    },
+    "COMMERCIAL_UNDERWRITER": {
+      "max_loan_amount": 2000000,
+      "eligible_loan_types": ["COMMERCIAL_TERM_LOAN", "SBA_7A", "SBA_504"],
+      "eligible_risk_tiers": ["APPROVE", "APPROVE_WITH_CONDITIONS"],
+      "hitl_required": false,
+      "description": "Commercial underwriter — small business and SBA below committee threshold"
+    },
+    "CREDIT_COMMITTEE": {
+      "max_loan_amount": 50000000,
+      "eligible_loan_types": ["COMMERCIAL_REAL_ESTATE", "COMMERCIAL_TERM_LOAN", "SBA_7A", "SBA_504", "JUMBO_MORTGAGE"],
+      "eligible_risk_tiers": ["APPROVE", "APPROVE_WITH_CONDITIONS", "REFER_TO_COMMITTEE"],
+      "hitl_required": true,
+      "quorum_required": 3,
+      "description": "Credit committee — large commercial, CRE, all REFER_TO_COMMITTEE tier"
+    },
+    "COMPLIANCE_OFFICER": {
+      "max_loan_amount": null,
+      "eligible_loan_types": "ALL",
+      "eligible_risk_tiers": "ALL",
+      "hitl_required": true,
+      "trigger": "fair_lending_review_required == true",
+      "description": "Compliance officer — mandatory for all fair lending flags (ECOA / Reg B)"
+    },
+    "BSA_OFFICER": {
+      "max_loan_amount": null,
+      "eligible_loan_types": "ALL",
+      "eligible_risk_tiers": "ALL",
+      "hitl_required": true,
+      "trigger": "ofac_hit == true",
+      "auto_sar_referral": true,
+      "description": "BSA Officer — mandatory for OFAC matches; SAR evaluation required"
+    }
+  },
+
+  "escalation_triggers": {
+    "committee_required": [
+      "requested_amount > 2000000",
+      "risk_tier == REFER_TO_COMMITTEE",
+      "fair_lending_review_required AND requested_amount > 500000",
+      "loan_type == COMMERCIAL_REAL_ESTATE"
+    ],
+    "senior_underwriter_required": [
+      "loan_type == JUMBO_MORTGAGE",
+      "requested_amount > 766550 AND loan_type in (CONVENTIONAL_MORTGAGE, HELOC)",
+      "document_exceptions_present AND risk_tier == APPROVE"
+    ],
+    "bsa_officer_required": [
+      "ofac_hit == true"
+    ],
+    "compliance_officer_required": [
+      "fair_lending_review_required == true",
+      "pricing_exception_flag == true",
+      "steering_flag == true",
+      "geographic_flag == true"
+    ]
+  },
+
+  "sla_hours": {
+    "CONSUMER_UNDERWRITER": 4,
+    "RESIDENTIAL_UNDERWRITER": 24,
+    "SENIOR_RESIDENTIAL_UNDERWRITER": 48,
+    "COMMERCIAL_UNDERWRITER": 48,
+    "CREDIT_COMMITTEE": 120,
+    "COMPLIANCE_OFFICER": 24,
+    "BSA_OFFICER": 4
+  },
+
+  "adverse_action_routing": {
+    "decline_notification_method": "WRITTEN_NOTICE",
+    "deadline_days": 30,
+    "required_for_all_declines": true,
+    "credit_score_disclosure_required": true,
+    "regulatory_basis": "12 CFR 1002.9 (Reg B) — ECOA"
+  }
+}
