@@ -1,0 +1,113 @@
+{
+  "rules": [
+    {
+      "rule_id": "RULE-LAY-001",
+      "name": "Order Cancellation Rate — Layering Indicator",
+      "pattern": "LAYERING_SPOOFING",
+      "description": "Detects high order cancellation rate combined with opposite-side orders on same instrument",
+      "thresholds": {
+        "cancel_rate_trigger": 0.80,
+        "minimum_order_count": 5,
+        "requires_opposite_side": true
+      },
+      "regulatory_basis": "Dodd-Frank Section 747; SEA Section 9(a)(2)",
+      "active": true
+    },
+    {
+      "rule_id": "RULE-FRN-001",
+      "name": "Proprietary Trade Ahead of Customer Order",
+      "pattern": "FRONT_RUNNING",
+      "description": "Detects proprietary trading in same direction as pending customer order",
+      "thresholds": {
+        "time_gap_seconds_trigger": 60,
+        "minimum_customer_order_usd": 500000
+      },
+      "regulatory_basis": "FINRA Rule 5270; SEA Section 10(b)",
+      "active": true
+    },
+    {
+      "rule_id": "RULE-WSH-001",
+      "name": "Related Account Round-Trip Trading",
+      "pattern": "WASH_TRADING",
+      "description": "Detects buy and sell of same instrument between related/affiliated accounts",
+      "thresholds": {
+        "requires_related_accounts": true,
+        "same_instrument_both_sides": true
+      },
+      "regulatory_basis": "SEA Section 9(a)(1); CFTC CEA Section 4c(a)",
+      "active": true
+    },
+    {
+      "rule_id": "RULE-INS-001",
+      "name": "Restricted List Violation",
+      "pattern": "INFORMATION_BARRIER_BREACH",
+      "description": "Detects trading in instrument on firm restricted list",
+      "thresholds": {
+        "requires_restricted_list_hit": true
+      },
+      "regulatory_basis": "SEC Rule 10b-5; Regulation FD; FINRA Rule 3110",
+      "active": true
+    },
+    {
+      "rule_id": "RULE-MRK-001",
+      "name": "End-of-Day Concentration — Marking the Close",
+      "pattern": "MARKING_THE_CLOSE",
+      "description": "Detects disproportionate trading volume in final 30 minutes of trading session",
+      "thresholds": {
+        "pct_volume_last_30_min_trigger": 0.25,
+        "closing_price_impact_bps_trigger": 10
+      },
+      "regulatory_basis": "SEA Section 9(a)(2); FINRA Rule 5210",
+      "active": true
+    },
+    {
+      "rule_id": "RULE-SSH-001",
+      "name": "Short Sale Without Locate",
+      "pattern": "SHORT_SELLING_VIOLATION",
+      "description": "Detects short sale execution without documented locate or failure to deliver",
+      "thresholds": {
+        "requires_short_sale": true,
+        "locate_obtained_false": true
+      },
+      "regulatory_basis": "SEC Regulation SHO Rule 203; Rule 204",
+      "active": true
+    },
+    {
+      "rule_id": "RULE-EXT-001",
+      "name": "Excessive Trading — Portfolio Turnover",
+      "pattern": "EXCESSIVE_TRADING",
+      "description": "Detects annualized portfolio turnover exceeding threshold for account type",
+      "thresholds": {
+        "annualized_turnover_retail_trigger": 6.0,
+        "annualized_turnover_institutional_trigger": 12.0
+      },
+      "regulatory_basis": "FINRA Rule 2111; FINRA Rule 2010",
+      "active": true
+    },
+    {
+      "rule_id": "RULE-BEX-001",
+      "name": "Best Execution — Systematic Price Deviation",
+      "pattern": "BEST_EXECUTION_FAILURE",
+      "description": "Detects systematic execution prices worse than NBBO by threshold amount",
+      "thresholds": {
+        "price_deviation_bps_trigger": 15,
+        "minimum_occurrence_count": 10
+      },
+      "regulatory_basis": "FINRA Rule 5310; Reg NMS Rule 611",
+      "active": true
+    }
+  ],
+  "sar_thresholds": {
+    "minimum_suspicious_amount_usd": 5000,
+    "mandatory_filing_alert_types": ["INSIDER_TRADING", "WASH_TRADING", "CROSS_MARKET_MANIPULATION"],
+    "filing_deadline_days": 30,
+    "continuing_activity_filing_days": 90
+  },
+  "retention_requirements": {
+    "surveillance_records_years": 3,
+    "sar_records_years": 5,
+    "correspondence_records_years": 3,
+    "order_records_years": 3,
+    "regulatory_basis": "FINRA Rule 4511; SEC Rule 17a-4; 31 CFR § 1010.430"
+  }
+}

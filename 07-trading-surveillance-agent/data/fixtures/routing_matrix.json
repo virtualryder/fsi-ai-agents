@@ -1,0 +1,55 @@
+{
+  "EQUITY": {
+    "primary": "EQUITIES_SURVEILLANCE_OFFICER",
+    "secondary": ["HEAD_OF_EQUITIES_COMPLIANCE", "CHIEF_COMPLIANCE_OFFICER"],
+    "legal_escalation_threshold": "CRITICAL",
+    "board_notification_threshold": "CRITICAL"
+  },
+  "FIXED_INCOME": {
+    "primary": "FIXED_INCOME_SURVEILLANCE_OFFICER",
+    "secondary": ["HEAD_OF_FIXED_INCOME_COMPLIANCE", "CHIEF_COMPLIANCE_OFFICER"],
+    "legal_escalation_threshold": "CRITICAL",
+    "board_notification_threshold": "CRITICAL"
+  },
+  "DERIVATIVES": {
+    "primary": "DERIVATIVES_SURVEILLANCE_OFFICER",
+    "secondary": ["HEAD_OF_DERIVATIVES_COMPLIANCE", "CHIEF_COMPLIANCE_OFFICER", "CFTC_LIAISON"],
+    "legal_escalation_threshold": "HIGH",
+    "board_notification_threshold": "CRITICAL"
+  },
+  "FX": {
+    "primary": "FX_SURVEILLANCE_OFFICER",
+    "secondary": ["HEAD_OF_FX_COMPLIANCE", "CHIEF_COMPLIANCE_OFFICER"],
+    "legal_escalation_threshold": "CRITICAL",
+    "board_notification_threshold": "CRITICAL"
+  },
+  "COMMODITIES": {
+    "primary": "COMMODITIES_SURVEILLANCE_OFFICER",
+    "secondary": ["HEAD_OF_COMMODITIES_COMPLIANCE", "CHIEF_COMPLIANCE_OFFICER", "CFTC_LIAISON"],
+    "legal_escalation_threshold": "HIGH",
+    "board_notification_threshold": "CRITICAL"
+  },
+  "CRYPTO": {
+    "primary": "DIGITAL_ASSETS_SURVEILLANCE_OFFICER",
+    "secondary": ["CHIEF_COMPLIANCE_OFFICER", "LEGAL_COUNSEL"],
+    "legal_escalation_threshold": "HIGH",
+    "board_notification_threshold": "HIGH",
+    "notes": "Enhanced scrutiny — regulatory framework still evolving"
+  },
+  "alert_type_overrides": {
+    "INSIDER_TRADING": {
+      "additional_reviewers": ["LEGAL_COUNSEL", "CHIEF_COMPLIANCE_OFFICER"],
+      "mandatory_hitl": true,
+      "mandatory_sar_evaluation": true
+    },
+    "INFORMATION_BARRIER_BREACH": {
+      "additional_reviewers": ["LEGAL_COUNSEL", "CHIEF_COMPLIANCE_OFFICER"],
+      "mandatory_hitl": true
+    },
+    "CROSS_MARKET_MANIPULATION": {
+      "additional_reviewers": ["LEGAL_COUNSEL"],
+      "mandatory_hitl": true,
+      "mandatory_regulator_notification_evaluation": true
+    }
+  }
+}

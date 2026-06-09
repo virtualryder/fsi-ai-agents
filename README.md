@@ -54,9 +54,11 @@ This suite delivers that reduction, use case by use case, in a way that satisfie
 │  │       $849K–$1.5M/yr · FFIEC · OCC · SR 11-7 · FDIC CMS           │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
 │                                                                             │
-│  COMING SOON                                                                │
+│  TRADING SURVEILLANCE                                                       │
 │  ┌──────────────────────────────────────────────────────────────────────┐   │
 │  │  07 · Trading Surveillance Agent                                    │   │
+│  │       11 alert types · Python rule engine · FINRA 3110 / Dodd-Frank │   │
+│  │       $2.6M/yr (6 analysts) · SR 11-7 · SAR automation · Reg SHO    │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -237,27 +239,32 @@ Security:
 
 ## Regulatory Coverage Map
 
-| Regulation | Agent 01 | Agent 02 | Agent 03 | Agent 04 | Agent 05 |
-|---|:---:|:---:|:---:|:---:|:---:|
-| BSA 31 U.S.C. § 5318 (SAR filing) | ✅ | ✅ | ✅ | ✅ | — |
-| FinCEN CDD Rule (31 CFR 1020.210) | ✅ | ✅ | ✅ | — | — |
-| OFAC IEEPA (SDN screening, 50% rule) | ✅ | ✅ | ✅ | ✅ | — |
-| FATF R.10 (Customer due diligence) | ✅ | — | ✅ | — | — |
-| FATF R.12 (PEP enhanced due diligence) | ✅ | ✅ | ✅ | — | — |
-| FATF R.20 (Suspicious transaction reporting) | ✅ | ✅ | — | ✅ | — |
-| USA PATRIOT Act § 326 (CIP) | ✅ | — | ✅ | — | — |
-| FIN-2014-G001 (SAR narrative format) | ✅ | — | — | — | — |
-| SR 11-7 (Model risk management) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| FFIEC BSA/AML Examination Manual | ✅ | ✅ | ✅ | — | — |
-| 18 U.S.C. § 1960 (No tipping off) | ✅ | — | — | — | ✅ |
-| 5-year BSA record retention | ✅ | ✅ | ✅ | ✅ | — |
-| Reg E (EFTA) — provisional credit | — | — | — | ✅ | — |
-| Nacha Rules (ACH fraud) | — | — | — | ✅ | — |
-| Reg BI (17 CFR 240.15l-1) | — | — | — | — | ✅ |
-| FINRA Rule 2111 (Suitability) | — | — | — | — | ✅ |
-| FINRA Rule 2210 (Communications) | — | — | — | — | ✅ |
-| ERISA (retirement account fiduciary) | — | — | — | — | ✅ |
-| GLBA (data privacy / PII) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Regulation | Agent 01 | Agent 02 | Agent 03 | Agent 04 | Agent 05 | Agent 06 | Agent 07 |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| BSA 31 U.S.C. § 5318 (SAR filing) | ✅ | ✅ | ✅ | ✅ | — | — | ✅ |
+| FinCEN CDD Rule (31 CFR 1020.210) | ✅ | ✅ | ✅ | — | — | ✅ | — |
+| OFAC IEEPA (SDN screening, 50% rule) | ✅ | ✅ | ✅ | ✅ | — | — | — |
+| FATF R.10 (Customer due diligence) | ✅ | — | ✅ | — | — | — | — |
+| FATF R.12 (PEP enhanced due diligence) | ✅ | ✅ | ✅ | — | — | — | — |
+| FATF R.20 (Suspicious transaction reporting) | ✅ | ✅ | — | ✅ | — | — | ✅ |
+| USA PATRIOT Act § 326 (CIP) | ✅ | — | ✅ | — | — | — | — |
+| FIN-2014-G001 (SAR narrative format) | ✅ | — | — | — | — | — | ✅ |
+| SR 11-7 (Model risk management) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| FFIEC BSA/AML Examination Manual | ✅ | ✅ | ✅ | — | — | ✅ | — |
+| 18 U.S.C. § 1960 (No tipping off) | ✅ | — | — | — | ✅ | — | ✅ |
+| 5-year BSA record retention | ✅ | ✅ | ✅ | ✅ | — | ✅ | — |
+| Reg E (EFTA) — provisional credit | — | — | — | ✅ | — | — | — |
+| Nacha Rules (ACH fraud) | — | — | — | ✅ | — | — | — |
+| Reg BI (17 CFR 240.15l-1) | — | — | — | — | ✅ | — | — |
+| FINRA Rule 2111 (Suitability) | — | — | — | — | ✅ | — | ✅ |
+| FINRA Rule 2210 (Communications) | — | — | — | — | ✅ | — | — |
+| FINRA Rule 3110 (Supervisory procedures) | — | — | — | — | — | — | ✅ |
+| FINRA Rule 4511 (Books and records) | — | — | — | — | — | — | ✅ |
+| ERISA (retirement account fiduciary) | — | — | — | — | ✅ | — | — |
+| GLBA (data privacy / PII) | ✅ | ✅ | ✅ | ✅ | ✅ | — | — |
+| Dodd-Frank § 747 (Spoofing ban) | — | — | — | — | — | — | ✅ |
+| SEC Regulation SHO (Short selling) | — | — | — | — | — | — | ✅ |
+| SEC Rule 10b-5 (Market manipulation) | — | — | — | — | — | — | ✅ |
 
 ---
 
@@ -271,7 +278,8 @@ Security:
 | 04 · Real-Time Fraud Detection | $2.3M fraud losses · 360 analyst hrs/week | $2.1M+ (regional bank) |
 | 05 · Wealth & RM Copilot | 35-40% RM time on admin · Reg BI gaps | $3.5M+ (50 RMs) |
 | 06 · Regulatory Change Management | 200-400 changes/year · exam findings | $849K–$1.5M+ (regional bank) |
-| **Full suite** | **End-to-end financial crime + fraud + wealth + compliance ops** | **$14.5M+ annually** |
+| 07 · Trading Surveillance | 800 alerts/month · 90%+ FP rate · FINRA fines | $2.6M+ (6-analyst team) |
+| **Full suite** | **End-to-end financial crime + fraud + wealth + compliance ops** | **$17M+ annually** |
 
 Payback period for full suite deployment: **< 6 months**
 

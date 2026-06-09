@@ -1,0 +1,104 @@
+[
+  {
+    "trader_id": "TRD-001",
+    "trader_name": "Alex Chen",
+    "desk": "EQUITIES_PROP",
+    "account_id": "ACCT-88421",
+    "account_risk_tier": "HIGH_RISK",
+    "pep_flag": false,
+    "employment_start": "2019-03-15",
+    "licenses": ["Series 7", "Series 63"],
+    "restricted_instruments": ["ACME", "GLOBEX", "TECHCO"],
+    "watch_instruments": ["MEDPHARMA", "FINTECH"],
+    "prior_alerts": [
+      {
+        "alert_id": "SURV-20240312-LAY-A1B2C3",
+        "alert_type": "LAYERING_SPOOFING",
+        "alert_date": "2024-03-12",
+        "instrument_id": "TECHCO",
+        "notional_value": 2500000,
+        "severity_tier": "HIGH",
+        "disposition": "CLOSED_NO_ACTION"
+      },
+      {
+        "alert_id": "SURV-20240618-FRN-D4E5F6",
+        "alert_type": "FRONT_RUNNING",
+        "alert_date": "2024-06-18",
+        "instrument_id": "GLOBEX",
+        "notional_value": 850000,
+        "severity_tier": "MEDIUM",
+        "disposition": "CLOSED_EXPLAINED"
+      },
+      {
+        "alert_id": "SURV-20241102-UNK-G7H8I9",
+        "alert_type": "UNUSUAL_ACTIVITY",
+        "alert_date": "2024-11-02",
+        "instrument_id": "ACME",
+        "notional_value": 1200000,
+        "severity_tier": "MEDIUM",
+        "disposition": "CLOSED_NO_ACTION"
+      }
+    ],
+    "supervisor": "Sarah Williams",
+    "last_training_date": "2025-01-15",
+    "notes": "Three prior alerts in 12 months. Flagged for enhanced supervision."
+  },
+  {
+    "trader_id": "TRD-002",
+    "trader_name": "Maria Santos",
+    "desk": "FIXED_INCOME_MM",
+    "account_id": "ACCT-22933",
+    "account_risk_tier": "STANDARD",
+    "pep_flag": false,
+    "employment_start": "2021-08-01",
+    "licenses": ["Series 7", "Series 63", "Series 65"],
+    "restricted_instruments": [],
+    "watch_instruments": ["CORP-BOND-XYZ"],
+    "prior_alerts": [],
+    "supervisor": "David Park",
+    "last_training_date": "2025-03-10",
+    "notes": "No prior alerts. Good standing."
+  },
+  {
+    "trader_id": "TRD-003",
+    "trader_name": "James O'Brien",
+    "desk": "DERIVATIVES_STRUCTURING",
+    "account_id": "ACCT-55789",
+    "account_risk_tier": "MEDIUM_RISK",
+    "pep_flag": false,
+    "employment_start": "2017-05-22",
+    "licenses": ["Series 7", "Series 63", "Series 3"],
+    "restricted_instruments": ["ENERGY-FUTURES-WTI"],
+    "watch_instruments": ["METALS-GOLD", "ENERGY-FUTURES-NG"],
+    "prior_alerts": [
+      {
+        "alert_id": "SURV-20241205-MRK-J1K2L3",
+        "alert_type": "MARKING_THE_CLOSE",
+        "alert_date": "2024-12-05",
+        "instrument_id": "METALS-GOLD",
+        "notional_value": 5800000,
+        "severity_tier": "HIGH",
+        "disposition": "PENDING_INVESTIGATION"
+      }
+    ],
+    "supervisor": "Helen Zhao",
+    "last_training_date": "2024-11-20",
+    "notes": "One prior alert under investigation. Medium-risk designation."
+  },
+  {
+    "trader_id": "TRD-004",
+    "trader_name": "Priya Patel",
+    "desk": "EQUITIES_PROP",
+    "account_id": "ACCT-31104",
+    "account_risk_tier": "STANDARD",
+    "pep_flag": false,
+    "employment_start": "2023-01-10",
+    "licenses": ["Series 7", "Series 63"],
+    "restricted_instruments": [],
+    "watch_instruments": [],
+    "prior_alerts": [],
+    "supervisor": "Sarah Williams",
+    "last_training_date": "2025-04-05",
+    "notes": "Junior trader, no prior alerts."
+  }
+]
