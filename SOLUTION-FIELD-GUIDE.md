@@ -5,17 +5,17 @@
 
 ---
 
-## The Platform Story: One Problem, Five Entry Points
+## The Platform Story: One Problem, Seven Entry Points
 
-Financial institutions lose **$274 billion annually** to the combined burden of financial crime compliance, KYC overhead, fraud losses, and RM administrative drag. That number isn't going away — regulatory requirements are tightening, not loosening.
+Financial institutions lose **$274 billion annually** to the combined burden of financial crime compliance, KYC overhead, fraud losses, RM administrative drag, regulatory change management, and market surveillance. That number isn't going away — regulatory requirements are tightening, not loosening.
 
 The status quo response is more analysts, more tools, and more complexity. The AI-native response is different: **let AI handle the high-volume, low-judgment work so your best people can focus on the 5% of decisions that actually require human expertise.**
 
-This suite is five purpose-built AI agents, each solving one high-cost problem. They are designed to be deployed independently — each delivers ROI on its own — but they share a common architecture, a common data model, and common regulatory controls. When deployed together, they form a closed-loop platform where every agent reinforces the others.
+This suite is seven purpose-built AI agents, each solving one high-cost problem. They are designed to be deployed independently — each delivers ROI on its own — but they share a common architecture, a common data model, and common regulatory controls. When deployed together, they form a closed-loop platform where every agent reinforces the others.
 
 ---
 
-## The Five-Agent Architecture
+## The Seven-Agent Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -50,6 +50,15 @@ This suite is five purpose-built AI agents, each solving one high-cost problem. 
 │  │   10+ hrs/week per RM reclaimed · $3.5M annually (50 RMs)              │   │
 │  └──────────────────────────────────────────────────────────────────────────┘   │
 │                                                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────────┐   │
+│  │  COMPLIANCE OPERATIONS LAYER                                             │   │
+│  │                                                                          │   │
+│  │  [06 · Regulatory Change Management] ─► [07 · Trading Surveillance]     │   │
+│  │   12-node gap analysis + remediation    11 alert types · Python rules   │   │
+│  │   9 regulatory sources · FFIEC/SR 11-7  FINRA 3110 · SAR automation    │   │
+│  │   $849K–$1.5M/yr (regional bank)        $2.6M/yr (6-analyst BD team)   │   │
+│  └──────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                 │
 │  SHARED PLATFORM LAYER (All Agents)                                             │
 │  LangGraph Orchestration · AWS Bedrock · Cognito + Okta/AD Auth                │
 │  Immutable Audit Trail · SR 11-7 Explainability · BSA/FATF Controls            │
@@ -71,6 +80,10 @@ The AML loop is the strongest linkage story:
 5. **Agent 04 (Fraud Detection)** runs in parallel to the AML loop. Fraud patterns it detects — account takeover, structured payments, new payee fraud — can generate SAR flags routed to Agent 01 for full investigation when patterns suggest money laundering layering.
 
 6. **Agent 05 (Wealth Copilot)** is the client-facing layer — operationally independent, but it uses the same KYC data that Agent 03 maintains. If an RM client triggers an adverse media hit or watchlist match via Agent 03, the Wealth Copilot can surface that context to the RM.
+
+7. **Agent 06 (Regulatory Change Management)** monitors 9 regulatory authorities continuously. When a BSA/AML final rule drops, it notifies Agent 01 and Agent 02 owners that threshold recalibration may be required. When a KYC/CDD rule changes, it notifies Agent 03's compliance owner with specific policy update tasks. Agent 06 is the connective tissue that keeps all other agents calibrated to current regulatory requirements.
+
+8. **Agent 07 (Trading Surveillance)** monitors trading activity across 11 market abuse patterns. When it identifies potential insider trading, it cross-notifies Agent 01 for BSA/SAR assessment. When wash trading is detected across related accounts, it triggers Agent 03 to run a perpetual monitoring refresh on the implicated accounts. When Agent 06 identifies a new Dodd-Frank or FINRA rule, it notifies Agent 07's surveillance officer that detection thresholds may need updating.
 
 ---
 
@@ -126,7 +139,27 @@ Phase 3 (Optional):    Agents 01 + 02
   → For wealth firms with trust/brokerage that also has AML obligations
 ```
 
-### Path D: Full-Suite (Large Regional Bank or Super Community Bank)
+### Path D: Broker-Dealer or Bank with Trading Desk
+**Lead with Agent 07 — trading surveillance is the CCO's exam-readiness problem.**
+
+```
+Phase 1 (Month 1-3):   Agent 07 (Trading Surveillance)
+  → Immediate FINRA 3110 WSP documentation value — every alert gets a disposition memo
+  → Buyer: Chief Compliance Officer, Head of Trading Surveillance
+  → 83% reduction in hours per HIGH alert; SAR automation for BSA-obligated BDs
+
+Phase 2 (Month 3-6):   Agent 06 (Regulatory Change Management)
+  → Natural follow-on: "your surveillance rules are now documented —
+    let's automate tracking when FINRA or the CFTC change them"
+  → When a spoofing rule or Reg SHO amendment drops, Agent 06 flags it
+    and automatically assigns remediation tasks to Agent 07's owner
+
+Phase 3 (Optional):    Agents 01 + 03
+  → For BDs with AML/BSA obligations (most FINRA members)
+  → Agent 07 insider trading flags feed directly to Agent 01 investigation workflow
+```
+
+### Path E: Full-Suite (Large Regional Bank or Super Community Bank)
 **Lead with the platform vision — individual agents are the proof points.**
 
 ```
@@ -134,6 +167,8 @@ Phase 1: Proof of concept on Agent 02 (fastest to stand up, most dramatic demo)
 Phase 2: Expand to Agent 01 + 03 in parallel (6 months post-POC)
 Phase 3: Agent 04 for card/payments business unit (12 months)
 Phase 4: Agent 05 for wealth/private banking division (12-18 months)
+Phase 5: Agent 06 for compliance operations team (15-18 months)
+Phase 6: Agent 07 if institution has trading desk or broker-dealer subsidiary (18-24 months)
 ```
 
 ---
@@ -146,11 +181,13 @@ Different personas care about different agents. Know who's in the room.
 |---------|-------------|-----------|----------------------|
 | **BSA Officer / Chief Compliance Officer** | Regulatory risk, exam findings, SAR quality | Agent 01 + 02 | "examination-ready audit trail, FFIEC-aligned, SR 11-7 compliant" |
 | **Financial Crime Ops Leader / VP AML** | Analyst capacity, queue management, FP rates | Agent 02 | "50% queue reduction, analysts focus on real alerts" |
-| **CRO / Chief Risk Officer** | Holistic risk posture, model risk, regulatory posture | Full suite | "$7.9M+ annual savings, <6 month payback, regulatory controls as code" |
+| **CRO / Chief Risk Officer** | Holistic risk posture, model risk, regulatory posture | Full suite | "$17M+ annual savings, <6 month payback, regulatory controls as code" |
 | **CIO / CTO** | Integration complexity, AWS-native, security | Architecture | "LangGraph DAG, ECS Fargate, Bedrock, Cognito + Okta/AD, Terraform IaC" |
 | **CFO / COO** | Fraud losses, operational cost, headcount | Agent 04 + 02 | "65% fraud loss reduction, $4M AML labor savings — hard P&L impact" |
 | **Head of Wealth / Private Banking** | RM productivity, Reg BI, client retention | Agent 05 | "10+ hrs/week per RM reclaimed, $3.5M annually (50 RMs)" |
 | **Head of Fraud** | False positive rate, real-time detection, Reg E | Agent 04 | "40% FP reduction, sub-200ms detection, auto Reg E disclosure" |
+| **Head of Trading Surveillance / Market Risk** | Alert volume, FINRA 3110 WSP, SAR obligations | Agent 07 | "83% reduction in hours/alert, auto disposition memos, FINRA exam-ready" |
+| **Regulatory Change Manager / CCO (compliance ops)** | 200-400 changes/year, exam findings, policy gaps | Agent 06 | "92% time reduction per change, $849K–$1.5M/yr, FFIEC/SR 11-7 documented" |
 | **Internal Audit / Exam Prep** | Audit trail, model documentation, defensibility | All agents | "every decision is explainable, cited, and examination-ready" |
 
 ---
@@ -255,6 +292,49 @@ Different personas care about different agents. Know who's in the room.
 
 ---
 
+### Agent 06 · Regulatory Change Management Agent
+**The headline:** *"You receive 300 regulatory updates per year. Each one takes 8–40 hours to analyze manually. There's a better way."*
+
+**The problem narrative:** A mid-size bank's 4-person compliance team is the last line of defense between a new OCC bulletin and a Matters Requiring Attention. They read the publication, search for the affected policies, write a gap analysis, draft a remediation plan, and notify the business units — all manually. At 26 hours per HIGH-impact change and 250 changes per year, the math doesn't work. Backlogs accumulate. Gaps get missed. Examiners ask about the same unclosed items year after year.
+
+**The AI-native answer:** Agent 06 automates the entire regulatory change workflow as a 12-node LangGraph pipeline. It ingests changes from 9 regulatory authorities (FinCEN, OCC, Federal Reserve, FDIC, CFPB, SEC, FINRA, NCUA, FATF), validates the source, maps the regulatory domain to affected business lines and policies from the institution's policy registry, runs an LLM-powered gap analysis against current policies, scores impact with a Python composite model (SR 11-7 documented), and routes CRITICAL/HIGH changes to the CCO for HITL review. For approved changes, it drafts the remediation plan with tasks, owners, and deadlines — and sends tailored notifications to each stakeholder.
+
+**The exam-readiness angle:** When an examiner asks "what did you do about the FinCEN AML Effectiveness final rule?" — the answer is a timestamped, CCO-approved gap analysis with a remediation plan showing every task status. That's the difference between a finding and a compliment.
+
+**The SR 11-7 story:** The impact scoring model is Python-only — 5 weighted factors, fixed weights, no LLM in the routing decision. Weight changes require CCO authentication and are logged. That's the model risk management story examiners want to hear.
+
+**Discovery questions:**
+- How do you currently track and analyze regulatory changes from FinCEN, OCC, CFPB, and your other regulators?
+- How many hours does your compliance team spend per regulatory change, and what's your current backlog?
+- Have you had any examination findings related to regulatory change implementation gaps?
+- How do you document your gap analysis and remediation planning for examiner review?
+- Do you have a systematic process for notifying business units of their obligations when a new rule drops?
+
+---
+
+### Agent 07 · Trading Surveillance Agent
+**The headline:** *"Your surveillance team reviews 800 alerts a month. 90% are false positives. The one real case looks like the other 19. Here's how you find it."*
+
+**The problem narrative:** A broker-dealer's 6-analyst surveillance team receives 800+ alerts per month from NASDAQ SMARTS or NICE Actimize. Each alert requires order blotter review, trader history lookup, market context assessment, pattern analysis, investigation documentation, and a disposition memo — 2–6 hours of work per significant alert. The false positive rate sits at 90–97%. False positive fatigue is real: analysts become desensitized to alerts, and the one actual spoofing case in 20 looks identical to the other 19 until someone digs in. FINRA Rule 3110 WSP documentation requirements mean every alert disposition must be documented — adding 30–45 minutes of administrative burden to every review.
+
+**The AI-native answer:** Agent 07 runs an 8-rule Python pattern detection engine across 11 alert types — layering/spoofing, front running, wash trading, insider trading, marking the close, short selling violations, and more. Pattern detection produces confidence scores, not LLM guesses. A 5-factor Python risk scoring model determines severity (CRITICAL/HIGH/MEDIUM/LOW) and whether HITL is required. The LLM then assembles market context from public sources, synthesizes an investigation narrative with supporting evidence and regulatory citations, and drafts the disposition memorandum. For CRITICAL/HIGH alerts, the compliance officer reviews the AI-assembled package — complete before they open the case — and submits a decision in one-third the time.
+
+**The FINRA 3110 story:** Every alert produces a timestamped audit trail, a reviewer decision record, and a disposition memo — the three things FINRA examiners want to see during a supervision exam. For institutions that have received FINRA findings on inadequate surveillance documentation, Agent 07 directly closes the finding.
+
+**The SAR story:** BSA obligations apply to most FINRA-member broker-dealers. When Agent 07 detects suspicious activity meeting the $5,000 BSA threshold (insider trading, wash trading, cross-market manipulation), it flags SAR consideration with a Python rule — not an LLM determination — and generates a draft SAR narrative following FinCEN's 5-W standard. The tipping-off prohibition (31 U.S.C. § 5318(g)(2)) is enforced at the LLM system prompt level — no output can alert the subject to the SAR.
+
+**The hard rule story:** INSIDER_TRADING, INFORMATION_BARRIER_BREACH, and CROSS_MARKET_MANIPULATION always escalate to CRITICAL with mandatory HITL — regardless of the composite score. That's Python code, not a configurable threshold. No LLM can reason its way around it.
+
+**Discovery questions:**
+- What is your current monthly alert volume, and how many analysts review them?
+- What is your estimated false positive rate, and how does your team document disposition decisions?
+- Have you received any FINRA findings related to surveillance documentation or supervisory procedures?
+- How do you currently handle SAR obligations for suspicious trading activity?
+- Do you have documented written supervisory procedures covering each of your alert types and detection thresholds?
+- How quickly can your current system adapt when FINRA or the CFTC introduce a new manipulation theory?
+
+---
+
 ## Architecture Differentiation
 
 When you're in a room with a CIO or solutions architect, these are the differentiators that matter.
@@ -300,7 +380,7 @@ Same alert, same customer, same investigation steps — every time. Every node t
 
 | Dimension | Fintech Point Solutions | This Suite |
 |-----------|------------------------|-----------|
-| Scope | Single use case (FP reduction OR investigation OR KYC) | End-to-end platform, 5 use cases |
+| Scope | Single use case (FP reduction OR investigation OR KYC) | End-to-end platform, 7 use cases |
 | Architecture | SaaS / shared infrastructure | Customer VPC, fully isolated |
 | Data residency | Vendor-managed | Customer-controlled |
 | Integration | API-first, modern | MCP pattern, integrates with legacy TMS |
@@ -391,6 +471,31 @@ Same alert, same customer, same investigation steps — every time. Every node t
 
 **Key moment:** Show the suitability block. "If I try to propose something that doesn't fit the client's IPS or risk profile, the agent blocks it before the draft is created — not after. The RM doesn't receive a proposal they'd have to reject."
 
+### Agent 06 — The Compliance Operations Demo
+1. Open the Regulatory Feed tab — show the change register with 3 pre-loaded changes
+2. Submit a new change: paste in a FinCEN final rule summary (AML Effectiveness rule)
+3. Run the pipeline — watch scope determination, policy mapping, and gap analysis execute
+4. Open Impact Analysis — show the 5-factor score breakdown chart (bar chart by component)
+5. Show the policy mapping table — which of the institution's 12 policies are affected and why
+6. HITL gate triggers for this HIGH impact change — submit the CCO review decision
+7. Open Remediation Tracker — show the auto-generated task list with owners and deadlines
+8. Open Audit Trail — walk through the timestamped entries per node
+
+**Key moment:** Show the compliance window adequacy flag. "This change has a 60-day implementation window but HIGH complexity. The agent automatically escalated the impact tier and triggered HITL — even though the raw score would have been MEDIUM. That's the kind of judgment call your compliance team makes manually today."
+
+### Agent 07 — The Surveillance Demo
+1. Open the Alert Queue tab — show the 3 pre-loaded alerts with severity distribution chart
+2. Submit a new alert: layering/spoofing, GLOBEX instrument, $3.5M notional, 87% cancel rate
+3. Run the pipeline — watch pattern detection, market context, and risk scoring execute in sequence
+4. Open Case Investigation — show the risk score breakdown (5 factors, bar chart)
+5. Show detected patterns with confidence scores — layering confirmed at 88%
+6. HITL gate triggers (HIGH severity) — walk through the compliance officer review panel
+7. Submit INVESTIGATE decision — workflow resumes and generates investigation narrative
+8. Open Disposition tab — show the disposition memo and SAR consideration flag
+9. Open Audit Trail — show every node entry with regulatory basis citations
+
+**Key moment:** Show the insider trading hard override. Pull up the pre-loaded insider trading alert (ACME Corporation, restricted list hit). "See this? The score is 0.93 — already CRITICAL. But even if it weren't, INSIDER_TRADING is hard-coded to CRITICAL with mandatory HITL. That's not a threshold we can configure. It's a Python constant. No prompt, no model version, no configuration change can remove that gate."
+
 ---
 
 ## ROI Summary by Institution Profile
@@ -402,7 +507,8 @@ Same alert, same customer, same investigation steps — every time. Every node t
 | Agent 01 (Financial Crime Investigation) | $800K–$1.5M | 300-600 SARs/year |
 | Agent 03 (KYC/CDD Perpetual) | $500K–$1.0M | 2,000-4,000 customer reviews |
 | Agent 04 (Fraud Detection) | $600K–$1.2M | Regional card/ACH volume |
-| **Full Suite** | **$3.1M–$5.7M** | Payback < 6 months |
+| Agent 06 (Regulatory Change Mgmt) | $400K–$700K | 2 compliance analysts |
+| **Full Suite** | **$3.5M–$6.4M** | Payback < 6 months |
 
 ### Regional Bank (Assets $5B–$50B)
 | Use Case | Annual Savings | Notes |
@@ -412,7 +518,9 @@ Same alert, same customer, same investigation steps — every time. Every node t
 | Agent 03 (KYC/CDD Perpetual) | $1.0M–$2.5M | 8,000-20,000 customer reviews |
 | Agent 04 (Fraud Detection) | $1.5M–$3.5M | Higher transaction volumes |
 | Agent 05 (Wealth Copilot) | $1.5M–$4.0M | 20-50 RMs |
-| **Full Suite** | **$8.0M–$18.0M** | Payback < 4 months |
+| Agent 06 (Regulatory Change Mgmt) | $849K–$1.5M | 4-analyst compliance team |
+| Agent 07 (Trading Surveillance) | $1.5M–$3.0M | Regional trading desk, 3-4 analysts |
+| **Full Suite** | **$9.4M–$22.5M** | Payback < 4 months |
 
 ### Credit Union (Assets $500M–$5B)
 | Use Case | Annual Savings | Notes |
@@ -420,26 +528,39 @@ Same alert, same customer, same investigation steps — every time. Every node t
 | Agent 02 (TMS Enhancement) | $600K–$1.5M | Smaller alert volumes, fewer analysts |
 | Agent 04 (Fraud Detection) | $400K–$1.0M | Card fraud primary concern |
 | Agent 03 (KYC/CDD Perpetual) | $300K–$800K | Member reviews |
-| **Priority Suite** | **$1.3M–$3.3M** | Agents 02 + 04 + 03 |
+| Agent 06 (Regulatory Change Mgmt) | $300K–$600K | 1-2 compliance staff |
+| **Priority Suite** | **$1.6M–$3.9M** | Agents 02 + 04 + 03 + 06 |
+
+### Broker-Dealer / Bank with Trading Desk
+| Use Case | Annual Savings | Notes |
+|----------|---------------|-------|
+| Agent 07 (Trading Surveillance) | $2.2M–$3.1M | 6-analyst surveillance team, 800 alerts/month |
+| Agent 06 (Regulatory Change Mgmt) | $849K–$1.5M | FINRA/SEC rule change volume |
+| Agent 01 (Financial Crime Investigation) | $800K–$1.5M | BSA/SAR cross-referrals from Agent 07 |
+| Agent 02 (TMS Enhancement) | $1.5M–$3.0M | Trading-related AML alerts |
+| **Full Suite** | **$5.4M–$9.1M** | Payback < 3 months |
 
 ---
 
 ## Infrastructure Cost Reference
 
-All five agents share the same AWS deployment pattern. Per-customer monthly AWS cost (mid-size bank, all 5 agents):
+All seven agents share the same AWS deployment pattern. Per-customer monthly AWS cost (mid-size bank, full 7-agent suite):
 
 | Component | Cost |
 |-----------|------|
-| ECS Fargate (UI tasks, all 5 agents) | ~$150 |
-| ECS Fargate (Agent workers, MCP gateways) | ~$350 |
+| ECS Fargate (UI tasks, all 7 agents) | ~$200 |
+| ECS Fargate (Agent workers, MCP gateways) | ~$450 |
 | RDS Aurora PostgreSQL (shared or per-agent) | ~$250–$500 |
-| DynamoDB (audit trails) | ~$20 |
-| S3 (documents + archives) | ~$10 |
+| DynamoDB (audit trails — all agents) | ~$35 |
+| S3 (documents, SAR records, archives) | ~$20 |
+| SQS FIFO + Lambda (Agent 06 EventBridge + Agent 07 alert ingestor) | ~$25 |
 | AWS Bedrock (Claude — inference, primary cost driver) | ~$1,000–$4,000 |
-| Security, networking, monitoring | ~$150 |
-| **Total** | **~$1,930–$5,180/month** |
+| Security, networking, monitoring | ~$175 |
+| **Total** | **~$2,155–$5,405/month** |
 
-*Bedrock cost scales with usage. Claude Haiku for triage nodes (10x cheaper), Claude Sonnet for SAR/proposal generation. Provisioned throughput available for high-volume customers.*
+*Bedrock cost scales with usage. Claude Haiku for triage nodes (10x cheaper), Claude Sonnet for SAR/proposal generation, investigation narratives, and surveillance dispositions. Provisioned throughput available for high-volume customers.*
+
+**Incremental cost for Agents 06 and 07 vs. Agents 01–05 only:** ~$225–$250/month fixed; variable cost depends on regulatory feed volume (Agent 06) and trading alert volume (Agent 07).
 
 ---
 
@@ -474,3 +595,18 @@ Before a customer POC, collect the following:
 - [ ] Current SAR volume per year?
 - [ ] Current TMS alert volume and estimated false positive rate?
 - [ ] Any pending regulatory actions or consent orders that affect timeline?
+
+### Trading Surveillance (Agent 07 — Broker-Dealers and Banks with Trading Desks)
+- [ ] FINRA member firm? Which FINRA district? Most recent FINRA examination date?
+- [ ] Current surveillance platform? (NASDAQ SMARTS, NICE Actimize, Bloomberg Compliance, none)
+- [ ] Monthly alert volume and breakdown by alert type?
+- [ ] Number of surveillance analysts on the team?
+- [ ] Asset classes traded: equities, fixed income, derivatives, FX, commodities, crypto?
+- [ ] Any open FINRA or SEC investigations related to surveillance gaps?
+- [ ] Who has access to surveillance data today — and who explicitly must not?
+
+### Regulatory Change Management (Agent 06 — All Institution Types)
+- [ ] How does the institution currently track regulatory changes? (Email newsletters, LexisNexis, manual monitoring)
+- [ ] How many policies are in scope for BSA/AML/compliance? Rough document count?
+- [ ] Who owns the regulatory change process? CCO, BSA Officer, or dedicated compliance team?
+- [ ] What is the typical implementation window for regulatory changes at this institution?
