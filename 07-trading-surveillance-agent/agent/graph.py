@@ -22,6 +22,7 @@ from __future__ import annotations
 
 from langgraph.graph import StateGraph
 from langgraph.checkpoint.memory import MemorySaver
+from agent.persistence import get_checkpointer
 
 from agent.nodes import (
     alert_intake_node,
@@ -124,7 +125,7 @@ def build_trading_surveillance_graph(use_memory: bool = True):
 
     # Compile with or without memory checkpointer
     if use_memory:
-        checkpointer = MemorySaver()
+        checkpointer = get_checkpointer()  # PostgresSaver when DATABASE_URL is set; MemorySaver fallback (dev)
         app = builder.compile(
             checkpointer=checkpointer,
             interrupt_before=["human_review_gate"],

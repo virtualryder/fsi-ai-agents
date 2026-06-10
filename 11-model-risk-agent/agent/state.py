@@ -86,7 +86,13 @@ MODEL_REGISTRY = {
             "PASS_THROUGH": 0.15,
             "ESCALATE": 0.0,
         },
-        "hard_rules": ["PEP_flag → always ESCALATE", "HIGH_RISK_GEO + LARGE_WIRE + NEW_ACCOUNT → always ESCALATE"],
+        "hard_rules": [
+            "OFAC/sanctions-flagged alerts → never SUPPRESS; always ESCALATE (hard override)","PEP_flag → always ESCALATE", "HIGH_RISK_GEO + LARGE_WIRE + NEW_ACCOUNT → always ESCALATE"],
+        "known_limitations": [
+            "LLM contextual factor (50% weight) has no formal statistical validation regime yet",
+            "Historical FP rates assume stationarity; concept drift degrades suppression accuracy",
+            "Trained/tuned on fixture distributions — production recalibration required per institution",
+        ],
         "revalidation_months": 12,
     },
     "AGT03-KYC-RISK-v1": {
@@ -112,6 +118,11 @@ MODEL_REGISTRY = {
             "EXIT": None,  # Rule-based, not score-based
         },
         "hard_rules": ["OFAC_hit → ESCALATE always", "PEP_flag → minimum EDD_REQUIRED"],
+        "known_limitations": [
+            "Adverse media factor depends on screening-vendor recall; false negatives propagate",
+            "Jurisdiction factor uses static country lists; requires refresh on FATF plenary updates",
+            "Tenure factor may understate risk for dormant-then-active accounts",
+        ],
         "revalidation_months": 12,
     },
     "AGT04-FRAUD-SCORE-v1": {
@@ -132,8 +143,14 @@ MODEL_REGISTRY = {
             "ALLOW": 0,
         },
         "hard_rules": [
+            "OFAC-sanctioned counterparty or jurisdiction → BLOCK regardless of score (hard override)",
             "confirmed_fraud_ip (RULE-091) → BLOCK regardless of score",
             "tor_exit_node (RULE-092) → BLOCK regardless of score",
+        ],
+        "known_limitations": [
+            "LLM analysis factor (50% weight) lacks latency guarantee for the sub-200ms path",
+            "Historical pattern factor cold-starts poorly for new accounts (<90 days)",
+            "Device intelligence signals are simulated in the accelerator — production feeds required",
         ],
         "revalidation_months": 12,
     },
@@ -157,9 +174,15 @@ MODEL_REGISTRY = {
             "LOW": 0.0,
         },
         "hard_rules": [
+            "OFAC/sanctions nexus in trading counterparty → always CRITICAL + mandatory HITL",
             "INSIDER_TRADING → always CRITICAL + mandatory HITL",
             "INFORMATION_BARRIER_BREACH → always CRITICAL + mandatory HITL",
             "CROSS_MARKET_MANIPULATION → always CRITICAL + mandatory HITL",
+        ],
+        "known_limitations": [
+            "Pattern detection covers 11 typologies; novel manipulation schemes require rule additions",
+            "Evidence-quality factor is heuristic; not validated against examiner outcomes",
+            "Cross-market detection limited to in-scope venues in fixture data",
         ],
         "revalidation_months": 12,
     },
@@ -183,10 +206,16 @@ MODEL_REGISTRY = {
             "DECLINE": 0.0,
         },
         "hard_rules": [
+            "OFAC SDN match on applicant → hard block; application cannot proceed (cannot be cleared downstream)",
             "DTI > 50% → DECLINE (all loan types)",
             "FICO < 580 conventional → DECLINE_HARD_BLOCK",
             "Chapter_7 < 2 years → DECLINE_HARD_BLOCK",
             "OFAC_hit → DECLINE_HARD_BLOCK (unresetable)",
+        ],
+        "known_limitations": [
+            "No disparate-impact / fair-lending statistical testing performed yet — required before production (ECOA/Reg B)",
+            "Composite weights are expert-set, not empirically derived from loan performance data",
+            "Thin-file applicants are scored with defaults that may understate risk",
         ],
         "revalidation_months": 12,
     },
@@ -213,6 +242,31 @@ VALIDATION_OUTCOMES = {
     "SUSPENDED": "Model use suspended pending remediation — manual process required",
     "RETIRED": "Model decommissioned — successor model required before retirement",
 }
+
+# ── Model IDs that ALWAYS require HITL regardless of validation outcome ─────
+# All suite models are HIGH tier (systemic compliance impact); their
+# validations always land with a human Model Risk Officer.
+# frozenset enforces immutability — cannot be modified by any code path.
+HIGH_TIER_ALWAYS_HITL = frozenset(
+    {
+        "AGT02-FP-SCORE-v1",
+        "AGT03-KYC-RISK-v1",
+        "AGT04-FRAUD-SCORE-v1",
+        "AGT07-SURV-RISK-v1",
+        "AGT08-CREDIT-SCORE-v1",
+    }
+)
+
+# ── Validation types that force HITL for HIGH-tier models ───────────────────
+# INITIAL_VALIDATION and CHANGE_VALIDATION always require a human Model Risk
+# Officer review when the model is HIGH tier (SR 11-7 effective challenge).
+# ONGOING_MONITORING with a pass outcome does NOT auto-trigger HITL.
+# frozenset enforces immutability — cannot be modified by any code path.
+HITL_VALIDATION_TYPES = frozenset({
+    "INITIAL_VALIDATION",
+    "CHANGE_VALIDATION",
+    "ANNUAL_REVALIDATION",
+})
 
 # ── HITL always-required conditions ─────────────────────────────────────────
 # Any of these conditions forces a human Model Risk Officer review.

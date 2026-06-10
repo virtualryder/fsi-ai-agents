@@ -31,6 +31,7 @@
 import logging
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
+from agent.persistence import get_checkpointer
 
 from agent.state import InvestigationState
 from agent.nodes import (
@@ -253,7 +254,7 @@ def build_investigation_graph(use_memory: bool = True):
         # MemorySaver enables checkpointing — state is persisted between
         # graph invocations, enabling human-in-the-loop interrupts.
         # In production, use PostgresSaver for durable persistence.
-        checkpointer = MemorySaver()
+        checkpointer = get_checkpointer()  # PostgresSaver when DATABASE_URL is set; MemorySaver fallback (dev)
         compiled_graph = workflow.compile(checkpointer=checkpointer)
     else:
         # No checkpointing — used for testing

@@ -35,3 +35,4 @@ Thumbs.db
 
 # Presidio playbook (internal use only — not for public repo)
 Presidio_FSI_Playbook/
+var/

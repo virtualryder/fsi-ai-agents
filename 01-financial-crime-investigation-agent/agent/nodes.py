@@ -23,7 +23,8 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict
 
-from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
+from agent.persistence import audit_sink
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from agent.state import InvestigationState, RecommendedAction
@@ -62,16 +63,34 @@ from tools.adverse_media import search_adverse_media, categorize_media_hits
 from tools.sar_generator import generate_sar_narrative, format_sar_part_ii
 from tools.case_management import create_case, update_case_status, close_case
 
+# ── Claude model tiers (Anthropic) ───────────────────────────────────────────
+# NARRATIVE tier — Claude Sonnet 4.6: regulatory narratives, SAR/dispute
+#   analysis, anything an examiner, reviewer, or customer will read.
+# FAST tier — Claude Haiku 4.5: high-volume triage, classification, and
+#   scoring-assist nodes where latency and unit cost dominate.
+# Override via env: CLAUDE_NARRATIVE_MODEL / CLAUDE_FAST_MODEL.
+# ── INTEGRATION POINT (production) ───────────────────────────────────────────
+# For VPC-contained inference, swap ChatAnthropic for ChatBedrockConverse
+# (langchain-aws) with Bedrock model IDs:
+#   anthropic.claude-sonnet-4-6-20260601-v1:0  (narrative)
+#   anthropic.claude-haiku-4-5-20251001        (fast)
+# ─────────────────────────────────────────────────────────────────────────────
+import os as _os_llm
+CLAUDE_NARRATIVE_MODEL = _os_llm.getenv("CLAUDE_NARRATIVE_MODEL", "claude-sonnet-4-6")
+CLAUDE_FAST_MODEL = _os_llm.getenv("CLAUDE_FAST_MODEL", "claude-haiku-4-5")
+CLAUDE_DEFAULT_MODEL = CLAUDE_NARRATIVE_MODEL
+
+
 # Configure module logger
 logger = logging.getLogger(__name__)
 
 # ── LLM Configuration ─────────────────────────────────────────────────────────
-# We use gpt-4o for all analysis tasks. Temperature is set to 0.1 to ensure
+# We use claude-sonnet-4-6 for all analysis tasks. Temperature is set to 0.1 to ensure
 # analytical precision and reproducibility — AML analysis is not creative writing.
 # SR 11-7 (Model Risk Management) requires that AI outputs be consistent and
 # explainable. A low temperature setting supports this requirement.
 
-def _get_llm() -> ChatOpenAI:
+def _get_llm() -> ChatAnthropic:
     """
     Initialize the LLM. Called fresh in each node to respect environment
     variable changes without requiring a restart.
@@ -81,16 +100,15 @@ def _get_llm() -> ChatOpenAI:
 
     # ── INTEGRATION POINT ──────────────────────────────────────────────────────
     # Replace with your organization's approved LLM endpoint:
-    # - AWS Bedrock (Claude 3/GPT-4 via Bedrock): use boto3 + langchain-aws
-    # - Azure OpenAI (data stays in Azure tenant): use AzureChatOpenAI
+    # - AWS Bedrock (Claude 3/Claude via Bedrock): use boto3 + langchain-aws
+    # - Azure OpenAI (data stays in Azure tenant): use AzureChatAnthropic
     # - On-premise: use Ollama or vLLM with an approved model
     # ──────────────────────────────────────────────────────────────────────────
     """
     import os
-    return ChatOpenAI(
-        model="gpt-4o",
+    return ChatAnthropic(model=CLAUDE_DEFAULT_MODEL,
         temperature=0.1,
-        api_key=os.getenv("OPENAI_API_KEY"),
+        api_key=os.getenv("ANTHROPIC_API_KEY"),
     )
 
 
@@ -131,6 +149,8 @@ def _log_audit_entry(
 
     audit_trail = state.get("audit_trail", [])
     audit_trail.append(entry)
+    # WRITE-AHEAD: durable audit record at creation (agent/persistence.py)
+    audit_sink().record(entry)
     state["audit_trail"] = audit_trail
 
 
@@ -276,7 +296,7 @@ def alert_intake(state: InvestigationState) -> InvestigationState:
             state,
             action=f"Alert classified as '{analysis.get('alert_classification')}' with preliminary risk '{analysis.get('preliminary_risk')}'",
             node="alert_intake",
-            ai_model="gpt-4o",
+            ai_model=CLAUDE_DEFAULT_MODEL,
         )
 
         # Mark step as complete
@@ -1182,7 +1202,7 @@ def risk_scoring(state: InvestigationState) -> InvestigationState:
         state,
         action="Calculating composite AML risk score across all investigation dimensions",
         node="risk_scoring",
-        ai_model="gpt-4o",
+        ai_model=CLAUDE_DEFAULT_MODEL,
     )
 
     try:
@@ -1431,7 +1451,7 @@ def generate_sar(state: InvestigationState) -> InvestigationState:
         state,
         action="Generating BSA-compliant SAR narrative draft — HUMAN REVIEW REQUIRED before filing",
         node="generate_sar",
-        ai_model="gpt-4o",
+        ai_model=CLAUDE_DEFAULT_MODEL,
         data_sources=["Investigation Findings", "Transaction History", "Watchlist Results", "Network Analysis"],
     )
 

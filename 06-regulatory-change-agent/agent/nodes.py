@@ -23,8 +23,27 @@ import os
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 
-from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
+from agent.persistence import audit_sink
 from langchain_core.messages import SystemMessage, HumanMessage
+
+# ── Claude model tiers (Anthropic) ───────────────────────────────────────────
+# NARRATIVE tier — Claude Sonnet 4.6: regulatory narratives, SAR/dispute
+#   analysis, anything an examiner, reviewer, or customer will read.
+# FAST tier — Claude Haiku 4.5: high-volume triage, classification, and
+#   scoring-assist nodes where latency and unit cost dominate.
+# Override via env: CLAUDE_NARRATIVE_MODEL / CLAUDE_FAST_MODEL.
+# ── INTEGRATION POINT (production) ───────────────────────────────────────────
+# For VPC-contained inference, swap ChatAnthropic for ChatBedrockConverse
+# (langchain-aws) with Bedrock model IDs:
+#   anthropic.claude-sonnet-4-6-20260601-v1:0  (narrative)
+#   anthropic.claude-haiku-4-5-20251001        (fast)
+# ─────────────────────────────────────────────────────────────────────────────
+import os as _os_llm
+CLAUDE_NARRATIVE_MODEL = _os_llm.getenv("CLAUDE_NARRATIVE_MODEL", "claude-sonnet-4-6")
+CLAUDE_FAST_MODEL = _os_llm.getenv("CLAUDE_FAST_MODEL", "claude-haiku-4-5")
+CLAUDE_DEFAULT_MODEL = CLAUDE_NARRATIVE_MODEL
+
 
 from agent.state import (
     ChangeManagementState,
@@ -54,10 +73,9 @@ logger = logging.getLogger(__name__)
 
 def _get_llm():
     """Initialize LLM client. Centralized for easy model swapping."""
-    return ChatOpenAI(
-        model="gpt-4o",
+    return ChatAnthropic(model=CLAUDE_DEFAULT_MODEL,
         temperature=0,
-        api_key=os.getenv("OPENAI_API_KEY"),
+        api_key=os.getenv("ANTHROPIC_API_KEY"),
     )
 
 
@@ -77,12 +95,14 @@ def _add_audit_entry(
         "action": action,
         "node": node,
         "data_sources_accessed": data_sources or [],
-        "ai_model_used": "gpt-4o" if used_llm else None,
+        "ai_model_used": "claude-sonnet-4-6" if used_llm else None,
         "regulatory_basis": regulatory_basis,
         "change_id": state.get("change_id"),
         "change_title": state.get("change_title"),
     }
     trail.append(entry)
+    # WRITE-AHEAD: durable audit record at creation time (see agent/persistence.py)
+    audit_sink().record(entry)
     return trail
 
 
@@ -701,6 +721,18 @@ def impact_scoring_node(state: ChangeManagementState) -> Dict[str, Any]:
     ops_count = len(state.get("affected_operations", []))
     complexity_score = min(ops_count / 6.0, 1.0)   # 6+ ops = max complexity
 
+    # ── Binding-nature moderation ───────────────────────────────────────────
+    # Policy depth and remediation complexity above are derived from the
+    # DOMAIN's footprint (policy count, operational areas) — they say nothing
+    # about whether THIS change actually imposes obligations. A non-binding
+    # clarification (FAQ: "clarification only", modifier 0.30) cannot impose
+    # MAJOR remediation across the domain; a FINAL_RULE (1.0) can. Scale both
+    # components by the change-type modifier so an FAQ in a broad domain like
+    # BSA/AML does not score like a final rule.
+    type_binding_modifier = CHANGE_TYPE_URGENCY.get(change_type_enum, 0.60)
+    policy_depth_score = policy_depth_score * type_binding_modifier
+    complexity_score = complexity_score * type_binding_modifier
+
     # ── Composite Score ─────────────────────────────────────────────────────
     composite_score = (
         authority_tier_score * 0.25
@@ -723,8 +755,14 @@ def impact_scoring_node(state: ChangeManagementState) -> Dict[str, Any]:
     else:
         impact_tier = ImpactTier.LOW
 
-    # Hard override: ENFORCEMENT_ACTION is always at least HIGH
-    if change_type_enum == ChangeType.ENFORCEMENT_ACTION and impact_tier == ImpactTier.LOW:
+    # Hard override: ENFORCEMENT_ACTION is always at least HIGH.
+    # The floor applies to ANY tier below HIGH — checking only LOW would let
+    # a MEDIUM-scored enforcement action bypass the elevation (enforcement
+    # actions signal active examiner focus and always warrant HIGH treatment).
+    if change_type_enum == ChangeType.ENFORCEMENT_ACTION and impact_tier in (
+        ImpactTier.LOW,
+        ImpactTier.MEDIUM,
+    ):
         impact_tier = ImpactTier.HIGH
         composite_score = max(composite_score, 0.65)
 
@@ -1159,30 +1197,38 @@ def stakeholder_notification_node(state: ChangeManagementState) -> Dict[str, Any
             "recipient_context": "Board-level notification for critical regulatory change",
         })
 
-    # Draft notifications via LLM
+    # Draft notifications via LLM — ONE draft per notification_type, not one
+    # LLM call per recipient. Recipient-specific addressing is Python string
+    # work; the narrative body is identical within a type. This bounds LLM
+    # cost/latency to the number of types (2-3) instead of the recipient
+    # count (6+ for broad domains like BSA/AML).
     notifications = []
+    drafts_by_type: Dict[str, str] = {}
     for recipient in recipients:
-        user_message = STAKEHOLDER_NOTIFICATION_USER_PROMPT.format(
-            change_title=state.get("change_title", "Unknown"),
-            regulatory_authority=state.get("regulatory_authority", "Unknown"),
-            impact_tier=state.get("impact_tier", "MEDIUM"),
-            effective_date=state.get("effective_date", "TBD"),
-            remediation_deadline=state.get("remediation_deadline", "TBD"),
-            gap_analysis_summary=state.get("gap_analysis_summary", "See full analysis."),
-            recipient_role=recipient["recipient_role"],
-            recipient_context=recipient["recipient_context"],
-            notification_type=recipient["notification_type"],
-        )
+        ntype = recipient["notification_type"]
+        if ntype not in drafts_by_type:
+            user_message = STAKEHOLDER_NOTIFICATION_USER_PROMPT.format(
+                change_title=state.get("change_title", "Unknown"),
+                regulatory_authority=state.get("regulatory_authority", "Unknown"),
+                impact_tier=state.get("impact_tier", "MEDIUM"),
+                effective_date=state.get("effective_date", "TBD"),
+                remediation_deadline=state.get("remediation_deadline", "TBD"),
+                gap_analysis_summary=state.get("gap_analysis_summary", "See full analysis."),
+                recipient_role=recipient["recipient_role"],
+                recipient_context=recipient["recipient_context"],
+                notification_type=ntype,
+            )
 
-        response = llm.invoke([
-            SystemMessage(content=STAKEHOLDER_NOTIFICATION_SYSTEM_PROMPT),
-            HumanMessage(content=user_message),
-        ])
+            response = llm.invoke([
+                SystemMessage(content=STAKEHOLDER_NOTIFICATION_SYSTEM_PROMPT),
+                HumanMessage(content=user_message),
+            ])
+            drafts_by_type[ntype] = response.content
 
         notifications.append({
             "recipient_role": recipient["recipient_role"],
-            "notification_type": recipient["notification_type"],
-            "draft_message": response.content,
+            "notification_type": ntype,
+            "draft_message": drafts_by_type[ntype],
             "sent_at": None,  # Set when actually sent in production
         })
 

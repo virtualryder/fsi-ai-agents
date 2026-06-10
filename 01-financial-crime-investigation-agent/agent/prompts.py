@@ -14,7 +14,7 @@
 #   language. The outputs should be reviewed by a licensed BSA officer
 #   before any compliance action (SAR filing, account restriction, etc.).
 #
-# Model: gpt-4o (configured in .env as OPENAI_API_KEY)
+# Model: claude-sonnet-4-6 (configured in .env as ANTHROPIC_API_KEY)
 # Temperature: 0.1 — we want analytical precision, not creativity
 # ============================================================
 

@@ -6,11 +6,11 @@
 # ── LangGraph / LangChain ─────────────────────────────────────────────────────
 langgraph==0.2.28
 langchain==0.3.7
-langchain-openai==0.2.8
+langchain-anthropic>=0.2.0
 langchain-core==0.3.15
 
 # ── OpenAI ────────────────────────────────────────────────────────────────────
-openai==1.54.3
+anthropic>=0.40.0
 
 # ── Streamlit Dashboard ───────────────────────────────────────────────────────
 streamlit==1.40.1

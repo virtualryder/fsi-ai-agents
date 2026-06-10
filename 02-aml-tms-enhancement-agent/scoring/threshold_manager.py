@@ -38,9 +38,14 @@ DEFAULT_THRESHOLDS = Thresholds(
 # Certain typologies are high-risk by nature and require tighter thresholds.
 # These override defaults when the alert_type matches.
 ALERT_TYPE_OVERRIDES: dict[str, Thresholds] = {
-    # Layering / rapid movement: genuinely suspicious when it occurs
-    "RAPID_MOVEMENT": Thresholds(suppress=92, downgrade=72, escalate=10),
-    "LAYERING": Thresholds(suppress=92, downgrade=72, escalate=10),
+    # Layering / rapid movement: genuinely suspicious when it occurs.
+    # CONTROL DIRECTION: suppress is HARDER (92 > default 85) AND escalate is
+    # EASIER (20 > default 15). Escalation fires when fp_probability <= the
+    # escalate threshold, so a HIGHER value escalates MORE alerts — setting it
+    # below the default would make the most suspicious typology the hardest
+    # to escalate (the inverse of intent).
+    "RAPID_MOVEMENT": Thresholds(suppress=92, downgrade=72, escalate=20),
+    "LAYERING": Thresholds(suppress=92, downgrade=72, escalate=20),
     # PEP-related: never suppress, always at least pass-through
     "PEP_RELATED": Thresholds(suppress=999, downgrade=999, escalate=25),
     # OFAC / sanctions proximity: never suppress
@@ -52,12 +57,17 @@ ALERT_TYPE_OVERRIDES: dict[str, Thresholds] = {
 }
 
 # ── Risk-tier adjustments (applied on top of type-level thresholds) ──────────
-# Higher risk customers → harder to suppress (need more confidence)
+# Higher risk customers → harder to suppress (need more confidence).
+# CONTROL: adjustments are POSITIVE points added to the FP-probability
+# required before an alert may be suppressed or downgraded. A negative sign
+# here would invert the control and make high-risk customers' alerts the
+# EASIEST to auto-suppress — guarded by
+# tests/test_scoring.py::TestThresholdManager::test_very_high_risk_harder_to_suppress.
 RISK_TIER_ADJUSTMENTS: dict[str, float] = {
-    "LOW": 0.0,        # No adjustment
-    "MEDIUM": -2.0,    # Suppress threshold 2 pts harder
-    "HIGH": -5.0,      # 5 pts harder
-    "VERY_HIGH": -12.0, # 12 pts harder — nearly impossible to auto-suppress
+    "LOW": 0.0,         # No adjustment
+    "MEDIUM": 2.0,      # Suppress threshold 2 pts harder
+    "HIGH": 5.0,        # 5 pts harder
+    "VERY_HIGH": 12.0,  # 12 pts harder — nearly impossible to auto-suppress
 }
 
 

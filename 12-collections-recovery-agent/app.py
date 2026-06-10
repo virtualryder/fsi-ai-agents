@@ -13,7 +13,7 @@ Streamlit Dashboard — Port 8512
 FDCPA/Reg F Architecture note: all contact time checks, Reg F 7-in-7 enforcement,
 SCRA rate cap application, SOL computation, payment plan math, settlement tier
 authorization, and HITL routing are Python-computed deterministic results.
-LLM (GPT-4o) produces NARRATIVE ONLY: hardship assessment, strategy summary, and
+LLM (Claude Sonnet 4.6) produces NARRATIVE ONLY: hardship assessment, strategy summary, and
 collection letter body — never routing decisions, HITL triggers, or financial amounts.
 """
 
@@ -55,8 +55,8 @@ SCENARIOS = load_scenarios()
 PAYMENT_CONFIGS = load_payment_plan_configs()
 
 DEMO_MODE = not bool(
-    os.getenv("OPENAI_API_KEY", "").startswith("sk-")
-    and len(os.getenv("OPENAI_API_KEY", "")) > 20
+    os.getenv("ANTHROPIC_API_KEY", "").startswith("sk-")
+    and len(os.getenv("ANTHROPIC_API_KEY", "")) > 20
 )
 
 # ── Color / badge helpers ─────────────────────────────────────────────────────
@@ -506,11 +506,11 @@ with st.sidebar:
     if DEMO_MODE:
         st.warning(
             "**Demo Mode** — Pre-computed scenarios active. "
-            "Add `OPENAI_API_KEY` for live LLM narratives.",
+            "Add `ANTHROPIC_API_KEY` for live LLM narratives.",
             icon="⚠️",
         )
     else:
-        st.success("**Live Mode** — Connected to OpenAI GPT-4o", icon="✅")
+        st.success("**Live Mode** — Connected to OpenAI Claude Sonnet 4.6", icon="✅")
 
     st.markdown("---")
 
@@ -569,7 +569,7 @@ def render_submit_tab():
 
     if DEMO_MODE:
         st.info(
-            "**Demo Mode:** Pre-computed results are shown. Connect `OPENAI_API_KEY` "
+            "**Demo Mode:** Pre-computed results are shown. Connect `ANTHROPIC_API_KEY` "
             "to generate live LLM hardship assessments, strategy summaries, and "
             "collection letter drafts.",
             icon="ℹ️",
@@ -1434,9 +1434,9 @@ def render_about_tab():
         ("IRS 1099-C threshold (≥$600)",               "Python — numeric comparison",      "26 U.S.C. § 6050P"),
         ("FDCPA mini-Miranda language",                 "Python — verbatim string inject",  "FDCPA § 807(11)"),
         ("Validation notice text",                      "Python — verbatim string inject",  "FDCPA § 809"),
-        ("Hardship assessment narrative",               "LLM (GPT-4o)",                     "Narrative only"),
-        ("Collections strategy narrative",              "LLM (GPT-4o)",                     "Narrative only"),
-        ("Collection letter body",                      "LLM (GPT-4o)",                     "Narrative only — disclosures Python-injected"),
+        ("Hardship assessment narrative",               "LLM (Claude Sonnet 4.6)",                     "Narrative only"),
+        ("Collections strategy narrative",              "LLM (Claude Sonnet 4.6)",                     "Narrative only"),
+        ("Collection letter body",                      "LLM (Claude Sonnet 4.6)",                     "Narrative only — disclosures Python-injected"),
         ("Audit trail entries",                         "Python — append-only list",        "FCRA / FDCPA"),
     ]
 
@@ -1554,13 +1554,13 @@ pip install -r requirements.txt
 
 # 3. Configure environment
 cp .env.example .env
-# Edit .env: OPENAI_API_KEY, INSTITUTION_NAME, COLLECTIONS_COMPLIANCE_EMAIL
+# Edit .env: ANTHROPIC_API_KEY, INSTITUTION_NAME, COLLECTIONS_COMPLIANCE_EMAIL
 
 # 4. Run (demo mode — no API key required for UI)
 streamlit run app.py --server.port 8512
 
 # 5. Run with live LLM narratives
-OPENAI_API_KEY=sk-... streamlit run app.py --server.port 8512
+ANTHROPIC_API_KEY=sk-... streamlit run app.py --server.port 8512
 
 # 6. Run tests
 pytest tests/ -v

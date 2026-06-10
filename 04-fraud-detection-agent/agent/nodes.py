@@ -21,8 +21,27 @@ import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
+from agent.persistence import audit_sink
 from langchain_core.messages import HumanMessage, SystemMessage
+
+# ── Claude model tiers (Anthropic) ───────────────────────────────────────────
+# NARRATIVE tier — Claude Sonnet 4.6: regulatory narratives, SAR/dispute
+#   analysis, anything an examiner, reviewer, or customer will read.
+# FAST tier — Claude Haiku 4.5: high-volume triage, classification, and
+#   scoring-assist nodes where latency and unit cost dominate.
+# Override via env: CLAUDE_NARRATIVE_MODEL / CLAUDE_FAST_MODEL.
+# ── INTEGRATION POINT (production) ───────────────────────────────────────────
+# For VPC-contained inference, swap ChatAnthropic for ChatBedrockConverse
+# (langchain-aws) with Bedrock model IDs:
+#   anthropic.claude-sonnet-4-6-20260601-v1:0  (narrative)
+#   anthropic.claude-haiku-4-5-20251001        (fast)
+# ─────────────────────────────────────────────────────────────────────────────
+import os as _os_llm
+CLAUDE_NARRATIVE_MODEL = _os_llm.getenv("CLAUDE_NARRATIVE_MODEL", "claude-sonnet-4-6")
+CLAUDE_FAST_MODEL = _os_llm.getenv("CLAUDE_FAST_MODEL", "claude-haiku-4-5")
+CLAUDE_DEFAULT_MODEL = CLAUDE_FAST_MODEL
+
 
 from agent.state import (
     FraudDetectionState,
@@ -77,15 +96,17 @@ def _add_audit_entry(
         "response_time_ms": response_ms,
         "regulatory_basis": regulatory_basis,
     })
+    # WRITE-AHEAD: durable audit record at creation (agent/persistence.py)
+    audit_sink().record(trail[-1])
     return trail
 
 
-def _get_llm(temperature: float = 0.0) -> ChatOpenAI:
+def _get_llm(temperature: float = 0.0) -> ChatAnthropic:
     """
     Return LLM instance.
     temperature=0 for scoring consistency (SR 11-7 model risk management).
     """
-    return ChatOpenAI(model="gpt-4o", temperature=temperature)
+    return ChatAnthropic(model=CLAUDE_DEFAULT_MODEL, temperature=temperature)
 
 
 # ── NODE 1: Transaction Intake ────────────────────────────────────────────────
@@ -738,7 +759,7 @@ def _analyze_behavioral_signals(state: FraudDetectionState) -> Dict[str, Any]:
 
 def llm_fraud_analysis(state: FraudDetectionState) -> Dict[str, Any]:
     """
-    GPT-4o contextual fraud analysis across all gathered signals.
+    Claude Sonnet 4.6 contextual fraud analysis across all gathered signals.
 
     Outputs:
       - llm_fraud_probability: 0-100 integer fraud probability
@@ -819,11 +840,11 @@ def llm_fraud_analysis(state: FraudDetectionState) -> Dict[str, Any]:
     audit_trail = _add_audit_entry(
         state,
         action=f"LLM analysis complete — fraud_probability: {llm_probability}, "
-               f"suspected_type: {llm_fraud_type}, model: gpt-4o",
+               f"suspected_type: {llm_fraud_type}, model: claude-sonnet-4-6",
         node="llm_fraud_analysis",
         score_at_time=float(llm_probability),
         data_sources=["openai_gpt4o"],
-        ai_model="gpt-4o",
+        ai_model=CLAUDE_DEFAULT_MODEL,
         response_ms=elapsed_ms,
         regulatory_basis="SR 11-7 — LLM output documented with reasoning for model risk oversight",
     )

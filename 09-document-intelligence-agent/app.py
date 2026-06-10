@@ -69,8 +69,8 @@ load_dotenv()
 
 # Check for OpenAI API key — required for LLM nodes (classification, extraction).
 # If not present, the app runs in DEMO MODE using pre-computed scenario outputs.
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-DEMO_MODE = not bool(OPENAI_API_KEY)
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+DEMO_MODE = not bool(ANTHROPIC_API_KEY)
 
 # ── Page Configuration ────────────────────────────────────────────────────────
 st.set_page_config(
@@ -239,7 +239,7 @@ with st.sidebar:
         st.warning(
             "**DEMO MODE**\n\n"
             "No OpenAI API key detected. Running with pre-computed demo scenarios.\n\n"
-            "Set `OPENAI_API_KEY` in `.env` for live processing.",
+            "Set `ANTHROPIC_API_KEY` in `.env` for live processing.",
             icon="⚠️",
         )
     else:
@@ -881,7 +881,7 @@ pip install -r requirements.txt
 
 # 3. Configure environment
 cp .env.example .env
-# Edit .env and add your OPENAI_API_KEY
+# Edit .env and add your ANTHROPIC_API_KEY
 
 # 4. Run the Streamlit dashboard
 streamlit run app.py --server.port 8509

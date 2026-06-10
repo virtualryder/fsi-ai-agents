@@ -1,7 +1,7 @@
 # tests/test_graph.py
 # ============================================================
 # Integration tests for the LangGraph workflow.
-# LLM calls are mocked — these tests run without OPENAI_API_KEY.
+# LLM calls are mocked — these tests run without ANTHROPIC_API_KEY.
 #
 # Tests cover:
 #   - Graph compilation

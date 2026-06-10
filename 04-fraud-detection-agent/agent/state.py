@@ -266,7 +266,7 @@ class FraudDetectionState(TypedDict, total=False):
     # ── ML / LLM Scoring ──────────────────────────────────────────────────────
 
     llm_fraud_probability: Optional[float]
-    # 0-100 fraud probability from GPT-4o contextual analysis (50% weight)
+    # 0-100 fraud probability from Claude Sonnet 4.6 contextual analysis (50% weight)
 
     llm_fraud_reasoning: Optional[str]
     # Plain-language explanation of why the LLM assigned this probability

@@ -1,15 +1,17 @@
 # Agent 12 — Collections & Recovery Agent
-# Pinned for reproducibility. All versions tested together.
+# Compatible ranges — the previous exact pins were mutually unresolvable
+# (pip ResolutionImpossible on langgraph-checkpoint==2.0.2 vs langgraph==0.2.28).
+# For true reproducibility, generate a lockfile: pip-compile or `uv pip compile`.
 
 # LangGraph + LangChain core
-langgraph==0.2.28
-langchain==0.3.7
-langchain-openai==0.2.5
-langchain-core==0.3.15
+langgraph>=1.0,<2.0
+langchain>=1.0,<2.0
+langchain-anthropic>=0.2.0
+langchain-core>=1.0,<2.0
 
 # LangGraph checkpoint persistence (production: PostgresSaver)
-langgraph-checkpoint==2.0.2
-langgraph-checkpoint-postgres==2.0.2
+langgraph-checkpoint>=4.0,<5.0
+langgraph-checkpoint-postgres>=3.0
 
 # Database
 psycopg2-binary==2.9.10     # Aurora PostgreSQL (production)

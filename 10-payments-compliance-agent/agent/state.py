@@ -269,7 +269,8 @@ class PaymentsComplianceState(TypedDict, total=False):
     """
 
     # ── Payment Identification ─────────────────────────────────────────────
-    payment_id: str                     # UUID for this compliance event
+    payment_event_id: str               # Canonical UUID for this compliance event
+    payment_id: str                     # Mirrors payment_event_id (legacy callers)
     payment_hash: str                   # SHA-256 of original payment data
     original_transaction_id: str        # Bank/network transaction ID
     trace_number: str                   # ACH trace number or wire reference
@@ -297,14 +298,20 @@ class PaymentsComplianceState(TypedDict, total=False):
     odfi_routing_number: str            # Originating DFI ABA routing number
     odfi_name: str                      # Originating DFI name
     originator_name: str                # Company / individual name
+    originator_account_raw: str         # Raw account at intake ONLY — scrubbed to "" by payment_intake_node
     originator_account_last4: str       # Last 4 of originator account — SECURITY
+    originator_country: str             # ISO 3166-1 alpha-2 — SCREENED by sanctions node
+    originator_routing: str             # ABA routing (public bank data)
     originator_id: str                  # Nacha Company ID or SWIFT BIC
 
     # ── Receiver / Beneficiary ──────────────────────────────────────────────
     rdfi_routing_number: str            # Receiving DFI ABA routing number
     rdfi_name: str                      # Receiving DFI name
     receiver_name: str                  # Individual or company name
+    receiver_account_raw: str           # Raw account at intake ONLY — scrubbed to "" by payment_intake_node
     receiver_account_last4: str         # Last 4 of receiver account — SECURITY
+    receiver_country: str               # ISO 3166-1 alpha-2 — SCREENED by sanctions node
+    receiver_routing: str               # ABA routing (public bank data)
     receiver_account_type: str          # CHECKING | SAVINGS | GENERAL_LEDGER | LOAN
 
     # ── Wire-Specific ──────────────────────────────────────────────────────
@@ -318,6 +325,7 @@ class PaymentsComplianceState(TypedDict, total=False):
     ofac_screening_performed: bool
     ofac_hit: bool                      # True if SDN/OFAC match found
     ofac_hit_details: str               # Matching SDN entry (masked for audit)
+    screening_data_missing: bool        # FAIL-CLOSED flag — no screenable identifiers; forces hold + CRITICAL
     high_risk_country_flag: bool        # True if country in FATF black/grey list
     high_risk_country_name: str         # Country name for reporting
     pep_flag: bool                      # Politically Exposed Person match
@@ -332,6 +340,12 @@ class PaymentsComplianceState(TypedDict, total=False):
     unauthorized_return_eligible: bool  # True if R07/R10/R29 is applicable
     late_return_flag: bool              # True if past standard return window (60+ days)
     noc_correction_required: bool       # NOC (C-series) requires ODFI record update
+    noc_required: bool                  # Alias of noc_correction_required (test/reporting contract)
+    ctr_threshold_triggered: bool       # Amount > $10K CTR threshold (31 CFR 1010.311) — rail-agnostic
+    customer_claim_text: str            # Customer dispute claim narrative (sanitized at intake)
+    account_tenure_months: int          # Receiver account age — Reg E new-account window input
+    prior_dispute_count: int            # Prior disputes on the account — pattern factor input
+    account_good_standing: bool         # Account standing — dispute analysis context
     noc_corrected_data: Dict[str, str]  # Corrected field values from NOC
 
     # ── Reg E Assessment ───────────────────────────────────────────────────

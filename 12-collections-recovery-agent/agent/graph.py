@@ -22,6 +22,7 @@ HITL framework enforcement:
 from typing import Any, Dict, Optional
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
+from agent.persistence import get_checkpointer
 
 from .state import CollectionsState
 from .nodes import (
@@ -146,7 +147,7 @@ def build_collections_graph(checkpointer=None, llm=None, institution_name: str =
 
     # Use MemorySaver in dev; PostgresSaver in production
     if checkpointer is None:
-        checkpointer = MemorySaver()
+        checkpointer = get_checkpointer()  # PostgresSaver when DATABASE_URL is set; MemorySaver fallback (dev)
 
     return workflow.compile(
         checkpointer=checkpointer,

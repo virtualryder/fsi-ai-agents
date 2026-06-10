@@ -1,0 +1,78 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# FSI AI Agent Suite — CI Gate
+#
+# PURPOSE (control): every agent's test suite encodes its regulatory control
+# contract (OFAC hard overrides, fair-lending HITL interrupts, FDCPA timing,
+# PII masking assertions). An untested control is a missing control — this
+# pipeline runs all 12 suites on every push and pull request.
+#
+# ENFORCEMENT: to make this gate actually block merges, enable branch
+# protection on `main` with "Require status checks to pass" and select the
+# `all-suites-green` check below. The workflow alone reports; branch
+# protection enforces.
+# ══════════════════════════════════════════════════════════════════════════════
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: "test (${{ matrix.agent }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # Run every suite even when one fails — full control evidence per run
+      matrix:
+        agent:
+          - 01-financial-crime-investigation-agent
+          - 02-aml-tms-enhancement-agent
+          - 03-kyc-cdd-perpetual-agent
+          - 04-fraud-detection-agent
+          - 05-wealth-rm-copilot
+          - 06-regulatory-change-agent
+          - 07-trading-surveillance-agent
+          - 08-credit-underwriting-agent
+          - 09-document-intelligence-agent
+          - 10-payments-compliance-agent
+          - 11-model-risk-agent
+          - 12-collections-recovery-agent
+    defaults:
+      run:
+        working-directory: ${{ matrix.agent }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: ${{ matrix.agent }}/requirements.txt
+
+      - name: Install dependencies (must resolve — unresolvable pins are a release blocker)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run test suite
+        run: python -m pytest tests/ -v --tb=short
+
+  # Single aggregate check for branch protection. Protecting one named check
+  # is simpler and safer than enumerating 12 matrix legs in repo settings.
+  all-suites-green:
+    name: all-suites-green
+    needs: test
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Verify every agent suite passed
+        run: |
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "::error::One or more agent test suites failed — merge blocked."
+            echo "Regulatory control tests are the release gate (see workflow header)."
+            exit 1
+          fi
+          echo "All 12 agent suites green."

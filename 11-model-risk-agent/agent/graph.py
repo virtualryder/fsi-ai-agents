@@ -24,6 +24,7 @@ from typing import Any, Dict
 
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
+from agent.persistence import get_checkpointer
 
 from .state import ModelRiskState
 from .nodes import (
@@ -179,12 +180,12 @@ def get_production_graph(postgres_connection_string: str):
         return build_model_risk_graph(checkpointer=checkpointer)
     except ImportError:
         # Fall back to MemorySaver if postgres package not installed
-        return build_model_risk_graph(checkpointer=MemorySaver())
+        return build_model_risk_graph(checkpointer = get_checkpointer())
 
 
 # ── Module-level graph instances ──────────────────────────────────────────────
 # graph: development/demo instance with MemorySaver (in-process, non-durable)
 # graph_no_checkpointer: for testing without state persistence
 
-graph = build_model_risk_graph(checkpointer=MemorySaver())
+graph = build_model_risk_graph(checkpointer = get_checkpointer())
 graph_no_checkpointer = build_model_risk_graph(checkpointer=None)

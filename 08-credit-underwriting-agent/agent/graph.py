@@ -31,6 +31,7 @@
 from __future__ import annotations
 
 from langgraph.checkpoint.memory import MemorySaver
+from agent.persistence import get_checkpointer
 from langgraph.graph import END, StateGraph
 
 from agent.nodes import (
@@ -56,10 +57,14 @@ def _route_after_routing_decision(state: CreditUnderwritingState) -> str:
     """
     Route to HITL gate or skip directly to memo drafting.
     Python-only — no LLM involvement in this decision.
+
+    FAIL-SAFE (Agent 12 idiom): only an EXPLICIT False skips human review.
+    None / missing / 0 / any truthy value all route to the HITL gate, so a
+    dropped or corrupted flag can never bypass mandatory review.
     """
-    if state.get("human_review_required"):
-        return "human_review_gate"
-    return "credit_memo_drafting"
+    if state.get("human_review_required") is False:
+        return "credit_memo_drafting"
+    return "human_review_gate"
 
 
 def _route_after_human_review(state: CreditUnderwritingState) -> str:
@@ -95,7 +100,7 @@ def build_underwriting_graph(checkpointer=None):
         Compiled LangGraph application with HITL interrupt.
     """
     if checkpointer is None:
-        checkpointer = MemorySaver()
+        checkpointer = get_checkpointer()  # PostgresSaver when DATABASE_URL is set; MemorySaver fallback (dev)
 
     builder = StateGraph(CreditUnderwritingState)
 
@@ -163,5 +168,5 @@ def build_underwriting_graph(checkpointer=None):
 
 
 # ── Module-level default instance (development) ───────────────────────────────
-_default_checkpointer = MemorySaver()
+_default_checkpointer = get_checkpointer()  # PostgresSaver when DATABASE_URL is set; MemorySaver fallback (dev)
 graph = build_underwriting_graph(checkpointer=_default_checkpointer)

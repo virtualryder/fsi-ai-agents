@@ -40,13 +40,32 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
+# ── Claude model tiers (Anthropic) ───────────────────────────────────────────
+# NARRATIVE tier — Claude Sonnet 4.6: regulatory narratives, SAR/dispute
+#   analysis, anything an examiner, reviewer, or customer will read.
+# FAST tier — Claude Haiku 4.5: high-volume triage, classification, and
+#   scoring-assist nodes where latency and unit cost dominate.
+# Override via env: CLAUDE_NARRATIVE_MODEL / CLAUDE_FAST_MODEL.
+# ── INTEGRATION POINT (production) ───────────────────────────────────────────
+# For VPC-contained inference, swap ChatAnthropic for ChatBedrockConverse
+# (langchain-aws) with Bedrock model IDs:
+#   anthropic.claude-sonnet-4-6-20260601-v1:0  (narrative)
+#   anthropic.claude-haiku-4-5-20251001        (fast)
+# ─────────────────────────────────────────────────────────────────────────────
+import os as _os_llm
+from langchain_anthropic import ChatAnthropic
+from agent.persistence import audit_sink
+CLAUDE_NARRATIVE_MODEL = _os_llm.getenv("CLAUDE_NARRATIVE_MODEL", "claude-sonnet-4-6")
+CLAUDE_FAST_MODEL = _os_llm.getenv("CLAUDE_FAST_MODEL", "claude-haiku-4-5")
+CLAUDE_DEFAULT_MODEL = CLAUDE_NARRATIVE_MODEL
+
+
 logger = logging.getLogger(__name__)
 
 # ── Lazy LLM import ───────────────────────────────────────────────────────────
 def _get_llm():
     """Import and instantiate the LLM. Lazy import avoids cost at test time."""
-    from langchain_openai import ChatOpenAI
-    return ChatOpenAI(model="gpt-4o", temperature=0)
+    return ChatAnthropic(model=CLAUDE_DEFAULT_MODEL, temperature=0)
 
 
 # ── Constants ─────────────────────────────────────────────────────────────────
@@ -195,6 +214,19 @@ def _mask_account_number(account: str) -> str:
     return f"****{cleaned}"
 
 
+def _last4_of_account(account: str) -> str:
+    """
+    Return the bare last-4 digits of an account number for *_account_last4
+    state fields. Returns "" when no digits are present.
+    Security: the raw account number must be discarded by the caller after
+    this extraction — only the last-4 may persist in graph state.
+    """
+    if not account:
+        return ""
+    cleaned = re.sub(r"[^\d]", "", str(account))
+    return cleaned[-4:] if cleaned else ""
+
+
 def _sanitize_text(text: str, max_length: int = 3000) -> str:
     """
     Strip control characters and enforce length limit.
@@ -256,7 +288,9 @@ def _append_audit(
     prior = list(state.get("audit_trail", []))
     entry = {
         "timestamp": _now_utc(),
-        "payment_id": state.get("payment_id", ""),
+        "payment_event_id": state.get("payment_event_id", "") or state.get("payment_id", ""),
+        "payment_id": state.get("payment_id", "") or state.get("payment_event_id", ""),
+        "node": step,
         "step": step,
         **details,
     }
@@ -265,6 +299,8 @@ def _append_audit(
     # Mask any 8–17 digit sequences (account numbers)
     entry_str = re.sub(r"\b(\d{4,13})(\d{4})\b", r"****\2", entry_str)
     prior.append(json.loads(entry_str))
+    # WRITE-AHEAD: durable audit record at creation (agent/persistence.py)
+    audit_sink().record(prior[-1])
     return prior
 
 
@@ -328,8 +364,10 @@ def payment_intake_node(state: Dict[str, Any]) -> Dict[str, Any]:
     errors = list(state.get("errors", []))
     audit = list(state.get("audit_trail", []))
 
-    # Assign payment_id if not already set
-    payment_id = state.get("payment_id") or str(uuid.uuid4())
+    # Assign canonical payment_event_id if not already set (empty string is
+    # not acceptable — generate). payment_id mirrors it for legacy callers.
+    payment_event_id = state.get("payment_event_id") or state.get("payment_id") or str(uuid.uuid4())
+    payment_id = payment_event_id
 
     # Compute SHA-256 hash of core payment fields for tamper detection
     hash_input = (
@@ -342,11 +380,12 @@ def payment_intake_node(state: Dict[str, Any]) -> Dict[str, Any]:
     payment_hash = hashlib.sha256(hash_input).hexdigest()
 
     # Mask account numbers — critical security step
-    # Full account numbers must never be stored in state
-    orig_account = state.get("originator_account_last4", "")
-    recv_account = state.get("receiver_account_last4", "")
-    masked_orig = _mask_account_number(orig_account)
-    masked_recv = _mask_account_number(recv_account)
+    # Raw account numbers arrive in *_account_raw and must never survive
+    # this node: we extract last-4 and OVERWRITE the raw fields in state.
+    orig_raw = state.get("originator_account_raw") or state.get("originator_account_last4") or ""
+    recv_raw = state.get("receiver_account_raw") or state.get("receiver_account_last4") or ""
+    masked_orig = _last4_of_account(orig_raw)
+    masked_recv = _last4_of_account(recv_raw)
 
     # Sanitize free-text fields to prevent injection
     remittance = _sanitize_text(state.get("remittance_information", ""))
@@ -364,13 +403,19 @@ def payment_intake_node(state: Dict[str, Any]) -> Dict[str, Any]:
 
     if errors:
         audit_entry = _append_audit(
-            {"payment_id": payment_id, "audit_trail": []},
+            {"payment_event_id": payment_event_id, "payment_id": payment_id, "audit_trail": []},
             "payment_intake",
             {"status": "REJECTED", "errors": errors},
         )
         return {
+            "payment_event_id": payment_event_id,
             "payment_id": payment_id,
             "payment_hash": payment_hash,
+            # SECURITY: scrub raw account numbers even on the rejected path
+            "originator_account_raw": "",
+            "receiver_account_raw": "",
+            "originator_account_last4": masked_orig,
+            "receiver_account_last4": masked_recv,
             "payment_status": "REJECTED",
             "errors": errors,
             "audit_trail": audit_entry,
@@ -378,21 +423,26 @@ def payment_intake_node(state: Dict[str, Any]) -> Dict[str, Any]:
         }
 
     audit_result = _append_audit(
-        {**state, "payment_id": payment_id, "audit_trail": audit},
+        {**state, "payment_event_id": payment_event_id, "payment_id": payment_id, "audit_trail": audit},
         "payment_intake",
         {
             "payment_type": state.get("payment_type"),
             "amount": amount,
             "currency": state.get("currency", "USD"),
             "is_return": state.get("is_return", False),
-            "return_code": state.get("return_code", "NONE"),
+            "return_code": state.get("return_code") or "NONE",
             "is_dispute": state.get("is_dispute", False),
         },
     )
 
     return {
+        "payment_event_id": payment_event_id,
         "payment_id": payment_id,
         "payment_hash": payment_hash,
+        # SECURITY: raw account numbers are scrubbed here — only last-4
+        # survives into graph state / the checkpoint database.
+        "originator_account_raw": "",
+        "receiver_account_raw": "",
         "originator_account_last4": masked_orig,
         "receiver_account_last4": masked_recv,
         "remittance_information": remittance,
@@ -437,24 +487,64 @@ def sanctions_screening_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     audit = list(state.get("audit_trail", []))
 
-    # Extract country codes from BIC or IBAN
-    swift_bic = state.get("swift_bic", "")
-    iban = state.get("iban", "")
+    # ── CONTROL: screen ALL party identifiers, not just BIC/IBAN ──────────
+    # A payment with a sanctioned-country counterparty but no SWIFT BIC or
+    # IBAN (e.g., a Fedwire with party country fields only) MUST still hit.
+    # Sources screened, in order of specificity:
+    #   1. originator_country / receiver_country (explicit party fields)
+    #   2. SWIFT BIC chars 5-6 (correspondent bank country)
+    #   3. IBAN chars 1-2 (beneficiary account country)
+    swift_bic = state.get("swift_bic", "") or ""
+    iban = state.get("iban", "") or ""
     originator_id = state.get("originator_id", "")
 
     bic_country = _extract_country_from_bic(swift_bic)
     iban_country = _extract_country_from_iban(iban)
-    country_code = bic_country or iban_country
 
-    # OFAC sanctioned country check
-    # Production: replace with real-time SDN API call
-    ofac_hit = country_code in OFAC_SANCTIONED_COUNTRY_CODES
+    country_sources: List[tuple] = []  # (source_label, country_code)
+    for label, value in (
+        ("originator_country", (state.get("originator_country") or "").strip().upper()),
+        ("receiver_country", (state.get("receiver_country") or "").strip().upper()),
+        ("swift_bic", bic_country),
+        ("iban", iban_country),
+    ):
+        if value:
+            country_sources.append((label, value))
+
+    screened_countries = {c for _, c in country_sources}
+    # Legacy single-value field retained for downstream/audit compatibility:
+    # prefer an OFAC-matched country, then a FATF-matched one, then first seen.
+    country_code = next(
+        (c for c in screened_countries if c in OFAC_SANCTIONED_COUNTRY_CODES),
+        next((c for c in screened_countries if c in FATF_HIGH_RISK_COUNTRIES),
+             next(iter(screened_countries), "")),
+    )
+
+    # ── FAIL-CLOSED: missing screening data = sanctions hold ──────────────
+    # OFAC operates on strict liability. If we cannot determine ANY party
+    # jurisdiction, the payment must be held for manual screening — absence
+    # of data is never treated as a clean result.
+    screening_data_missing = len(screened_countries) == 0
+
+    # OFAC sanctioned country check (any party identifier)
+    # Production: replace with real-time SDN API call against ALL identifiers
+    ofac_matches = [
+        (label, c) for label, c in country_sources
+        if c in OFAC_SANCTIONED_COUNTRY_CODES
+    ]
+    ofac_hit = len(ofac_matches) > 0
     ofac_hit_details = ""
     if ofac_hit:
-        ofac_hit_details = f"Country code {country_code} is comprehensively sanctioned by OFAC"
+        ofac_hit_details = "; ".join(
+            f"{label}={c} is comprehensively sanctioned by OFAC"
+            for label, c in ofac_matches
+        )
 
-    # FATF high-risk jurisdiction check
-    high_risk_country = country_code in FATF_HIGH_RISK_COUNTRIES
+    # FATF high-risk jurisdiction check (any party identifier)
+    fatf_matches = [c for _, c in country_sources if c in FATF_HIGH_RISK_COUNTRIES]
+    if fatf_matches and country_code not in FATF_HIGH_RISK_COUNTRIES:
+        country_code = fatf_matches[0]
+    high_risk_country = len(fatf_matches) > 0
     high_risk_country_name = ""
     if high_risk_country and country_code:
         country_names = {
@@ -480,7 +570,15 @@ def sanctions_screening_node(state: Dict[str, Any]) -> Dict[str, Any]:
         high_risk_country = high_risk_country or bool(country_code)
 
     # Determine if payment must be placed on hold
-    sanctions_hold = ofac_hit  # Any OFAC hit = immediate hold
+    # FAIL-CLOSED: OFAC hit OR missing screening data = immediate hold.
+    # A payment we cannot screen is held, never passed.
+    sanctions_hold = ofac_hit or screening_data_missing
+    if screening_data_missing:
+        ofac_hit_details = (
+            "SCREENING DATA UNAVAILABLE: no party country, BIC, or IBAN present. "
+            "Fail-closed hold applied — manual sanctions screening required before release. "
+            "31 CFR Part 501 — OFAC strict liability."
+        )
 
     audit_result = _append_audit(
         {**state, "audit_trail": audit},
@@ -489,20 +587,25 @@ def sanctions_screening_node(state: Dict[str, Any]) -> Dict[str, Any]:
             "ofac_hit": ofac_hit,
             "high_risk_country": high_risk_country,
             "country_code": country_code,
+            "countries_screened": sorted(screened_countries),
+            "screening_sources": [f"{label}:{c}" for label, c in country_sources],
+            "screening_data_missing": screening_data_missing,
             "pep_flag": pep_flag,
             "sanctions_hold": sanctions_hold,
         },
     )
 
     logger.info(
-        "Sanctions screening for payment %s: OFAC=%s, high_risk=%s, PEP=%s",
-        state.get("payment_id"), ofac_hit, high_risk_country, pep_flag,
+        "Sanctions screening for payment %s: OFAC=%s, high_risk=%s, PEP=%s, data_missing=%s",
+        state.get("payment_event_id") or state.get("payment_id"),
+        ofac_hit, high_risk_country, pep_flag, screening_data_missing,
     )
 
     return {
         "ofac_screening_performed": True,
         "ofac_hit": ofac_hit,
         "ofac_hit_details": ofac_hit_details,
+        "screening_data_missing": screening_data_missing,
         "high_risk_country_flag": high_risk_country,
         "high_risk_country_name": high_risk_country_name,
         "pep_flag": pep_flag,
@@ -542,8 +645,12 @@ def nacha_validation_node(state: Dict[str, Any]) -> Dict[str, Any]:
     violations = []
     payment_type = state.get("payment_type", "")
     sec_code = state.get("sec_code", "UNKNOWN")
-    return_code = state.get("return_code", "NONE")
-    is_return = state.get("is_return", False)
+    # return_code may arrive as None — normalize to "NONE"
+    return_code = state.get("return_code") or "NONE"
+    # The presence of a return code IS a return event. The explicit is_return
+    # flag is honored when set, but a return code alone must never be ignored
+    # (control: a missing flag cannot suppress return-code analysis).
+    is_return = bool(state.get("is_return", False)) or return_code != "NONE"
 
     # Only perform Nacha validation for ACH transactions
     is_ach = payment_type in ("ACH_CREDIT", "ACH_DEBIT", "ACH_IAT")
@@ -561,7 +668,12 @@ def nacha_validation_node(state: Dict[str, Any]) -> Dict[str, Any]:
             "unauthorized_return_eligible": False,
             "late_return_flag": False,
             "noc_correction_required": False,
+            "noc_required": False,
             "noc_corrected_data": {},
+            # CTR threshold applies regardless of rail (31 CFR 1010.311)
+            "ctr_threshold_triggered": bool(state.get("amount"))
+            and float(state.get("amount", 0) or 0) > CTR_THRESHOLD_USD,
+            "is_return": is_return,
             "audit_trail": audit_result,
             "completed_steps": list(state.get("completed_steps", [])) + ["nacha_validation"],
         }
@@ -671,8 +783,15 @@ def nacha_validation_node(state: Dict[str, Any]) -> Dict[str, Any]:
             )
 
     # ── CTR Threshold Check ────────────────────────────────────────────────
+    # The CTR threshold flag is payment-type agnostic (31 CFR 1010.311 applies
+    # to currency transactions over $10,000 regardless of rail). The wire-
+    # specific advisory text below adds context for wire transfers.
     amount = state.get("amount", 0)
-    if amount and float(amount) > CTR_THRESHOLD_USD and payment_type in ("WIRE_DOMESTIC", "WIRE_INTERNATIONAL"):
+    try:
+        ctr_threshold_triggered = bool(amount) and float(amount) > CTR_THRESHOLD_USD
+    except (TypeError, ValueError):
+        ctr_threshold_triggered = False
+    if ctr_threshold_triggered and payment_type in ("WIRE_DOMESTIC", "WIRE_INTERNATIONAL"):
         violations.append(
             f"Wire transfer amount ${amount:,.2f} exceeds CTR threshold ${CTR_THRESHOLD_USD:,.0f}. "
             "Verify cash component — if cash involved, CTR filing required within 15 days. "
@@ -705,7 +824,10 @@ def nacha_validation_node(state: Dict[str, Any]) -> Dict[str, Any]:
         "unauthorized_return_eligible": unauthorized_return,
         "late_return_flag": late_return,
         "noc_correction_required": noc_required,
+        "noc_required": noc_required,
         "noc_corrected_data": noc_data,
+        "ctr_threshold_triggered": ctr_threshold_triggered,
+        "is_return": is_return,
         "payment_status": "VALIDATING",
         "audit_trail": audit_result,
         "completed_steps": list(state.get("completed_steps", [])) + ["nacha_validation"],
@@ -757,7 +879,7 @@ def reg_e_assessment_node(state: Dict[str, Any]) -> Dict[str, Any]:
 
     payment_type = state.get("payment_type", "")
     sec_code = state.get("sec_code", "UNKNOWN")
-    is_dispute = state.get("is_dispute", False)
+    is_dispute = bool(state.get("is_dispute", False)) or state.get("dispute_type") not in (None, "", "NOT_DISPUTE")
     dispute_type = state.get("dispute_type", "NOT_DISPUTE")
 
     # ── Determine Reg E Applicability ─────────────────────────────────────
@@ -1039,7 +1161,7 @@ def compliance_scoring_node(state: Dict[str, Any]) -> Dict[str, Any]:
     # ── Factor 2: Unauthorized Indicator ─────────────────────────────────
     return_code = state.get("return_code", "NONE")
     is_unauthorized_return = return_code in UNAUTHORIZED_RETURN_CODES
-    is_dispute = state.get("is_dispute", False)
+    is_dispute = bool(state.get("is_dispute", False)) or state.get("dispute_type") not in (None, "", "NOT_DISPUTE")
     if is_unauthorized_return or state.get("unauthorized_return_eligible"):
         unauthorized_factor = 0.8
     elif is_dispute:
@@ -1096,9 +1218,14 @@ def compliance_scoring_node(state: Dict[str, Any]) -> Dict[str, Any]:
     composite = round(min(max(composite, 0.0), 1.0), 4)
 
     # ── Tier Assignment ────────────────────────────────────────────────────
-    # HARD OVERRIDE: OFAC hit = CRITICAL regardless of composite score
-    if state.get("ofac_hit"):
+    # HARD OVERRIDE: OFAC hit = CRITICAL tier AND score forced to 1.0,
+    # regardless of composite. The override applies to BOTH outputs so no
+    # downstream consumer of the numeric score can deprioritize an OFAC hit.
+    # FAIL-CLOSED: if sanctions screening had no data to screen, the event
+    # is also forced to CRITICAL — an unscreened payment is never low risk.
+    if state.get("ofac_hit") or state.get("screening_data_missing"):
         tier = "CRITICAL"
+        composite = 1.0
     elif composite >= 0.80:
         tier = "CRITICAL"
     elif composite >= 0.60:
@@ -1283,7 +1410,7 @@ def routing_decision_node(state: Dict[str, Any]) -> Dict[str, Any]:
     late_return = state.get("late_return_flag", False)
     high_risk_country = state.get("high_risk_country_flag", False)
     sar_candidate = state.get("score_breakdown", {}).get("sar_candidate", False)
-    is_dispute = state.get("is_dispute", False)
+    is_dispute = bool(state.get("is_dispute", False)) or state.get("dispute_type") not in (None, "", "NOT_DISPUTE")
     noc_only = state.get("noc_correction_required", False) and not is_dispute
     payment_type = state.get("payment_type", "UNKNOWN")
     violation_count = state.get("violation_count", 0)
@@ -1299,7 +1426,7 @@ def routing_decision_node(state: Dict[str, Any]) -> Dict[str, Any]:
     if ofac_hit:
         human_review_required = True
         human_review_reason = "OFAC SDN match — sanctions hold required. BSA Officer must review."
-        target_team = "BSA"
+        target_team = "BSA_COMPLIANCE"
         resolution_type = "BLOCK_AND_FREEZE"
         escalation_path = ["BSA_OFFICER", "COMPLIANCE_OFFICER", "LEGAL"]
 
@@ -1307,7 +1434,7 @@ def routing_decision_node(state: Dict[str, Any]) -> Dict[str, Any]:
     elif high_risk_country and payment_type in ("WIRE_INTERNATIONAL", "ACH_IAT"):
         human_review_required = True
         human_review_reason = f"Wire to high-risk country ({state.get('high_risk_country_name')}) — enhanced due diligence required."
-        target_team = "BSA"
+        target_team = "BSA_COMPLIANCE"
         resolution_type = "BLOCK_AND_FREEZE"
         escalation_path = ["BSA_OFFICER", "COMPLIANCE_OFFICER"]
 
@@ -1315,7 +1442,7 @@ def routing_decision_node(state: Dict[str, Any]) -> Dict[str, Any]:
     elif sar_candidate:
         human_review_required = True
         human_review_reason = f"SAR consideration: ${amount:,.2f} unauthorized/suspicious activity. BSA review required."
-        target_team = "BSA"
+        target_team = "BSA_COMPLIANCE"
         resolution_type = "ESCALATE_TO_BSA"
         escalation_path = ["BSA_OFFICER", "COMPLIANCE_OFFICER"]
 
@@ -1513,7 +1640,7 @@ def resolution_drafting_node(state: Dict[str, Any]) -> Dict[str, Any]:
     llm = _get_llm()
     resolution_type = state.get("resolution_type", "NO_ACTION_REQUIRED")
     reg_e_applicable = state.get("reg_e_applicable", False)
-    is_dispute = state.get("is_dispute", False)
+    is_dispute = bool(state.get("is_dispute", False)) or state.get("dispute_type") not in (None, "", "NOT_DISPUTE")
 
     customer_notice_text = ""
     customer_notice_required = False

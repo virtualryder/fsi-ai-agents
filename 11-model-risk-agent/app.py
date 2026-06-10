@@ -59,8 +59,8 @@ SCENARIOS = load_scenarios()
 MODEL_REGISTRY = load_model_registry()
 VALIDATION_MATRIX = load_validation_matrix()
 
-DEMO_MODE = not bool(os.getenv("OPENAI_API_KEY", "").startswith("sk-") and
-                     len(os.getenv("OPENAI_API_KEY", "")) > 20)
+DEMO_MODE = not bool(os.getenv("ANTHROPIC_API_KEY", "").startswith("sk-") and
+                     len(os.getenv("ANTHROPIC_API_KEY", "")) > 20)
 
 # ── Color helpers ─────────────────────────────────────────────────────────────
 
@@ -100,9 +100,9 @@ with st.sidebar:
     st.markdown("**Agent 11 · FSI AI Suite**")
 
     if DEMO_MODE:
-        st.warning("**Demo Mode** — Pre-computed scenarios active. Add `OPENAI_API_KEY` for live LLM validation.", icon="⚠️")
+        st.warning("**Demo Mode** — Pre-computed scenarios active. Add `ANTHROPIC_API_KEY` for live LLM validation.", icon="⚠️")
     else:
-        st.success("**Live Mode** — Connected to OpenAI GPT-4o", icon="✅")
+        st.success("**Live Mode** — Connected to OpenAI Claude Sonnet 4.6", icon="✅")
 
     st.markdown("---")
     st.markdown("**Models Under Governance**")
@@ -930,7 +930,7 @@ cd fsi-ai-agents/11-model-risk-agent
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure (OPENAI_API_KEY optional — demo mode works without it)
+# Configure (ANTHROPIC_API_KEY optional — demo mode works without it)
 cp .env.example .env
 
 # Run (port 8511)
