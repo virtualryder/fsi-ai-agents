@@ -195,6 +195,52 @@ AI copilot for relationship managers: automates meeting prep, proposal writing, 
 
 ---
 
+### 06 · Regulatory Change Management Agent
+**[`06-regulatory-change-agent/`](./06-regulatory-change-agent/)**
+
+Automated regulatory change monitoring, gap analysis, and remediation planning across 9 regulatory authorities (FinCEN, OCC, Federal Reserve, FDIC, CFPB, SEC, FINRA, NCUA, FATF). The 5-factor Python impact scoring model and gap analysis workflow replace 8–40 hours of manual compliance analyst work per regulatory change.
+
+| What it does | The number |
+|---|---|
+| Manual hours per HIGH-impact change | 26 hrs → 2.5 hrs (90% reduction) |
+| Regulatory sources monitored | 9 authorities, continuous |
+| Annual savings (4-analyst regional bank) | $849K–$1.5M |
+| 3-year NPV | $2.0M |
+| Payback period | < 8 weeks |
+
+**Workflow:** Change intake → source validation → scope determination → policy mapping → gap analysis (LLM) → impact scoring (Python: 5-factor, SR 11-7) → routing → **CCO review gate (HITL)** → remediation planning → stakeholder notification → tracking update → finalize
+
+**Impact tiers:** CRITICAL ≥0.85 · HIGH 0.65–0.84 · MEDIUM 0.40–0.64 · LOW <0.40 — all Python, no LLM in routing
+
+**Hard rules:** Enforcement actions → minimum HIGH + mandatory HITL. Already-effective Tier 1 regulations → CRITICAL. Compliance window too short for MEDIUM complexity → escalates to HIGH.
+
+**Regulatory coverage:** FFIEC BSA/AML Examination Manual, OCC 12 CFR Part 30 App. D, FDIC FIL-44-2008, SR 11-7, all 9 monitored authority frameworks
+
+---
+
+### 07 · Trading Surveillance Agent
+**[`07-trading-surveillance-agent/`](./07-trading-surveillance-agent/)**
+
+Automated trading surveillance across 11 market abuse alert types: layering/spoofing, front running, wash trading, insider trading, marking the close, excessive trading, best execution failures, short selling violations, cross-market manipulation, information barrier breaches, and unusual activity. Python pattern detection scores every alert; the LLM assembles market context and drafts the disposition memo.
+
+| What it does | The number |
+|---|---|
+| Hours per HIGH alert | 6 hrs → 1.2 hrs (80% reduction) |
+| Alert types covered | 11 (FINRA 3110 / Dodd-Frank / SEC Rule 10b-5) |
+| Annual savings (6-analyst BD) | $2.6M |
+| 3-year NPV | $7.0M |
+| SAR auto-generation | $5K BSA threshold — Python determination |
+
+**Workflow:** Alert intake → data enrichment → pattern detection (Python, 11 rules) → market context (LLM) → risk scoring (Python, 5 factors) → routing → **compliance officer review gate (HITL)** → investigation narrative (LLM) → disposition → case tracking → finalize
+
+**Hard overrides:** INSIDER_TRADING, INFORMATION_BARRIER_BREACH, CROSS_MARKET_MANIPULATION → always CRITICAL + mandatory HITL. Python `frozenset` — cannot be configured away.
+
+**SAR determination:** Python rule (`amount ≥ $5,000 AND suspicious_activity`), not LLM. Tipping-off prohibition (31 U.S.C. § 5318(g)(2)) enforced in system prompt — no LLM output can disclose SAR to subject.
+
+**Regulatory coverage:** FINRA Rule 3110/4511/5210/5270/5310, SEC Rule 10b-5, Dodd-Frank § 747, Reg SHO Rules 203-204, BSA 31 CFR § 1023.320, SR 11-7
+
+---
+
 ### 08 · Credit Underwriting Agent
 **[`08-credit-underwriting-agent/`](./08-credit-underwriting-agent/)**
 
@@ -321,32 +367,41 @@ Security:
 
 ## Regulatory Coverage Map
 
-| Regulation | Agent 01 | Agent 02 | Agent 03 | Agent 04 | Agent 05 | Agent 06 | Agent 07 |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| BSA 31 U.S.C. § 5318 (SAR filing) | ✅ | ✅ | ✅ | ✅ | — | — | ✅ |
-| FinCEN CDD Rule (31 CFR 1020.210) | ✅ | ✅ | ✅ | — | — | ✅ | — |
-| OFAC IEEPA (SDN screening, 50% rule) | ✅ | ✅ | ✅ | ✅ | — | — | — |
-| FATF R.10 (Customer due diligence) | ✅ | — | ✅ | — | — | — | — |
-| FATF R.12 (PEP enhanced due diligence) | ✅ | ✅ | ✅ | — | — | — | — |
-| FATF R.20 (Suspicious transaction reporting) | ✅ | ✅ | — | ✅ | — | — | ✅ |
-| USA PATRIOT Act § 326 (CIP) | ✅ | — | ✅ | — | — | — | — |
-| FIN-2014-G001 (SAR narrative format) | ✅ | — | — | — | — | — | ✅ |
-| SR 11-7 (Model risk management) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| FFIEC BSA/AML Examination Manual | ✅ | ✅ | ✅ | — | — | ✅ | — |
-| 18 U.S.C. § 1960 (No tipping off) | ✅ | — | — | — | ✅ | — | ✅ |
-| 5-year BSA record retention | ✅ | ✅ | ✅ | ✅ | — | ✅ | — |
-| Reg E (EFTA) — provisional credit | — | — | — | ✅ | — | — | — |
-| Nacha Rules (ACH fraud) | — | — | — | ✅ | — | — | — |
-| Reg BI (17 CFR 240.15l-1) | — | — | — | — | ✅ | — | — |
-| FINRA Rule 2111 (Suitability) | — | — | — | — | ✅ | — | ✅ |
-| FINRA Rule 2210 (Communications) | — | — | — | — | ✅ | — | — |
-| FINRA Rule 3110 (Supervisory procedures) | — | — | — | — | — | — | ✅ |
-| FINRA Rule 4511 (Books and records) | — | — | — | — | — | — | ✅ |
-| ERISA (retirement account fiduciary) | — | — | — | — | ✅ | — | — |
-| GLBA (data privacy / PII) | ✅ | ✅ | ✅ | ✅ | ✅ | — | — |
-| Dodd-Frank § 747 (Spoofing ban) | — | — | — | — | — | — | ✅ |
-| SEC Regulation SHO (Short selling) | — | — | — | — | — | — | ✅ |
-| SEC Rule 10b-5 (Market manipulation) | — | — | — | — | — | — | ✅ |
+| Regulation | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | 10 |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| BSA 31 U.S.C. § 5318 (SAR filing) | ✅ | ✅ | ✅ | ✅ | — | — | ✅ | — | ✅ | ✅ |
+| FinCEN CDD Rule (31 CFR 1020.210) | ✅ | ✅ | ✅ | — | — | ✅ | — | — | ✅ | ✅ |
+| OFAC IEEPA (SDN screening, 50% rule) | ✅ | ✅ | ✅ | ✅ | — | — | — | ✅ | ✅ | ✅ |
+| FATF R.10 (Customer due diligence) | ✅ | — | ✅ | — | — | — | — | — | — | ✅ |
+| FATF R.12 (PEP enhanced due diligence) | ✅ | ✅ | ✅ | — | — | — | — | — | — | — |
+| FATF R.20 (Suspicious transaction reporting) | ✅ | ✅ | — | ✅ | — | — | ✅ | — | — | ✅ |
+| USA PATRIOT Act § 326 (CIP) | ✅ | — | ✅ | — | — | — | — | ✅ | ✅ | — |
+| FIN-2014-G001 (SAR narrative format) | ✅ | — | — | — | — | — | ✅ | — | — | ✅ |
+| SR 11-7 (Model risk management) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| FFIEC BSA/AML Examination Manual | ✅ | ✅ | ✅ | — | — | ✅ | — | — | — | — |
+| 18 U.S.C. § 1960 (No tipping off) | ✅ | — | — | — | ✅ | — | ✅ | — | — | ✅ |
+| 5-year BSA record retention | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Reg E (EFTA) — provisional credit / disputes | — | — | — | ✅ | — | — | — | — | — | ✅ |
+| Nacha Operating Rules (ACH return / NOC) | — | — | — | ✅ | — | — | — | — | — | ✅ |
+| Reg BI (17 CFR 240.15l-1) | — | — | — | — | ✅ | — | — | — | — | — |
+| FINRA Rule 2111 (Suitability) | — | — | — | — | ✅ | — | ✅ | — | — | — |
+| FINRA Rule 2210 (Communications) | — | — | — | — | ✅ | — | — | — | — | — |
+| FINRA Rule 3110 (Supervisory procedures) | — | — | — | — | — | — | ✅ | — | — | — |
+| FINRA Rule 4511 (Books and records) | — | — | — | — | — | — | ✅ | — | — | — |
+| ERISA (retirement account fiduciary) | — | — | — | — | ✅ | — | — | — | — | — |
+| GLBA (data privacy / PII safeguards) | ✅ | ✅ | ✅ | ✅ | ✅ | — | — | ✅ | ✅ | ✅ |
+| Dodd-Frank § 747 (Spoofing ban) | — | — | — | — | — | — | ✅ | — | — | — |
+| SEC Regulation SHO (Short selling) | — | — | — | — | — | — | ✅ | — | — | — |
+| SEC Rule 10b-5 (Market manipulation) | — | — | — | — | — | — | ✅ | — | — | — |
+| ECOA / Reg B (Fair lending, adverse action) | — | — | — | — | — | — | — | ✅ | ✅ | — |
+| HMDA (Home Mortgage Disclosure Act) | — | — | — | — | — | — | — | ✅ | ✅ | — |
+| CRA (Community Reinvestment Act) | — | — | — | — | — | — | — | ✅ | — | — |
+| Reg Z / TILA (Truth in Lending) | — | — | — | — | — | — | — | ✅ | — | — |
+| SBA 7(a) / 504 Program Rules | — | — | — | — | — | — | — | ✅ | — | — |
+| CFPB Prepaid Rule (12 CFR Part 1005) | — | — | — | — | — | — | — | — | — | ✅ |
+| UCC Article 4A (Wire transfer liability) | — | — | — | — | — | — | — | — | — | ✅ |
+| OFAC Blocking Report (501.604 SLA) | — | — | — | — | — | — | — | — | — | ✅ |
+| CTR (31 CFR 1010.311 — $10K threshold) | ✅ | — | — | — | — | — | — | — | — | ✅ |
 
 ---
 
@@ -394,37 +449,82 @@ Each agent runs independently. No shared infrastructure required for development
 git clone https://github.com/virtualryder/fsi-ai-agents
 cd fsi-ai-agents
 
-# Start with Agent 01 (Financial Crime Investigation)
-cd 01-financial-crime-investigation-agent
+# ── RECOMMENDED: Start with Agent 09 (Document Intelligence) ──────────────
+# Deploy first — its structured output immediately benefits every other agent.
+cd 09-document-intelligence-agent
 cp .env.example .env
-# Add OPENAI_API_KEY to .env
+# Add OPENAI_API_KEY to .env (optional — demo mode works without it)
 docker compose up
-# Open: http://localhost:8501
+# Open: http://localhost:8509
 
-# Then try Agent 02 (TMS Enhancement)
+# ── FINANCIAL CRIME LOOP ──────────────────────────────────────────────────
+# Agent 02 first (upstream FP suppressor), then Agent 01 (investigation)
 cd ../02-aml-tms-enhancement-agent
 cp .env.example .env
 docker compose up
 # Open: http://localhost:8502
 
-# Then try Agent 03 (KYC/CDD)
+cd ../01-financial-crime-investigation-agent
+cp .env.example .env
+docker compose up
+# Open: http://localhost:8501
+
 cd ../03-kyc-cdd-perpetual-agent
 cp .env.example .env
 docker compose up
 # Open: http://localhost:8503
 
-# Then try Agent 04 (Real-Time Fraud Detection)
+# ── FRAUD & PAYMENTS ──────────────────────────────────────────────────────
 cd ../04-fraud-detection-agent
 cp .env.example .env
 docker compose up
 # Open: http://localhost:8504
 
-# Then try Agent 05 (Wealth & RM Copilot)
+cd ../10-payments-compliance-agent
+cp .env.example .env
+docker compose up
+# Open: http://localhost:8510
+
+# ── CUSTOMER INTELLIGENCE ────────────────────────────────────────────────
 cd ../05-wealth-rm-copilot
 cp .env.example .env
 docker compose up
 # Open: http://localhost:8505
+
+# ── COMPLIANCE OPERATIONS ────────────────────────────────────────────────
+cd ../06-regulatory-change-agent
+cp .env.example .env
+docker compose up
+# Open: http://localhost:8506
+
+cd ../07-trading-surveillance-agent
+cp .env.example .env
+docker compose up
+# Open: http://localhost:8507
+
+# ── LENDING ──────────────────────────────────────────────────────────────
+cd ../08-credit-underwriting-agent
+cp .env.example .env
+docker compose up
+# Open: http://localhost:8508
 ```
+
+> **Demo mode:** All agents run with pre-computed scenarios when `OPENAI_API_KEY` is absent. Start any agent without an API key to explore the full UI and all regulatory decision paths.
+
+**Port reference:**
+
+| Agent | Port |
+|---|---|
+| 01 · Financial Crime Investigation | 8501 |
+| 02 · AML/TMS Enhancement | 8502 |
+| 03 · KYC/CDD Perpetual Monitoring | 8503 |
+| 04 · Real-Time Fraud Detection | 8504 |
+| 05 · Wealth & RM Copilot | 8505 |
+| 06 · Regulatory Change Management | 8506 |
+| 07 · Trading Surveillance | 8507 |
+| 08 · Credit Underwriting | 8508 |
+| 09 · Document Intelligence | 8509 |
+| 10 · Payments Compliance | 8510 |
 
 ---
 
