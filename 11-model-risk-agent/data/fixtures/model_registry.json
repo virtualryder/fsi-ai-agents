@@ -1,0 +1,288 @@
+{
+  "_comment": "Model registry reference for Agent 11. In production this lives in DynamoDB (append-only) with IAM-enforced immutability. Changes require MRO authentication and are logged. This fixture is the source of truth for demo mode.",
+
+  "registry_version": "2.0",
+  "last_updated": "2026-06-09",
+
+  "models": {
+    "AGT02-FP-SCORE-v1": {
+      "model_id": "AGT02-FP-SCORE-v1",
+      "agent": "02",
+      "agent_name": "AML/TMS Enhancement Agent",
+      "model_name": "False Positive Probability Composite",
+      "model_type": "COMPOSITE_SCORING",
+      "version": "1.0",
+      "status": "APPROVED",
+      "risk_tier": "HIGH",
+      "last_validated": "2025-03-15",
+      "next_revalidation_due": "2026-03-15",
+      "model_owner": "Financial Crime Operations",
+      "model_developer": "AI/ML Team",
+      "independent_validator": "Model Risk Management",
+      "use_case": "Pre-queue false positive suppression for TMS alerts — reduces analyst workload by suppressing ~50% of alerts as false positives before they reach the analyst queue.",
+      "regulatory_basis": "SR 11-7 model risk management; BSA/AML examination manual guidance on alert management efficiency",
+      "weights": {
+        "rule_based_prescore": 0.30,
+        "llm_contextual": 0.50,
+        "historical_fp_rates": 0.20
+      },
+      "decision_thresholds": {
+        "SUPPRESS": 0.85,
+        "DOWNGRADE": 0.60,
+        "PASS_THROUGH": 0.15,
+        "ESCALATE": 0.0
+      },
+      "hard_rules": [
+        "PEP_flag → always ESCALATE (not suppressible)",
+        "HIGH_RISK_GEO + LARGE_WIRE + NEW_ACCOUNT → always ESCALATE",
+        "OFAC_match → always ESCALATE"
+      ],
+      "known_limitations": [
+        "LLM component (50% weight) introduces non-determinism bounded by Python feature inputs",
+        "Historical FP rates require at least 90 days of data to be statistically reliable",
+        "Performance may degrade during regulatory threshold changes before retraining"
+      ],
+      "revalidation_months": 12,
+      "monitoring_frequency": "MONTHLY",
+      "performance_baseline": {
+        "accuracy": 94.8,
+        "gini_coefficient": 70.1,
+        "ks_statistic": 54.3,
+        "auc_roc": 0.940,
+        "false_positive_rate": 9.2,
+        "false_negative_rate": 13.9,
+        "psi": 0.05
+      }
+    },
+
+    "AGT03-KYC-RISK-v1": {
+      "model_id": "AGT03-KYC-RISK-v1",
+      "agent": "03",
+      "agent_name": "KYC/CDD Perpetual Monitoring Agent",
+      "model_name": "8-Factor Customer Risk Score",
+      "model_type": "WEIGHTED_RISK_SCORE",
+      "version": "1.0",
+      "status": "APPROVED",
+      "risk_tier": "HIGH",
+      "last_validated": "2026-02-01",
+      "next_revalidation_due": "2027-02-01",
+      "model_owner": "KYC/CDD Compliance",
+      "model_developer": "AI/ML Team",
+      "independent_validator": "Model Risk Management",
+      "use_case": "8-factor weighted customer risk scoring for perpetual KYC monitoring. Determines CDD refresh routing: PASS, EDD_REQUIRED, ESCALATE, or EXIT.",
+      "regulatory_basis": "FinCEN CDD Rule (31 CFR 1020.210); FATF R.10/R.12; FFIEC BSA/AML Examination Manual; SR 11-7",
+      "weights": {
+        "transaction_behavior": 0.20,
+        "pep_flag": 0.15,
+        "adverse_media": 0.15,
+        "jurisdiction": 0.15,
+        "documents": 0.10,
+        "beneficial_ownership": 0.10,
+        "industry": 0.10,
+        "tenure": 0.05
+      },
+      "decision_thresholds": {
+        "ESCALATE": 0.85,
+        "EDD_REQUIRED": 0.65,
+        "PASS": 0.40,
+        "EXIT": "rule_based"
+      },
+      "hard_rules": [
+        "OFAC_hit → ESCALATE always (unresetable)",
+        "PEP_flag → minimum EDD_REQUIRED"
+      ],
+      "known_limitations": [
+        "Adverse media score relies on LLM text classification — subject to model behavior changes",
+        "Tenure factor provides low discriminatory power for new customers (<90 days)",
+        "Jurisdiction risk scores are updated quarterly — may lag emerging risk events"
+      ],
+      "revalidation_months": 12,
+      "monitoring_frequency": "MONTHLY",
+      "performance_baseline": {
+        "accuracy": 93.1,
+        "gini_coefficient": 70.4,
+        "ks_statistic": 52.9,
+        "auc_roc": 0.931,
+        "false_positive_rate": 11.4,
+        "false_negative_rate": 14.1,
+        "psi": 0.05
+      }
+    },
+
+    "AGT04-FRAUD-SCORE-v1": {
+      "model_id": "AGT04-FRAUD-SCORE-v1",
+      "agent": "04",
+      "agent_name": "Real-Time Fraud Detection Agent",
+      "model_name": "Fraud Detection Composite Score",
+      "model_type": "COMPOSITE_SCORING",
+      "version": "1.0",
+      "status": "APPROVED",
+      "risk_tier": "HIGH",
+      "last_validated": "2025-09-01",
+      "next_revalidation_due": "2026-09-01",
+      "model_owner": "Fraud Operations",
+      "model_developer": "AI/ML Team",
+      "independent_validator": "Model Risk Management",
+      "use_case": "Real-time composite fraud scoring for authorization decisions. Drives BLOCK / STEP_UP_AUTH / ANALYST_REVIEW / ALLOW routing at sub-200ms latency.",
+      "regulatory_basis": "SR 11-7; Reg E (EFTA) for provisional credit obligations; BSA/AML for SAR consideration",
+      "weights": {
+        "rule_engine": 0.30,
+        "llm_analysis": 0.50,
+        "historical_pattern": 0.20
+      },
+      "decision_thresholds": {
+        "BLOCK": 85,
+        "STEP_UP_AUTH": 65,
+        "ANALYST_REVIEW": 40,
+        "ALLOW": 0
+      },
+      "hard_rules": [
+        "confirmed_fraud_ip (RULE-091) → BLOCK regardless of composite score",
+        "tor_exit_node (RULE-092) → BLOCK regardless of composite score"
+      ],
+      "known_limitations": [
+        "LLM component (50% weight) is primary discriminator — model is sensitive to LLM version changes",
+        "Real-time path (<200ms) uses deterministic rules only; LLM enrichment is async",
+        "Historical pattern baseline requires 6 months of labeled data per fraud typology"
+      ],
+      "revalidation_months": 12,
+      "monitoring_frequency": "WEEKLY",
+      "performance_baseline": {
+        "accuracy": 94.1,
+        "gini_coefficient": 70.1,
+        "ks_statistic": 54.7,
+        "auc_roc": 0.941,
+        "false_positive_rate": 9.8,
+        "false_negative_rate": 13.2,
+        "psi": 0.06
+      }
+    },
+
+    "AGT07-SURV-RISK-v1": {
+      "model_id": "AGT07-SURV-RISK-v1",
+      "agent": "07",
+      "agent_name": "Trading Surveillance Agent",
+      "model_name": "5-Factor Trading Surveillance Risk Score",
+      "model_type": "WEIGHTED_RISK_SCORE",
+      "version": "1.0",
+      "status": "APPROVED",
+      "risk_tier": "HIGH",
+      "last_validated": "2025-11-01",
+      "next_revalidation_due": "2026-11-01",
+      "model_owner": "Trading Surveillance",
+      "model_developer": "AI/ML Team",
+      "independent_validator": "Model Risk Management",
+      "use_case": "5-factor surveillance risk scoring across 11 market abuse alert types. Determines CRITICAL/HIGH/MEDIUM/LOW severity and HITL routing.",
+      "regulatory_basis": "SR 11-7; FINRA Rule 3110 (supervisory procedures); SEC Rule 10b-5; Dodd-Frank § 747",
+      "weights": {
+        "pattern_severity": 0.25,
+        "trade_size": 0.25,
+        "recidivism": 0.20,
+        "regulatory_exposure": 0.15,
+        "evidence_quality": 0.15
+      },
+      "decision_thresholds": {
+        "CRITICAL": 0.85,
+        "HIGH": 0.65,
+        "MEDIUM": 0.40,
+        "LOW": 0.0
+      },
+      "hard_rules": [
+        "INSIDER_TRADING → always CRITICAL + mandatory HITL (Python frozenset)",
+        "INFORMATION_BARRIER_BREACH → always CRITICAL + mandatory HITL",
+        "CROSS_MARKET_MANIPULATION → always CRITICAL + mandatory HITL"
+      ],
+      "known_limitations": [
+        "Market context LLM node introduces latency variability under high alert volume",
+        "Recidivism factor requires 12-month historical window — less effective for new traders",
+        "Pattern detection thresholds calibrated for equity markets — may require recalibration for FX/crypto"
+      ],
+      "revalidation_months": 12,
+      "monitoring_frequency": "MONTHLY",
+      "performance_baseline": {
+        "accuracy": 91.7,
+        "gini_coefficient": 67.4,
+        "ks_statistic": 50.2,
+        "auc_roc": 0.918,
+        "false_positive_rate": 13.1,
+        "false_negative_rate": 16.8,
+        "psi": 0.06
+      }
+    },
+
+    "AGT08-CREDIT-SCORE-v1": {
+      "model_id": "AGT08-CREDIT-SCORE-v1",
+      "agent": "08",
+      "agent_name": "Credit Underwriting Agent",
+      "model_name": "5-Factor Credit Underwriting Composite",
+      "model_type": "COMPOSITE_SCORING",
+      "version": "1.0",
+      "status": "APPROVED",
+      "risk_tier": "HIGH",
+      "last_validated": "2026-01-15",
+      "next_revalidation_due": "2027-01-15",
+      "model_owner": "Credit Risk",
+      "model_developer": "AI/ML Team",
+      "independent_validator": "Model Risk Management",
+      "use_case": "5-factor credit underwriting composite across 12 loan types. Produces APPROVE / APPROVE_WITH_CONDITIONS / REFER / DECLINE routing for underwriter review.",
+      "regulatory_basis": "SR 11-7; ECOA/Reg B (fair lending, adverse action); HMDA; CRA; SR 11-7 model risk",
+      "weights": {
+        "credit_quality": 0.30,
+        "dti_analysis": 0.25,
+        "ltv_analysis": 0.20,
+        "cash_flow": 0.15,
+        "collateral": 0.10
+      },
+      "decision_thresholds": {
+        "APPROVE": 0.70,
+        "APPROVE_WITH_CONDITIONS": 0.55,
+        "REFER": 0.40,
+        "DECLINE": 0.0
+      },
+      "hard_rules": [
+        "DTI > 50% → DECLINE (all loan types, regardless of composite score)",
+        "FICO < 580 conventional → DECLINE_HARD_BLOCK",
+        "Chapter_7 < 2 years → DECLINE_HARD_BLOCK",
+        "OFAC_hit → DECLINE_HARD_BLOCK (unresetable by any application code path)"
+      ],
+      "known_limitations": [
+        "Cash flow analysis depends on document quality from Agent 09 — accuracy degrades with low-quality scans",
+        "Collateral scoring for non-standard properties (rural, mixed-use, unique) has higher uncertainty",
+        "SBA 7(a)/504 scoring uses specialized weights not validated on conventional loan data"
+      ],
+      "revalidation_months": 12,
+      "monitoring_frequency": "MONTHLY",
+      "performance_baseline": {
+        "accuracy": 91.4,
+        "gini_coefficient": 65.2,
+        "ks_statistic": 49.8,
+        "auc_roc": 0.916,
+        "false_positive_rate": 12.7,
+        "false_negative_rate": 15.9,
+        "psi": 0.07
+      }
+    }
+  },
+
+  "validation_history_summary": {
+    "_comment": "Summary of recent validation events. Full history in DynamoDB audit trail.",
+    "AGT02-FP-SCORE-v1": [
+      {"date": "2024-03-10", "type": "INITIAL_VALIDATION", "outcome": "APPROVED", "validator": "External MRM Firm"},
+      {"date": "2025-03-15", "type": "ANNUAL_REVALIDATION", "outcome": "APPROVED", "validator": "Internal MRM"}
+    ],
+    "AGT03-KYC-RISK-v1": [
+      {"date": "2025-06-01", "type": "INITIAL_VALIDATION", "outcome": "CONDITIONALLY_APPROVED", "validator": "Internal MRM", "conditions": "Jurisdiction risk score update cycle reduced from quarterly to monthly"},
+      {"date": "2026-02-01", "type": "ANNUAL_REVALIDATION", "outcome": "APPROVED", "validator": "Internal MRM"}
+    ],
+    "AGT04-FRAUD-SCORE-v1": [
+      {"date": "2024-09-01", "type": "INITIAL_VALIDATION", "outcome": "APPROVED", "validator": "External MRM Firm"},
+      {"date": "2025-09-01", "type": "ANNUAL_REVALIDATION", "outcome": "APPROVED", "validator": "Internal MRM"}
+    ],
+    "AGT07-SURV-RISK-v1": [
+      {"date": "2025-11-01", "type": "INITIAL_VALIDATION", "outcome": "APPROVED", "validator": "Internal MRM"}
+    ],
+    "AGT08-CREDIT-SCORE-v1": [
+      {"date": "2026-01-15", "type": "INITIAL_VALIDATION", "outcome": "APPROVED", "validator": "Internal MRM"}
+    ]
+  }
+}

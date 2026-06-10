@@ -1,0 +1,293 @@
+{
+  "_comment": "Pre-computed demo scenarios for Agent 11 Model Risk Management Agent. Used when OPENAI_API_KEY is absent or in demo mode. Each scenario represents a real SR 11-7 validation event type with realistic metrics and findings.",
+
+  "scenarios": [
+    {
+      "id": "DEMO-001",
+      "label": "Agent 02 TMS Enhancement — Annual Revalidation",
+      "description": "Scheduled annual revalidation of the false positive probability composite model. Model is performing within acceptable bounds with minor PSI trend noted.",
+      "input": {
+        "model_id": "AGT02-FP-SCORE-v1",
+        "validation_type": "ANNUAL_REVALIDATION",
+        "requested_by": "MODEL_RISK_OFFICER",
+        "validation_period_start": "2025-10-01",
+        "validation_period_end": "2026-03-31",
+        "last_validation_date": "2025-03-15",
+        "triggering_event": null,
+        "current_metrics": {
+          "accuracy": 93.2,
+          "precision": 0.891,
+          "recall": 0.847,
+          "f1_score": 0.868,
+          "gini_coefficient": 68.4,
+          "ks_statistic": 52.1,
+          "psi": 0.09,
+          "auc_roc": 0.924,
+          "false_positive_rate": 10.8,
+          "false_negative_rate": 15.3
+        },
+        "baseline_metrics": {
+          "accuracy": 94.8,
+          "precision": 0.908,
+          "recall": 0.861,
+          "f1_score": 0.884,
+          "gini_coefficient": 70.1,
+          "ks_statistic": 54.3,
+          "psi": 0.05,
+          "auc_roc": 0.940,
+          "false_positive_rate": 9.2,
+          "false_negative_rate": 13.9
+        },
+        "challenger_metrics": null
+      },
+      "computed_output": {
+        "risk_tier": "HIGH",
+        "metric_deltas": {
+          "accuracy": -1.6,
+          "gini_coefficient": -1.7,
+          "ks_statistic": -2.2,
+          "psi": 0.04,
+          "false_positive_rate": 1.6,
+          "false_negative_rate": 1.4
+        },
+        "psi_score": 0.09,
+        "psi_flag": "STABLE",
+        "degradation_flags": [],
+        "material_findings": [],
+        "performance_outcome": "PASS",
+        "hitl_conditions": ["ANNUAL_REVALIDATION_HIGH_TIER"],
+        "human_review_required": true,
+        "target_reviewer": "MODEL_RISK_OFFICER",
+        "resolution_type": "APPROVED",
+        "findings_summary": "Annual revalidation of AGT02-FP-SCORE-v1. All metrics within acceptable tolerance. No degradation flags triggered. PSI is STABLE at 0.09 (just below 0.10 WARNING threshold — monitor). HIGH-tier model requires MRO sign-off. Recommended outcome: APPROVED.",
+        "next_revalidation_date": "2027-03-01"
+      }
+    },
+    {
+      "id": "DEMO-002",
+      "label": "Agent 04 Fraud Detection — Triggered Review (Performance Degradation)",
+      "description": "Triggered review after monitoring detected Gini coefficient decline of 12.3 points over 90 days. HIGH-tier model with material degradation — immediate MRO and CRO review required.",
+      "input": {
+        "model_id": "AGT04-FRAUD-SCORE-v1",
+        "validation_type": "TRIGGERED_REVIEW",
+        "requested_by": "MODEL_MONITORING_SYSTEM",
+        "validation_period_start": "2026-01-01",
+        "validation_period_end": "2026-03-31",
+        "last_validation_date": "2025-09-01",
+        "triggering_event": "Gini coefficient declined 12.3 points in 90-day monitoring window. Alert threshold: 10 points. Automated trigger from CloudWatch model monitoring alarm.",
+        "current_metrics": {
+          "accuracy": 88.4,
+          "precision": 0.821,
+          "recall": 0.779,
+          "f1_score": 0.799,
+          "gini_coefficient": 57.8,
+          "ks_statistic": 43.2,
+          "psi": 0.19,
+          "auc_roc": 0.889,
+          "false_positive_rate": 17.9,
+          "false_negative_rate": 22.1
+        },
+        "baseline_metrics": {
+          "accuracy": 94.1,
+          "precision": 0.902,
+          "recall": 0.868,
+          "f1_score": 0.885,
+          "gini_coefficient": 70.1,
+          "ks_statistic": 54.7,
+          "psi": 0.06,
+          "auc_roc": 0.941,
+          "false_positive_rate": 9.8,
+          "false_negative_rate": 13.2
+        },
+        "challenger_metrics": {
+          "accuracy": 93.8,
+          "precision": 0.899,
+          "recall": 0.856,
+          "f1_score": 0.877,
+          "gini_coefficient": 69.4,
+          "ks_statistic": 53.8,
+          "auc_roc": 0.937
+        }
+      },
+      "computed_output": {
+        "risk_tier": "HIGH",
+        "metric_deltas": {
+          "accuracy": -5.7,
+          "gini_coefficient": -12.3,
+          "ks_statistic": -11.5,
+          "psi": 0.13,
+          "false_positive_rate": 8.1,
+          "false_negative_rate": 8.9
+        },
+        "psi_score": 0.19,
+        "psi_flag": "WARNING",
+        "degradation_flags": [
+          "ACCURACY_DEGRADATION",
+          "GINI_DEGRADATION",
+          "KS_DEGRADATION",
+          "FPR_INCREASE",
+          "FNR_INCREASE",
+          "PSI_WARNING"
+        ],
+        "material_findings": [
+          "Model accuracy declined 5.7pp — exceeds 5pp degradation threshold. Investigation required.",
+          "Gini coefficient declined 12.3 points — exceeds 10-point threshold. Model has lost discriminatory power — likely population shift or concept drift.",
+          "KS statistic declined 11.5pp — exceeds 8pp threshold.",
+          "False positive rate increased 8.1pp — analyst efficiency impact.",
+          "False negative rate increased 8.9pp — model missing significantly more fraud. Regulatory and financial risk.",
+          "Challenger model outperforms production: Gini 69.4 vs 57.8 (11.6 point advantage). Model replacement should be evaluated."
+        ],
+        "performance_outcome": "CRITICAL",
+        "hitl_conditions": [
+          "HIGH_TIER_INITIAL_VALIDATION",
+          "PERFORMANCE_DEGRADATION_TRIGGERED",
+          "PSI_WARNING",
+          "MATERIAL_FINDING",
+          "CHALLENGER_UNDERPERFORMS"
+        ],
+        "human_review_required": true,
+        "target_reviewer": "CHIEF_RISK_OFFICER",
+        "resolution_type": "CONDITIONALLY_APPROVED",
+        "findings_summary": "CRITICAL: AGT04-FRAUD-SCORE-v1 shows material performance degradation across all primary metrics. Gini declined 12.3 points (threshold: 10). FNR increased 8.9pp — the model is missing significantly more fraud events. PSI is 0.19 (WARNING) — population shift detected. Challenger model outperforms production by 11.6 Gini points. Immediate CRO review required. Recommended outcome: CONDITIONALLY_APPROVED pending remediation plan with 30-day implementation deadline.",
+        "next_revalidation_date": "2026-07-01"
+      }
+    },
+    {
+      "id": "DEMO-003",
+      "label": "Agent 08 Credit Underwriting — Initial Validation (New Challenger)",
+      "description": "Initial validation of a challenger credit underwriting model proposed to replace the production v1 model. Challenger shows improved performance on Gini and KS but introduces a new data feature requiring fair lending assessment.",
+      "input": {
+        "model_id": "AGT08-CREDIT-SCORE-v1",
+        "validation_type": "INITIAL_VALIDATION",
+        "requested_by": "CHIEF_CREDIT_OFFICER",
+        "validation_period_start": "2025-10-01",
+        "validation_period_end": "2026-03-31",
+        "last_validation_date": "2025-01-15",
+        "triggering_event": "Challenger model AGT08-CREDIT-SCORE-v2 submitted for initial validation. Proposes adding rental payment history as new scoring feature (Fannie Mae DU 11.0 compatible). Fair lending assessment required for new feature.",
+        "current_metrics": {
+          "accuracy": 91.4,
+          "precision": 0.873,
+          "recall": 0.841,
+          "f1_score": 0.857,
+          "gini_coefficient": 65.2,
+          "ks_statistic": 49.8,
+          "psi": 0.07,
+          "auc_roc": 0.916,
+          "false_positive_rate": 12.7,
+          "false_negative_rate": 15.9
+        },
+        "baseline_metrics": {
+          "accuracy": 91.4,
+          "precision": 0.873,
+          "recall": 0.841,
+          "f1_score": 0.857,
+          "gini_coefficient": 65.2,
+          "ks_statistic": 49.8,
+          "psi": 0.07,
+          "auc_roc": 0.916,
+          "false_positive_rate": 12.7,
+          "false_negative_rate": 15.9
+        },
+        "challenger_metrics": {
+          "accuracy": 93.1,
+          "precision": 0.901,
+          "recall": 0.869,
+          "f1_score": 0.885,
+          "gini_coefficient": 71.4,
+          "ks_statistic": 55.2,
+          "auc_roc": 0.937
+        }
+      },
+      "computed_output": {
+        "risk_tier": "HIGH",
+        "metric_deltas": {
+          "accuracy": 0.0,
+          "gini_coefficient": 0.0,
+          "ks_statistic": 0.0,
+          "psi": 0.0,
+          "false_positive_rate": 0.0,
+          "false_negative_rate": 0.0
+        },
+        "psi_score": 0.07,
+        "psi_flag": "STABLE",
+        "degradation_flags": [],
+        "material_findings": [
+          "FAIR_LENDING_FLAG: New feature 'rental_payment_history' requires fair lending disparate impact testing. Census tract correlation analysis required before production deployment. ECOA/Reg B — 15 CFR Part 202.",
+          "Challenger model outperforms production: Gini 71.4 vs 65.2 (6.2 point advantage). Challenger deployment recommended pending fair lending clearance."
+        ],
+        "performance_outcome": "PASS",
+        "hitl_conditions": [
+          "HIGH_TIER_INITIAL_VALIDATION",
+          "MATERIAL_FINDING",
+          "FAIR_LENDING_FLAG"
+        ],
+        "human_review_required": true,
+        "target_reviewer": "MODEL_RISK_OFFICER",
+        "resolution_type": "CONDITIONALLY_APPROVED",
+        "findings_summary": "Initial validation of AGT08 challenger model. Production model metrics are stable. Challenger shows 6.2 Gini point improvement. CONDITION: fair lending disparate impact assessment for new 'rental_payment_history' feature must be completed and cleared by Fair Lending Officer before challenger is deployed to production. MRO sign-off required. Recommended outcome: CONDITIONALLY_APPROVED pending fair lending clearance.",
+        "next_revalidation_date": "2027-04-01"
+      }
+    },
+    {
+      "id": "DEMO-004",
+      "label": "Agent 03 KYC Risk Model — Ongoing Monthly Monitoring",
+      "description": "Routine monthly monitoring of the 8-factor KYC customer risk score. All metrics stable. PSI within bounds. Auto-resolvable with monitoring notes — no HITL required for MEDIUM-tier monitoring event.",
+      "input": {
+        "model_id": "AGT03-KYC-RISK-v1",
+        "validation_type": "ONGOING_MONITORING",
+        "requested_by": "AUTOMATED_MONITORING_SYSTEM",
+        "validation_period_start": "2026-05-01",
+        "validation_period_end": "2026-05-31",
+        "last_validation_date": "2026-02-01",
+        "triggering_event": null,
+        "current_metrics": {
+          "accuracy": 92.7,
+          "precision": 0.881,
+          "recall": 0.854,
+          "f1_score": 0.867,
+          "gini_coefficient": 69.3,
+          "ks_statistic": 51.8,
+          "psi": 0.06,
+          "auc_roc": 0.928,
+          "false_positive_rate": 11.9,
+          "false_negative_rate": 14.6
+        },
+        "baseline_metrics": {
+          "accuracy": 93.1,
+          "precision": 0.886,
+          "recall": 0.859,
+          "f1_score": 0.872,
+          "gini_coefficient": 70.4,
+          "ks_statistic": 52.9,
+          "psi": 0.05,
+          "auc_roc": 0.931,
+          "false_positive_rate": 11.4,
+          "false_negative_rate": 14.1
+        },
+        "challenger_metrics": null
+      },
+      "computed_output": {
+        "risk_tier": "HIGH",
+        "metric_deltas": {
+          "accuracy": -0.4,
+          "gini_coefficient": -1.1,
+          "ks_statistic": -1.1,
+          "psi": 0.01,
+          "false_positive_rate": 0.5,
+          "false_negative_rate": 0.5
+        },
+        "psi_score": 0.06,
+        "psi_flag": "STABLE",
+        "degradation_flags": [],
+        "material_findings": [],
+        "performance_outcome": "PASS",
+        "hitl_conditions": [],
+        "human_review_required": false,
+        "target_reviewer": "MODEL_VALIDATION_TEAM",
+        "resolution_type": "APPROVED",
+        "findings_summary": "Monthly monitoring — AGT03-KYC-RISK-v1. All metrics stable. PSI STABLE at 0.06. No degradation flags. No HITL required for ONGOING_MONITORING at this performance level. Monitoring notes recorded to audit trail. Next full annual revalidation due 2027-02-01.",
+        "next_revalidation_date": "2027-02-01"
+      }
+    }
+  ]
+}

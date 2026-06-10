@@ -1,0 +1,155 @@
+{
+  "_comment": "SR 11-7 validation requirements matrix. Defines what validation components are required for each combination of validation type and model risk tier. Used by the agent to scope validation activities and by the dashboard to explain why each component was run.",
+
+  "sr_11_7_components": {
+    "conceptual_soundness": {
+      "description": "Evaluation of model design, theoretical basis, assumptions, and limitations",
+      "sr_11_7_reference": "SR 11-7 §§ 5-7",
+      "required_for": {
+        "HIGH": ["INITIAL_VALIDATION", "ANNUAL_REVALIDATION", "CHANGE_VALIDATION"],
+        "MEDIUM": ["INITIAL_VALIDATION", "ANNUAL_REVALIDATION"],
+        "LOW": ["INITIAL_VALIDATION"]
+      }
+    },
+    "outcomes_analysis": {
+      "description": "Back-testing model predictions against actual outcomes; computing accuracy, Gini, KS, AUC",
+      "sr_11_7_reference": "SR 11-7 § 8",
+      "required_for": {
+        "HIGH": ["INITIAL_VALIDATION", "ANNUAL_REVALIDATION", "TRIGGERED_REVIEW", "ONGOING_MONITORING"],
+        "MEDIUM": ["INITIAL_VALIDATION", "ANNUAL_REVALIDATION", "TRIGGERED_REVIEW"],
+        "LOW": ["INITIAL_VALIDATION", "ANNUAL_REVALIDATION"]
+      }
+    },
+    "population_stability": {
+      "description": "Population Stability Index (PSI) analysis to detect input distribution shift",
+      "sr_11_7_reference": "SR 11-7 §§ 8-10 (ongoing monitoring)",
+      "required_for": {
+        "HIGH": ["ANNUAL_REVALIDATION", "TRIGGERED_REVIEW", "ONGOING_MONITORING"],
+        "MEDIUM": ["ANNUAL_REVALIDATION", "ONGOING_MONITORING"],
+        "LOW": ["ANNUAL_REVALIDATION"]
+      }
+    },
+    "challenger_comparison": {
+      "description": "Comparison of production model against challenger or benchmark model",
+      "sr_11_7_reference": "SR 11-7 § 8 (benchmarking and alternative approaches)",
+      "required_for": {
+        "HIGH": ["INITIAL_VALIDATION", "ANNUAL_REVALIDATION"],
+        "MEDIUM": ["INITIAL_VALIDATION"],
+        "LOW": []
+      },
+      "note": "Required for HIGH-tier; recommended for MEDIUM-tier. Absence should be documented."
+    },
+    "sensitivity_analysis": {
+      "description": "Stress-testing model behavior at extreme inputs, boundary conditions, and weight concentration checks",
+      "sr_11_7_reference": "SR 11-7 §§ 5-7 (model limitations and use conditions)",
+      "required_for": {
+        "HIGH": ["INITIAL_VALIDATION", "ANNUAL_REVALIDATION", "CHANGE_VALIDATION"],
+        "MEDIUM": ["INITIAL_VALIDATION", "ANNUAL_REVALIDATION"],
+        "LOW": ["INITIAL_VALIDATION"]
+      }
+    },
+    "ongoing_monitoring": {
+      "description": "Routine monitoring of model performance metrics at defined frequency",
+      "sr_11_7_reference": "SR 11-7 §§ 10-11",
+      "required_for": {
+        "HIGH": "MONTHLY",
+        "MEDIUM": "QUARTERLY",
+        "LOW": "SEMI_ANNUALLY"
+      }
+    }
+  },
+
+  "hitl_requirements": {
+    "description": "When human Model Risk Officer review is required. All entries in ALWAYS_HITL_CONDITIONS frozenset in state.py.",
+    "always_hitl": {
+      "HIGH_TIER_INITIAL_VALIDATION": "All HIGH-tier initial validations require MRO sign-off before model deployment",
+      "HIGH_TIER_CHANGE_VALIDATION": "All HIGH-tier change validations require MRO sign-off before change deployment",
+      "ANNUAL_REVALIDATION_HIGH_TIER": "Annual revalidation of HIGH-tier models requires MRO sign-off per SR 11-7",
+      "PERFORMANCE_DEGRADATION_TRIGGERED": "Triggered review due to metric degradation always requires MRO — may involve suspension",
+      "PSI_CRITICAL": "PSI > 0.25 indicates significant population shift — independent validation required",
+      "MATERIAL_FINDING": "Any material model limitation or gap requires MRO documentation and approval",
+      "CHALLENGER_UNDERPERFORMS": "When production model underperforms challenger — deployment decision requires MRO",
+      "HARD_RULE_VIOLATION_DETECTED": "Any hard rule circumvention in production is a critical finding — CRO escalation required",
+      "FAIR_LENDING_FLAG": "Fair lending / disparate impact concern requires Fair Lending Officer + MRO review"
+    },
+    "threshold_hitl": {
+      "MEDIUM_TIER_TRIGGERED": "Triggered review for MEDIUM-tier models requires MRO review",
+      "CHANGE_VALIDATION_ANY_TIER": "Any model change validation requires documented MRO review of change scope"
+    }
+  },
+
+  "reviewer_escalation_matrix": {
+    "MODEL_VALIDATION_TEAM": "Low-tier or routine monitoring events — team-level sign-off",
+    "MODEL_RISK_OFFICER": "Standard HIGH-tier reviews, MEDIUM-tier triggered reviews, material findings",
+    "CHIEF_RISK_OFFICER": "HIGH-tier critical degradation, hard rule violations, CRO-level regulatory exposure",
+    "BOARD_RISK_COMMITTEE": "Systemic model failure, regulatory enforcement, model suspension affecting core operations"
+  },
+
+  "performance_thresholds": {
+    "description": "Degradation thresholds that trigger automated review escalation. These are Python constants in nodes.py — not configurable at runtime.",
+    "accuracy_drop_pct": {
+      "threshold": 5.0,
+      "description": "Accuracy decline exceeding 5 percentage points from baseline",
+      "severity": "MATERIAL"
+    },
+    "gini_drop_points": {
+      "threshold": 10.0,
+      "description": "Gini coefficient decline exceeding 10 points from baseline",
+      "severity": "MATERIAL"
+    },
+    "ks_stat_drop_pct": {
+      "threshold": 8.0,
+      "description": "KS statistic decline exceeding 8 percentage points",
+      "severity": "MATERIAL"
+    },
+    "psi_warning": {
+      "threshold": 0.10,
+      "description": "Population Stability Index between 0.10 and 0.25 — moderate shift",
+      "severity": "WARNING"
+    },
+    "psi_critical": {
+      "threshold": 0.25,
+      "description": "Population Stability Index above 0.25 — significant population shift",
+      "severity": "CRITICAL"
+    },
+    "false_positive_rate_increase": {
+      "threshold": 0.05,
+      "description": "FPR increase exceeding 5 percentage points — analyst efficiency impact",
+      "severity": "MODERATE"
+    },
+    "false_negative_rate_increase": {
+      "threshold": 0.03,
+      "description": "FNR increase exceeding 3 percentage points — risk identification gap",
+      "severity": "HIGH",
+      "note": "FNR threshold is tighter than FPR — missing true positives in compliance models has greater regulatory risk than false positives"
+    }
+  },
+
+  "validation_outcome_definitions": {
+    "APPROVED": {
+      "meaning": "Model approved for continued use without conditions",
+      "next_action": "Continue monthly/quarterly monitoring; schedule next revalidation per tier",
+      "registry_update": "status=APPROVED, approval_date=today, next_revalidation=calculated"
+    },
+    "CONDITIONALLY_APPROVED": {
+      "meaning": "Model approved for continued use with specific remediation conditions",
+      "next_action": "Model owner must remediate each condition within specified deadline. MRO tracks remediation.",
+      "registry_update": "status=CONDITIONALLY_APPROVED, conditions=recorded, condition_deadline=set"
+    },
+    "UNDER_REVIEW": {
+      "meaning": "Validation in progress or escalated — model use may continue with enhanced monitoring",
+      "next_action": "MRO coordinates with CRO or Board for escalated reviews. Enhanced monitoring during review.",
+      "registry_update": "status=UNDER_REVIEW, escalation_date=today"
+    },
+    "SUSPENDED": {
+      "meaning": "Model use suspended pending remediation — manual process must replace model output",
+      "next_action": "Model owner implements manual override or fallback. Suspension remains until MRO approves remediation.",
+      "registry_update": "status=SUSPENDED, suspension_date=today, remediation_plan_required=true"
+    },
+    "RETIRED": {
+      "meaning": "Model decommissioned — successor model required",
+      "next_action": "Successor model must complete INITIAL_VALIDATION before deployment. Retired model archived.",
+      "registry_update": "status=RETIRED, retirement_date=today, successor_model_id=required"
+    }
+  }
+}

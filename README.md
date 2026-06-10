@@ -302,6 +302,30 @@ Automates ACH dispute processing, OFAC screening, Nacha return code validation, 
 
 ---
 
+### 11 · Model Risk Management Agent
+**[`11-model-risk-agent/`](./11-model-risk-agent/)**
+
+The independent model validation function for the FSI AI Suite. Validates the five scoring models across Agents 02, 03, 04, 07, and 08 in full compliance with SR 11-7 (Federal Reserve / OCC Guidance on Model Risk Management). Every risk determination — tier assignment, degradation flags, PSI classification, HITL routing, validation outcome — is produced by deterministic Python. The LLM produces only written narratives. The Model Risk Officer always signs off before any HIGH-tier validation event produces a final outcome.
+
+| What it does | The number |
+|---|---|
+| Manual validation cost (HIGH-risk model) | $20,000–$56,900 per event |
+| Agent 11 cost per event | $3,500–$7,000 |
+| Annual labor savings (5 models, full schedule) | $735K–$1.28M |
+| Undetected Gini degradation exposure (90 days) | $345K–$11.7M in incremental losses |
+| Detection window with Agent 11 | ≤ 30 days (monthly automated monitoring) |
+| Payback period | 14–22 weeks |
+
+**Validation pipeline (12 nodes):** Model inventory lookup → data sample pull → conceptual soundness review (LLM narrative) → outcomes analysis (Python: Gini, KS, AUC-ROC, FPR, FNR deltas) → population stability analysis (Python: PSI formula) → benchmark comparison → sensitivity analysis → risk tier determination (Python) → validation narrative (LLM) → routing decision (Python, fail-safe) → **HITL gate** (MRO/CRO decision) → audit finalization
+
+**HITL triggers (9 conditions, Python frozenset — immutable at runtime):** HIGH-tier initial/change/annual validation · Performance degradation · PSI CRITICAL (>0.25) · Material finding · Challenger underperforms · Hard rule violation → CRO escalation · Fair lending flag (AGT08 credit model)
+
+**Models validated:** AGT02-FP-SCORE-v1 (AML false positive composite) · AGT03-KYC-RISK-v1 (customer risk score) · AGT04-FRAUD-SCORE-v1 (fraud composite) · AGT07-SURV-RISK-v1 (trading surveillance risk) · AGT08-CREDIT-SCORE-v1 (credit underwriting composite)
+
+**Regulatory coverage:** SR 11-7 §§ 4-11 (conceptual soundness, outcomes analysis, ongoing monitoring, human oversight) · ECOA/Regulation B (fair lending validation for AGT08) · BSA/AML model validation implications · OCC model risk retention guidance · 10-year S3 Object Lock GOVERNANCE retention
+
+---
+
 ## Architecture Principles
 
 Every agent in this suite is built on the same opinionated architecture. Customers learn it once and deploy it everywhere.
@@ -367,41 +391,42 @@ Security:
 
 ## Regulatory Coverage Map
 
-| Regulation | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | 10 |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| BSA 31 U.S.C. § 5318 (SAR filing) | ✅ | ✅ | ✅ | ✅ | — | — | ✅ | — | ✅ | ✅ |
-| FinCEN CDD Rule (31 CFR 1020.210) | ✅ | ✅ | ✅ | — | — | ✅ | — | — | ✅ | ✅ |
-| OFAC IEEPA (SDN screening, 50% rule) | ✅ | ✅ | ✅ | ✅ | — | — | — | ✅ | ✅ | ✅ |
-| FATF R.10 (Customer due diligence) | ✅ | — | ✅ | — | — | — | — | — | — | ✅ |
-| FATF R.12 (PEP enhanced due diligence) | ✅ | ✅ | ✅ | — | — | — | — | — | — | — |
-| FATF R.20 (Suspicious transaction reporting) | ✅ | ✅ | — | ✅ | — | — | ✅ | — | — | ✅ |
-| USA PATRIOT Act § 326 (CIP) | ✅ | — | ✅ | — | — | — | — | ✅ | ✅ | — |
-| FIN-2014-G001 (SAR narrative format) | ✅ | — | — | — | — | — | ✅ | — | — | ✅ |
-| SR 11-7 (Model risk management) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| FFIEC BSA/AML Examination Manual | ✅ | ✅ | ✅ | — | — | ✅ | — | — | — | — |
-| 18 U.S.C. § 1960 (No tipping off) | ✅ | — | — | — | ✅ | — | ✅ | — | — | ✅ |
-| 5-year BSA record retention | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Reg E (EFTA) — provisional credit / disputes | — | — | — | ✅ | — | — | — | — | — | ✅ |
-| Nacha Operating Rules (ACH return / NOC) | — | — | — | ✅ | — | — | — | — | — | ✅ |
-| Reg BI (17 CFR 240.15l-1) | — | — | — | — | ✅ | — | — | — | — | — |
-| FINRA Rule 2111 (Suitability) | — | — | — | — | ✅ | — | ✅ | — | — | — |
-| FINRA Rule 2210 (Communications) | — | — | — | — | ✅ | — | — | — | — | — |
-| FINRA Rule 3110 (Supervisory procedures) | — | — | — | — | — | — | ✅ | — | — | — |
-| FINRA Rule 4511 (Books and records) | — | — | — | — | — | — | ✅ | — | — | — |
-| ERISA (retirement account fiduciary) | — | — | — | — | ✅ | — | — | — | — | — |
-| GLBA (data privacy / PII safeguards) | ✅ | ✅ | ✅ | ✅ | ✅ | — | — | ✅ | ✅ | ✅ |
-| Dodd-Frank § 747 (Spoofing ban) | — | — | — | — | — | — | ✅ | — | — | — |
-| SEC Regulation SHO (Short selling) | — | — | — | — | — | — | ✅ | — | — | — |
-| SEC Rule 10b-5 (Market manipulation) | — | — | — | — | — | — | ✅ | — | — | — |
-| ECOA / Reg B (Fair lending, adverse action) | — | — | — | — | — | — | — | ✅ | ✅ | — |
-| HMDA (Home Mortgage Disclosure Act) | — | — | — | — | — | — | — | ✅ | ✅ | — |
-| CRA (Community Reinvestment Act) | — | — | — | — | — | — | — | ✅ | — | — |
-| Reg Z / TILA (Truth in Lending) | — | — | — | — | — | — | — | ✅ | — | — |
-| SBA 7(a) / 504 Program Rules | — | — | — | — | — | — | — | ✅ | — | — |
-| CFPB Prepaid Rule (12 CFR Part 1005) | — | — | — | — | — | — | — | — | — | ✅ |
-| UCC Article 4A (Wire transfer liability) | — | — | — | — | — | — | — | — | — | ✅ |
-| OFAC Blocking Report (501.604 SLA) | — | — | — | — | — | — | — | — | — | ✅ |
-| CTR (31 CFR 1010.311 — $10K threshold) | ✅ | — | — | — | — | — | — | — | — | ✅ |
+| Regulation | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | 10 | 11 |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| BSA 31 U.S.C. § 5318 (SAR filing) | ✅ | ✅ | ✅ | ✅ | — | — | ✅ | — | ✅ | ✅ | ✅ |
+| FinCEN CDD Rule (31 CFR 1020.210) | ✅ | ✅ | ✅ | — | — | ✅ | — | — | ✅ | ✅ | — |
+| OFAC IEEPA (SDN screening, 50% rule) | ✅ | ✅ | ✅ | ✅ | — | — | — | ✅ | ✅ | ✅ | — |
+| FATF R.10 (Customer due diligence) | ✅ | — | ✅ | — | — | — | — | — | — | ✅ | — |
+| FATF R.12 (PEP enhanced due diligence) | ✅ | ✅ | ✅ | — | — | — | — | — | — | — | — |
+| FATF R.20 (Suspicious transaction reporting) | ✅ | ✅ | — | ✅ | — | — | ✅ | — | — | ✅ | — |
+| USA PATRIOT Act § 326 (CIP) | ✅ | — | ✅ | — | — | — | — | ✅ | ✅ | — | — |
+| FIN-2014-G001 (SAR narrative format) | ✅ | — | — | — | — | — | ✅ | — | — | ✅ | — |
+| SR 11-7 (Model risk management) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| FFIEC BSA/AML Examination Manual | ✅ | ✅ | ✅ | — | — | ✅ | — | — | — | — | ✅ |
+| 18 U.S.C. § 1960 (No tipping off) | ✅ | — | — | — | ✅ | — | ✅ | — | — | ✅ | — |
+| 5-year BSA record retention | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 10-year model validation retention | — | — | — | — | — | — | — | — | — | — | ✅ |
+| Reg E (EFTA) — provisional credit / disputes | — | — | — | ✅ | — | — | — | — | — | ✅ | — |
+| Nacha Operating Rules (ACH return / NOC) | — | — | — | ✅ | — | — | — | — | — | ✅ | — |
+| Reg BI (17 CFR 240.15l-1) | — | — | — | — | ✅ | — | — | — | — | — | — |
+| FINRA Rule 2111 (Suitability) | — | — | — | — | ✅ | — | ✅ | — | — | — | — |
+| FINRA Rule 2210 (Communications) | — | — | — | — | ✅ | — | — | — | — | — | — |
+| FINRA Rule 3110 (Supervisory procedures) | — | — | — | — | — | — | ✅ | — | — | — | — |
+| FINRA Rule 4511 (Books and records) | — | — | — | — | — | — | ✅ | — | — | — | — |
+| ERISA (retirement account fiduciary) | — | — | — | — | ✅ | — | — | — | — | — | — |
+| GLBA (data privacy / PII safeguards) | ✅ | ✅ | ✅ | ✅ | ✅ | — | — | ✅ | ✅ | ✅ | — |
+| Dodd-Frank § 747 (Spoofing ban) | — | — | — | — | — | — | ✅ | — | — | — | — |
+| SEC Regulation SHO (Short selling) | — | — | — | — | — | — | ✅ | — | — | — | — |
+| SEC Rule 10b-5 (Market manipulation) | — | — | — | — | — | — | ✅ | — | — | — | — |
+| ECOA / Reg B (Fair lending, adverse action) | — | — | — | — | — | — | — | ✅ | ✅ | — | ✅ |
+| HMDA (Home Mortgage Disclosure Act) | — | — | — | — | — | — | — | ✅ | ✅ | — | — |
+| CRA (Community Reinvestment Act) | — | — | — | — | — | — | — | ✅ | — | — | — |
+| Reg Z / TILA (Truth in Lending) | — | — | — | — | — | — | — | ✅ | — | — | — |
+| SBA 7(a) / 504 Program Rules | — | — | — | — | — | — | — | ✅ | — | — | — |
+| CFPB Prepaid Rule (12 CFR Part 1005) | — | — | — | — | — | — | — | — | — | ✅ | — |
+| UCC Article 4A (Wire transfer liability) | — | — | — | — | — | — | — | — | — | ✅ | — |
+| OFAC Blocking Report (501.604 SLA) | — | — | — | — | — | — | — | — | — | ✅ | — |
+| CTR (31 CFR 1010.311 — $10K threshold) | ✅ | — | — | — | — | — | — | — | — | ✅ | — |
 
 ---
 
@@ -419,7 +444,8 @@ Security:
 | 08 · Credit Underwriting | 3–5 day decisions · ECOA compliance gaps · manual docs | $1.8M–$3.4M (300 loans/month) |
 | 09 · Document Intelligence | Manual re-keying of PDFs/SWIFT · OCR bottlenecks | $1.66M–$1.91M (suite multiplier) |
 | 10 · Payments Compliance | 143-min disputes · missed SLA fines · OFAC exposure | $713K–$1.95M (5K disputes/year) |
-| **Full suite** | **End-to-end financial crime + fraud + wealth + compliance ops** | **$22M+ annually** |
+| 11 · Model Risk Management | $20K–$57K per manual validation · undetected degradation losses · SR 11-7 exam gaps | $735K–$1.28M (5 models) |
+| **Full suite** | **End-to-end financial crime + fraud + wealth + compliance ops + model governance** | **$23M+ annually** |
 
 Payback period for full suite deployment: **< 6 months**
 
@@ -507,6 +533,14 @@ cd ../08-credit-underwriting-agent
 cp .env.example .env
 docker compose up
 # Open: http://localhost:8508
+
+# ── MODEL RISK MANAGEMENT ────────────────────────────────────────────────
+# Deploy last — validates all scoring models; requires other agents to have
+# production performance baselines before validation runs are meaningful.
+cd ../11-model-risk-agent
+cp .env.example .env
+docker compose up
+# Open: http://localhost:8511
 ```
 
 > **Demo mode:** All agents run with pre-computed scenarios when `OPENAI_API_KEY` is absent. Start any agent without an API key to explore the full UI and all regulatory decision paths.
@@ -525,6 +559,7 @@ docker compose up
 | 08 · Credit Underwriting | 8508 |
 | 09 · Document Intelligence | 8509 |
 | 10 · Payments Compliance | 8510 |
+| 11 · Model Risk Management | 8511 |
 
 ---
 

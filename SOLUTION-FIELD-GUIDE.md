@@ -5,17 +5,17 @@
 
 ---
 
-## The Platform Story: One Problem, Ten Entry Points
+## The Platform Story: One Problem, Eleven Entry Points
 
-Financial institutions lose **$274 billion annually** to the combined burden of financial crime compliance, KYC overhead, fraud losses, RM administrative drag, regulatory change management, market surveillance, credit underwriting overhead, document processing bottlenecks, and payments dispute management. That number isn't going away — regulatory requirements are tightening, not loosening.
+Financial institutions lose **$274 billion annually** to the combined burden of financial crime compliance, KYC overhead, fraud losses, RM administrative drag, regulatory change management, market surveillance, credit underwriting overhead, document processing bottlenecks, payments dispute management, and — increasingly — unvalidated AI scoring models that create SR 11-7 examination exposure. That number isn't going away — regulatory requirements are tightening, not loosening.
 
 The status quo response is more analysts, more tools, and more complexity. The AI-native response is different: **let AI handle the high-volume, low-judgment work so your best people can focus on the 5% of decisions that actually require human expertise.**
 
-This suite is ten purpose-built AI agents, each solving one high-cost problem. They are designed to be deployed independently — each delivers ROI on its own — but they share a common architecture, a common data model, and common regulatory controls. When deployed together, they form a closed-loop platform where every agent reinforces the others.
+This suite is eleven purpose-built AI agents, each solving one high-cost problem. They are designed to be deployed independently — each delivers ROI on its own — but they share a common architecture, a common data model, and common regulatory controls. When deployed together, they form a closed-loop platform where every agent reinforces the others. Agent 11 (Model Risk Management) is the governance layer that makes every other agent's scoring model defensible in front of SR 11-7 examiners.
 
 ---
 
-## The Ten-Agent Architecture
+## The Eleven-Agent Architecture
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────┐
@@ -70,7 +70,16 @@ This suite is ten purpose-built AI agents, each solving one high-cost problem. T
 │  │   $849K–$1.5M/yr (regional bank)       $2.6M/yr (6-analyst BD team)        │  │
 │  └──────────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                    │
-│  SHARED PLATFORM LAYER (All 10 Agents)                                             │
+│  ┌──────────────────────────────────────────────────────────────────────────────┐  │
+│  │  MODEL GOVERNANCE LAYER (Deploy Last — Validates All Scoring Models)         │  │
+│  │                                                                              │  │
+│  │  [11 · Model Risk Management]  Validates: AGT02 · AGT03 · AGT04 · AGT07    │  │
+│  │   · AGT08 scoring models · SR 11-7 §§ 4-11 · PSI · Gini/KS/FPR/FNR       │  │
+│  │   · Python-only risk determinations · MRO HITL gate · 10-yr S3 retention   │  │
+│  │   $735K–$1.28M/yr labor savings · ≤30-day degradation detection window     │  │
+│  └──────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                    │
+│  SHARED PLATFORM LAYER (All 11 Agents)                                             │
 │  LangGraph StateGraph · AWS Bedrock · Cognito + Okta/AD Auth                      │
 │  Immutable Append-Only Audit Trail · SR 11-7 Explainability · BSA/FATF Controls   │
 │  MCP Auth Gateway · ECS Fargate · Aurora PostgreSQL · S3 Object Lock (WORM)       │
@@ -104,6 +113,8 @@ The linkages between agents are what make the suite more than the sum of its par
 11. **Agent 09 (Document Intelligence)** is the horizontal entry point for the entire suite. It receives raw documents — PDF loan applications, SWIFT MT103 wire instructions, KYC identity documents, regulatory filings — and outputs structured JSON that every other agent can consume immediately. Deploying Agent 09 first makes every subsequent agent faster to implement and more accurate, because the unstructured data problem is solved once at the platform level instead of agent by agent.
 
 12. **Agent 10 (Payments Compliance)** receives structured SWIFT and wire instruction data from Agent 09, eliminating manual re-keying for international wires. OFAC hits detected by Agent 10 are routed to Agent 01 for BSA/SAR investigation. When a SAR candidate is detected in a payments pattern, Agent 10 flags it for the BSA Officer — Agent 01 handles the investigation workflow.
+
+13. **Agent 11 (Model Risk Management)** is the governance layer that sits above all scoring models in the suite. It validates the five scoring models in Agents 02, 03, 04, 07, and 08 on a monthly (automated), annual (full revalidation), and triggered (CloudWatch alarm) basis. Every validation event produces a tamper-evident SR 11-7 audit record. When Agent 04's fraud Gini coefficient declines, Agent 11 detects it within 30 days, triggers MRO review, and generates a remediation plan — before the degradation becomes a regulatory examination finding. Agent 11 is the answer to every examiner question about model governance: "Is your AI model independently validated? Who approved it? Where is the record?" The answer is: S3 Object Lock, 10-year retention, MRO-signed, node-by-node audit trail.
 
 ---
 
@@ -256,7 +267,8 @@ Different personas care about different agents. Know who's in the room.
 | **Chief Credit Officer / Head of Lending** | Underwriting speed, ECOA compliance, fair lending | Agent 08 | "same-day decisions, ECOA adverse action Python-only, $1.8M–$3.4M/yr" |
 | **VP Payments Operations / Head of Disputes** | Reg E SLA failures, Nacha fines, OFAC exposure | Agent 10 | "143 min → 12 min per dispute, 92% time reduction, auto Reg E notice" |
 | **Document Operations / Loan Ops Leader** | PDF re-keying, OCR errors, 25+ document types | Agent 09 | "88% document processing time reduction, 3-week payback, suite multiplier" |
-| **Internal Audit / Exam Prep** | Audit trail, model documentation, defensibility | All agents | "every decision is explainable, cited, and examination-ready" |
+| **Model Risk Officer / MRM Function Head** | SR 11-7 exam gaps, manual validation cost, undetected model degradation | Agent 11 | "$20K–$57K per manual validation → $3.5K–$7K with Agent 11; degradation detected in ≤30 days" |
+| **Internal Audit / Exam Prep** | Audit trail, model documentation, defensibility | All agents + Agent 11 | "every decision is explainable, cited, and examination-ready; Agent 11 provides 10-year tamper-evident model validation record" |
 
 ---
 
@@ -474,6 +486,33 @@ For NOC (Notification of Change) codes C01-C09, the agent auto-resolves and gene
 
 ---
 
+### Agent 11 · Model Risk Management Agent
+**The headline:** *"Every scoring model in the suite — AML, KYC, fraud, trading, credit — needs to be independently validated under SR 11-7. One missed validation cycle is an examination finding. An undetected Gini decline in your fraud model is $345K–$11.7M in incremental losses. Agent 11 catches it in 30 days."*
+
+**The problem narrative:** SR 11-7 compliance for AI scoring models is one of the most expensive, most manually intensive compliance functions in a financial institution. A single HIGH-tier model validation event requires 92–163 hours of senior quantitative analyst and Model Risk Officer time: data pull and quality review, conceptual soundness review, back-testing against outcomes data, population stability analysis, sensitivity analysis, benchmark comparison against a challenger model, written validation report, and MRO sign-off. At $175–$275/hour blended rates, that's $20,000–$57,000 per event — before vendor markup. Five HIGH-tier models on annual revalidation schedules, monthly monitoring, and triggered reviews can cost $840,000–$1.46M per year in pure labor.
+
+And that's before the secondary risk: model degradation that goes undetected. A fraud model's Gini coefficient declining from 68.4 to 56.1 over 90 days of quarterly monitoring generates $345K–$11.7M in incremental fraud losses at institutions ranging from community banks to mid-tier banks. If the model degrades and your TMS alert volume looks "normal," you may not notice until the annual review — which is 12 months, not 90 days. The BSA examination that follows will ask: "When did you know the model had degraded? What triggered your review? Where is the remediation plan?" Without Agent 11, the answers to those questions are uncomfortably vague.
+
+**The AI-native answer:** Agent 11 runs all six SR 11-7 validation components — conceptual soundness, outcomes analysis, population stability index, benchmark comparison, sensitivity analysis, and validation report — automatically. Every risk determination is Python: performance thresholds are constants, PSI is a mathematical formula (`PSI = Σ (Actual% − Expected%) × ln(Actual% / Expected%)`), HITL conditions are an immutable frozenset. The LLM produces only written narratives — the conceptual soundness review text, the outcomes interpretation, and the validation report prose that the MRO reads at the human review gate. No LLM output determines whether a model passes or fails.
+
+The Model Risk Officer always makes the final decision. `interrupt_before=["human_review_gate"]` is a LangGraph framework directive — the graph physically cannot produce a validation outcome for a HIGH-tier model without a human MRO submitting a decision. The reviewer's identity, decision, conditions, and timestamp are captured in the audit trail for examination review.
+
+**The degradation detection story:** Monthly automated CloudWatch metric alarms monitor Gini, KS, FPR, FNR, and PSI for all five scoring models between scheduled validation cycles. When Agent 04's fraud model Gini declines by 12 points, the CloudWatch alarm fires, EventBridge triggers a `TRIGGERED_REVIEW` validation, and Agent 11 produces a complete SR 11-7 findings report with MRO escalation within hours — not weeks. The maximum undetected exposure window drops from 90 days (quarterly monitoring) to 30 days (monthly automated monitoring).
+
+**The fair lending story:** For the credit underwriting model (Agent 08), Agent 11's `FAIR_LENDING_FLAG` condition triggers whenever a model change introduces a feature that may correlate with ECOA-protected classes — geographic data, rental payment history, proximity to schools. This condition requires Fair Lending Officer review in addition to MRO sign-off before the model is approved for production use. Detecting disparate impact at validation is the difference between a $50,000 model finding and a $5M–$50M+ CFPB enforcement action. That asymmetry is the story.
+
+**The examiner-ready audit trail story:** The DynamoDB model registry provides current approval status for all five models — queryable in seconds. The Aurora PostgreSQL audit trail provides the full node-by-node decision record for each validation event. The S3 Object Lock bucket retains every validation report in tamper-evident, GOVERNANCE-mode storage for 10 years. When an examiner asks "show me your model validation records," the answer is: S3 console access to the bucket, DynamoDB query on the model registry, and a printout of the Aurora audit trail — produced in one afternoon, not three weeks.
+
+**Discovery questions:**
+- How many HIGH-tier models (as classified under SR 11-7) are currently in production, and what is your current validation schedule for each?
+- What is your current cost per model validation event — internal labor, external vendor, or both?
+- Have you had any SR 11-7-related MRAs or exam findings in the past two years?
+- How do you currently monitor for model degradation between scheduled revalidation cycles?
+- For the credit underwriting model, what is your current fair lending validation process — and how long does it take to produce a fair lending assessment after a model change?
+- How quickly can you produce model validation records when an examiner requests them — days or weeks?
+
+---
+
 ## Architecture Differentiation
 
 When you're in a room with a CIO or solutions architect, these are the differentiators that matter.
@@ -678,6 +717,20 @@ Same alert, same customer, same investigation steps — every time. Every node t
 
 ---
 
+### Agent 11 — The Model Risk Management Demo
+1. Open the Submit Validation tab — show the 4 pre-loaded scenarios; select DEMO-002 (AGT04 Triggered Review — Gini Degradation)
+2. Run the pipeline — watch all 12 nodes execute: model lookup → data pull → conceptual soundness → outcomes analysis → PSI → benchmark → sensitivity → risk tier → narrative → routing
+3. Open the Validation Findings tab — show the CRITICAL degradation banner: "Gini declined 12.3 points (baseline 68.4 → current 56.1). Threshold: 10.0 points. CRITICAL DEGRADATION."
+4. Show the HITL alert: PERFORMANCE_DEGRADATION_TRIGGERED condition triggered → CRO escalation required
+5. Open Tab 3 (Model Performance) — show the metric comparison table with the Gini row highlighted RED and the degradation percentage, the PSI score (STABLE — population hasn't shifted, the model has degraded against stable population), and the challenger comparison
+6. Go to Tab 4 (MRO Review) — walk through the HITL gate: enter reviewer ID, select CONDITIONALLY_APPROVED, type the condition: "Remediation plan required within 30 days. Gini must return to ≥65.0 before full approval. Monthly monitoring interval reduced to bi-weekly during remediation period."
+7. Submit the decision — watch the validation outcome update to CONDITIONALLY_APPROVED, the model approval status update in the registry
+8. Open Tab 5 (Audit Trail) — show the full 12-node record: timestamp, node name, event type, reviewer ID, decision, conditions, retention policy. "This is what the examiner sees."
+
+**Key moment (DEMO-003 — Fair Lending Flag):** Load DEMO-003 (AGT08 Initial Validation with geographic feature). "The credit model just received a new feature: geographic cluster scoring. Before this model touches a single loan application, Agent 11 flags it — FAIR_LENDING_FLAG. The model contains a feature that may correlate with protected characteristics. It cannot be approved for production until a Fair Lending Officer has reviewed the disparate impact analysis and signed off alongside the MRO. This happens at validation — not after a CFPB examiner finds it six months later."
+
+---
+
 ## ROI Summary by Institution Profile
 
 ### Community Bank (Assets $1B–$5B)
@@ -691,7 +744,8 @@ Same alert, same customer, same investigation steps — every time. Every node t
 | Agent 10 (Payments Compliance) | $400K–$800K | 2,000-3,000 ACH disputes/year |
 | Agent 08 (Credit Underwriting) | $600K–$1.2M | 100-200 loans/month |
 | Agent 06 (Regulatory Change Mgmt) | $400K–$700K | 2 compliance analysts |
-| **Full Suite** | **$5.0M–$9.1M** | Payback < 5 months |
+| Agent 11 (Model Risk Management) | $500K–$900K | 3-5 HIGH-tier models; includes degradation detection savings |
+| **Full Suite** | **$5.5M–$10.0M** | Payback < 5 months |
 
 ### Regional Bank (Assets $5B–$50B)
 | Use Case | Annual Savings | Notes |
@@ -706,7 +760,8 @@ Same alert, same customer, same investigation steps — every time. Every node t
 | Agent 05 (Wealth Copilot) | $1.5M–$4.0M | 20-50 RMs |
 | Agent 06 (Regulatory Change Mgmt) | $849K–$1.5M | 4-analyst compliance team |
 | Agent 07 (Trading Surveillance) | $1.5M–$3.0M | Regional trading desk, 3-4 analysts |
-| **Full Suite** | **$12.9M–$29.8M** | Payback < 3 months |
+| Agent 11 (Model Risk Management) | $735K–$1.28M | 5 HIGH-tier models; monthly automated monitoring |
+| **Full Suite** | **$13.6M–$31.1M** | Payback < 3 months |
 
 ### Credit Union (Assets $500M–$5B)
 | Use Case | Annual Savings | Notes |
@@ -717,7 +772,8 @@ Same alert, same customer, same investigation steps — every time. Every node t
 | Agent 10 (Payments Compliance) | $300K–$700K | ACH dispute automation; Reg E SLA compliance |
 | Agent 03 (KYC/CDD Perpetual) | $300K–$800K | Member reviews |
 | Agent 06 (Regulatory Change Mgmt) | $300K–$600K | 1-2 compliance staff |
-| **Priority Suite** | **$2.2M–$5.2M** | Agents 09 + 02 + 04 + 10 + 03 + 06 |
+| Agent 11 (Model Risk Management) | $350K–$700K | SR 11-7 compliance for AML and fraud models |
+| **Priority Suite** | **$2.55M–$5.9M** | Agents 09 + 02 + 04 + 10 + 03 + 06 + 11 |
 
 ### Mortgage Bank / SBA Lender / CDFI
 | Use Case | Annual Savings | Notes |
@@ -866,3 +922,15 @@ Before a customer POC, collect the following:
 - [ ] Does the institution originate ACH transactions as ODFI? (Affects scope of Nacha return code exposure)
 - [ ] Any Nacha audit findings related to return code timelines or unauthorized return handling?
 - [ ] Does the institution issue prepaid cards? (CFPB Prepaid Rule applies — confirms Reg E scope)
+
+### Model Risk Management (Agent 11 — Any Institution Using AI Scoring Models)
+- [ ] How many AI or statistical scoring models are currently in production? What risk tiers are they classified under SR 11-7?
+- [ ] What is the current validation schedule for each HIGH-tier model — annual, quarterly, ad hoc?
+- [ ] Is model validation performed by an internal MRM function, external vendor, or both? What is the approximate cost per event?
+- [ ] What is the current process for ongoing monitoring between scheduled validation cycles?
+- [ ] Have there been any SR 11-7-related MRAs, MRIAs, or exam findings in the past three years?
+- [ ] How long does it take to produce model validation documentation when an examiner requests it?
+- [ ] For credit scoring models (Agent 08): what is the current fair lending validation process, and has there been a CFPB or banking regulator fair lending inquiry?
+- [ ] Are there CloudWatch or monitoring system alarms on model performance metrics today?
+- [ ] What is the current model change control process — how is a change validated before going to production?
+- [ ] Where are model validation reports currently stored? What is the retention policy?
