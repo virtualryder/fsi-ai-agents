@@ -1,7 +1,7 @@
 # Financial Services AI Agent Suite
 ### Agentic AI for Regulated Financial Institutions
 
-> Built for banks, broker-dealers, credit unions, and wealth management firms navigating the intersection of AI capability and regulatory obligation. Every agent in this suite ships with working code, documented regulatory controls, AWS reference architecture, and quantified ROI.
+> Built for banks, broker-dealers, credit unions, and wealth management firms navigating the intersection of AI capability and regulatory obligation. Every agent in this suite ships with working code, documented regulatory controls, AWS reference architecture, and illustrative ROI modeling.
 
 ---
 
@@ -9,7 +9,7 @@
 
 Financial crime compliance, KYC, and fraud together consume **$274 billion annually** across global institutions. AI agents don't eliminate that cost — they eliminate the manual, repetitive, low-judgment work so your best analysts can focus on the 5% of cases that require human expertise.
 
-This suite delivers that reduction, use case by use case, in a way that satisfies OCC, FDIC, FinCEN, and FATF examiners.
+This repo is an art-of-the-possible suite showing how financial institutions can move from manual, document-heavy, queue-based operations to controlled agentic workflows. The key design pattern is that AI assists with evidence gathering, summarization, drafting, and context synthesis — while regulated decisions remain deterministic, auditable, and human-approved. Each agent is designed to support OCC, FDIC, FinCEN, and FATF examination readiness, not replace the compliance program itself.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -479,6 +479,8 @@ Security:
 
 ## ROI Summary
 
+> All figures are illustrative estimates based on publicly available industry benchmarks and common operating assumptions (analyst hourly rates, alert volumes, FP rates). Actual savings will vary by institution size, workflow maturity, and implementation scope. Treat these as directional inputs for a business case, not independently validated guarantees.
+
 | Agent | Cost Driver Addressed | Annual Savings (mid-market bank) |
 |---|---|---|
 | 01 · Financial Crime Investigation | $10K–$25K per SAR · analyst time | $2.4M+ (1,000 SARs/year) |
@@ -620,9 +622,9 @@ docker compose up
 
 ## About
 
-Built by [David Ryder](https://github.com/virtualryder) as part of a "art of the possible", production-grade agentic AI portfolio for financial services.
+Built by [David Ryder](https://github.com/virtualryder) as an art-of-the-possible, production-shaped agentic AI portfolio for financial services.
 
-All agents are designed for real deployment — customization, security,  and verification are a user responsibility. Every regulatory citation is accurate. Every integration point reflects actual FSI system landscapes (Actimize, Verafin, Fiserv, FIS, Refinitiv, LexisNexis).
+All agents are designed for real deployment — customization, security, and independent verification remain the responsibility of the implementing institution. Regulatory citations reflect the relevant framework requirements as understood at time of writing; institutions should validate applicability to their specific charter, jurisdiction, and examiner expectations. Integration points reference actual FSI system landscapes (Actimize, Verafin, Fiserv, FIS, Refinitiv, LexisNexis) and are illustrative of how these agents would connect in a production environment.
 
 **Target buyers:** BSA Officers · Chief Compliance Officers · Financial Crime Operations Leaders · CIOs at banks, credit unions, and broker-dealers
 
