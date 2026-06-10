@@ -1,0 +1,353 @@
+{
+  "_comment": "Routing Matrix — Document Intelligence Agent (Agent 09)",
+  "_description": "This file defines how each document type routes to downstream agents, what HITL conditions apply, and what priority level each document type carries. This matrix is used by the Streamlit UI to display routing decisions in a human-readable format and by the routing_decision_node in nodes.py as the authoritative routing table. The DOCUMENT_ROUTING constant in nodes.py is derived from the agent_targets fields here.",
+  "_schema_version": "1.0.0",
+
+  "routing_matrix": [
+
+    {
+      "document_category": "Lending / Credit",
+      "documents": [
+        {
+          "document_type": "LOAN_APPLICATION_RESIDENTIAL",
+          "display_name": "Residential Loan Application (Form 1003)",
+          "target_agents": ["08-credit-underwriting"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65", "missing_required_fields", "fair_lending_flag"],
+          "default_priority": "NORMAL",
+          "sla_hours": 4,
+          "regulatory_tags": ["ECOA", "HMDA", "Reg Z"]
+        },
+        {
+          "document_type": "LOAN_APPLICATION_COMMERCIAL",
+          "display_name": "Commercial Loan Application",
+          "target_agents": ["08-credit-underwriting"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65", "missing_required_fields"],
+          "default_priority": "NORMAL",
+          "sla_hours": 8,
+          "regulatory_tags": ["Reg B", "CRA", "SBA"]
+        },
+        {
+          "document_type": "PROPERTY_APPRAISAL",
+          "display_name": "Property Appraisal Report",
+          "target_agents": ["08-credit-underwriting"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65", "environmental_issues_flag"],
+          "default_priority": "NORMAL",
+          "sla_hours": 4,
+          "regulatory_tags": ["FIRREA", "USPAP"]
+        },
+        {
+          "document_type": "TAX_RETURN_1040",
+          "display_name": "IRS Form 1040 — Individual Tax Return",
+          "target_agents": ["08-credit-underwriting"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65"],
+          "default_priority": "NORMAL",
+          "sla_hours": 4,
+          "regulatory_tags": ["Fannie Mae B3-3", "FHA 4000.1"]
+        },
+        {
+          "document_type": "TAX_RETURN_1065",
+          "display_name": "IRS Form 1065 — Partnership Tax Return",
+          "target_agents": ["08-credit-underwriting"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65"],
+          "default_priority": "NORMAL",
+          "sla_hours": 4,
+          "regulatory_tags": ["Fannie Mae B3-4", "SBA SOP 50-10"]
+        },
+        {
+          "document_type": "TAX_RETURN_1120",
+          "display_name": "IRS Form 1120 — Corporation Tax Return",
+          "target_agents": ["08-credit-underwriting"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65"],
+          "default_priority": "NORMAL",
+          "sla_hours": 4,
+          "regulatory_tags": ["OCC Commercial Lending Handbook"]
+        },
+        {
+          "document_type": "FINANCIAL_STATEMENT",
+          "display_name": "Business Financial Statement",
+          "target_agents": ["08-credit-underwriting"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65"],
+          "default_priority": "NORMAL",
+          "sla_hours": 4,
+          "regulatory_tags": ["GAAP", "OCC Handbook"]
+        },
+        {
+          "document_type": "BANK_STATEMENT",
+          "display_name": "Bank Account Statement",
+          "target_agents": ["08-credit-underwriting", "01-financial-crime-investigation"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65", "large_cash_deposits"],
+          "default_priority": "NORMAL",
+          "sla_hours": 4,
+          "regulatory_tags": ["Fannie Mae B3-4.2", "BSA/AML"]
+        },
+        {
+          "document_type": "SBA_FORM_1919",
+          "display_name": "SBA Form 1919 — Borrower Information",
+          "target_agents": ["08-credit-underwriting", "03-kyc-cdd-perpetual"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65", "criminal_history_flag"],
+          "default_priority": "NORMAL",
+          "sla_hours": 4,
+          "regulatory_tags": ["SBA SOP 50-10", "BSA CIP"]
+        },
+        {
+          "document_type": "SBA_FORM_1920",
+          "display_name": "SBA Form 1920 — Lender Application for Guaranty",
+          "target_agents": ["08-credit-underwriting"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65"],
+          "default_priority": "NORMAL",
+          "sla_hours": 4,
+          "regulatory_tags": ["SBA SOP 50-10", "13 CFR Part 120"]
+        }
+      ]
+    },
+
+    {
+      "document_category": "Payments / Wire Transfers",
+      "documents": [
+        {
+          "document_type": "SWIFT_MT103",
+          "display_name": "SWIFT MT103 — Customer Credit Transfer",
+          "target_agents": ["01-financial-crime-investigation", "04-fraud-detection"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65", "high_risk_country", "ctr_threshold"],
+          "default_priority": "HIGH",
+          "sla_hours": 1,
+          "regulatory_tags": ["BSA/AML", "OFAC", "FATF Recommendation 16"]
+        },
+        {
+          "document_type": "SWIFT_MT202",
+          "display_name": "SWIFT MT202 — Financial Institution Transfer",
+          "target_agents": ["01-financial-crime-investigation"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65", "high_risk_country"],
+          "default_priority": "HIGH",
+          "sla_hours": 1,
+          "regulatory_tags": ["BSA/AML", "OFAC", "FATF"]
+        },
+        {
+          "document_type": "WIRE_INSTRUCTION",
+          "display_name": "Wire Transfer Instructions",
+          "target_agents": ["04-fraud-detection", "01-financial-crime-investigation"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65", "amount_above_callback_threshold", "new_beneficiary"],
+          "default_priority": "HIGH",
+          "sla_hours": 1,
+          "regulatory_tags": ["BSA/AML", "UCC Article 4A", "NACHA"]
+        }
+      ]
+    },
+
+    {
+      "document_category": "Capital Markets / Trading",
+      "documents": [
+        {
+          "document_type": "TRADE_CONFIRMATION",
+          "display_name": "Trade Confirmation",
+          "target_agents": ["07-trading-surveillance"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65"],
+          "default_priority": "HIGH",
+          "sla_hours": 2,
+          "regulatory_tags": ["SEC Rule 10b-5", "FINRA Rule 4511", "CFTC"]
+        },
+        {
+          "document_type": "BROKERAGE_STATEMENT",
+          "display_name": "Brokerage Account Statement",
+          "target_agents": ["03-kyc-cdd-perpetual", "07-trading-surveillance"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65"],
+          "default_priority": "NORMAL",
+          "sla_hours": 4,
+          "regulatory_tags": ["SEC Rule 17a-5", "FINRA Rule 2231"]
+        }
+      ]
+    },
+
+    {
+      "document_category": "Identity / KYC",
+      "documents": [
+        {
+          "document_type": "GOVERNMENT_ID",
+          "display_name": "Government-Issued ID (Passport / Driver's License)",
+          "target_agents": ["03-kyc-cdd-perpetual"],
+          "hitl_always": true,
+          "hitl_reason": "Contains biometric PII and requires human verification of document authenticity and security features. Passport numbers are never extracted.",
+          "hitl_conditions": ["ALWAYS"],
+          "default_priority": "NORMAL",
+          "sla_hours": 24,
+          "regulatory_tags": ["BSA CIP", "FinCEN CDD Rule", "PATRIOT Act Sec 326"]
+        },
+        {
+          "document_type": "ENTITY_DOCUMENT",
+          "display_name": "Entity Formation / Governance Document",
+          "target_agents": ["03-kyc-cdd-perpetual"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65", "multiple_ownership_layers"],
+          "default_priority": "NORMAL",
+          "sla_hours": 24,
+          "regulatory_tags": ["BSA CIP", "FinCEN CDD Rule"]
+        },
+        {
+          "document_type": "TRUST_DOCUMENT",
+          "display_name": "Trust Agreement / Trust Certification",
+          "target_agents": ["03-kyc-cdd-perpetual"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65"],
+          "default_priority": "NORMAL",
+          "sla_hours": 24,
+          "regulatory_tags": ["BSA CIP", "FinCEN CDD Rule", "State trust law"]
+        },
+        {
+          "document_type": "BENEFICIAL_OWNERSHIP_CERT",
+          "display_name": "FinCEN Beneficial Ownership Certification",
+          "target_agents": ["03-kyc-cdd-perpetual"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65", "ownership_sum_not_100pct"],
+          "default_priority": "NORMAL",
+          "sla_hours": 24,
+          "regulatory_tags": ["FinCEN CDD Rule (31 CFR 1010.230)", "BSA"]
+        }
+      ]
+    },
+
+    {
+      "document_category": "Compliance / Regulatory",
+      "documents": [
+        {
+          "document_type": "REGULATORY_EXAM_LETTER",
+          "display_name": "Regulatory Examination Letter / MRA",
+          "target_agents": ["06-regulatory-change"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.65"],
+          "default_priority": "CRITICAL",
+          "sla_hours": 2,
+          "regulatory_tags": ["12 USC 1820", "OCC Handbook", "FDIC RMS Manual"]
+        },
+        {
+          "document_type": "CONSENT_ORDER",
+          "display_name": "Consent Order / Cease and Desist",
+          "target_agents": ["06-regulatory-change"],
+          "hitl_always": true,
+          "hitl_reason": "Formal enforcement actions require immediate board and senior management notification. Always requires compliance officer review before routing.",
+          "hitl_conditions": ["ALWAYS"],
+          "default_priority": "CRITICAL",
+          "sla_hours": 1,
+          "regulatory_tags": ["12 USC 1818", "Dodd-Frank Sec 1053", "CFPB"]
+        },
+        {
+          "document_type": "ADVERSE_MEDIA_ARTICLE",
+          "display_name": "Adverse Media Article",
+          "target_agents": ["01-financial-crime-investigation", "03-kyc-cdd-perpetual"],
+          "hitl_always": false,
+          "hitl_conditions": ["confidence < 0.50", "criminal_allegations_flag"],
+          "default_priority": "HIGH",
+          "sla_hours": 4,
+          "regulatory_tags": ["FinCEN CDD Rule", "OFAC guidance on adverse media"]
+        },
+        {
+          "document_type": "SAR_FORM",
+          "display_name": "Suspicious Activity Report (SAR)",
+          "target_agents": ["01-financial-crime-investigation"],
+          "hitl_always": true,
+          "hitl_reason": "SARs are confidential by federal law (31 USC 5318(g)(2)). Must be reviewed by BSA Officer before routing. Output payload restricted to BSA Officer only — no other agents receive SAR content.",
+          "hitl_conditions": ["ALWAYS"],
+          "default_priority": "CRITICAL",
+          "sla_hours": 1,
+          "regulatory_tags": ["31 USC 5318(g)", "31 CFR 1020.320", "FinCEN SAR"]
+        },
+        {
+          "document_type": "CTR_FORM",
+          "display_name": "Currency Transaction Report (CTR)",
+          "target_agents": ["01-financial-crime-investigation"],
+          "hitl_always": true,
+          "hitl_reason": "CTRs must be verified by BSA staff before filing with FinCEN. Structuring indicators require human assessment. Filing deadline is 15 days from transaction.",
+          "hitl_conditions": ["ALWAYS"],
+          "default_priority": "HIGH",
+          "sla_hours": 4,
+          "regulatory_tags": ["31 USC 5313", "31 CFR 1010.311", "FinCEN CTR"]
+        }
+      ]
+    },
+
+    {
+      "document_category": "Unclassified",
+      "documents": [
+        {
+          "document_type": "UNKNOWN",
+          "display_name": "Unclassified Document",
+          "target_agents": [],
+          "hitl_always": true,
+          "hitl_reason": "Document type could not be determined. Human classification required before any routing can occur.",
+          "hitl_conditions": ["ALWAYS"],
+          "default_priority": "LOW",
+          "sla_hours": 48,
+          "regulatory_tags": []
+        }
+      ]
+    }
+  ],
+
+  "hitl_decision_options": [
+    {
+      "decision": "APPROVE_AND_ROUTE",
+      "display_name": "Approve and Route",
+      "description": "Extraction is accurate. Route document to target agents as-is.",
+      "downstream_action": "enrichment → output_packaging → downstream_agents"
+    },
+    {
+      "decision": "CORRECT_AND_ROUTE",
+      "display_name": "Correct and Route",
+      "description": "Apply reviewer's field corrections, then route to target agents.",
+      "downstream_action": "correction_merge → enrichment → output_packaging → downstream_agents"
+    },
+    {
+      "decision": "REJECT",
+      "display_name": "Reject",
+      "description": "Document is fraudulent, unreadable, or otherwise unprocessable. Mark REJECTED and close.",
+      "downstream_action": "audit_finalize (REJECTED status)"
+    },
+    {
+      "decision": "REQUEST_RESUBMIT",
+      "display_name": "Request Resubmission",
+      "description": "Document is incomplete or incorrect. Notify submitter to resubmit.",
+      "downstream_action": "audit_finalize (PENDING_RESUBMIT status) + notification to source_system"
+    }
+  ],
+
+  "confidence_tiers": [
+    {
+      "tier": "HIGH",
+      "threshold": "≥ 0.85",
+      "action": "Auto-route to downstream agents",
+      "hitl": false
+    },
+    {
+      "tier": "MEDIUM",
+      "threshold": "0.65 – 0.84",
+      "action": "Auto-route with low-confidence fields flagged for downstream agent awareness",
+      "hitl": false
+    },
+    {
+      "tier": "LOW",
+      "threshold": "0.40 – 0.64",
+      "action": "HITL required — human review before routing",
+      "hitl": true
+    },
+    {
+      "tier": "UNCERTAIN",
+      "threshold": "< 0.40",
+      "action": "HITL required — likely UNKNOWN document type",
+      "hitl": true
+    }
+  ]
+}

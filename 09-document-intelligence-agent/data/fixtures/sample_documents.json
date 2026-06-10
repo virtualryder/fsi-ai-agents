@@ -1,0 +1,203 @@
+{
+  "_comment": "Sample Documents — Document Intelligence Agent (Agent 09)",
+  "_description": "Four realistic demo scenarios covering the key document categories: SWIFT wire transfer (AML/financial crime path), residential loan application (credit underwriting path), trade confirmation (trading surveillance path), and a regulatory exam letter (regulatory change path). Each scenario includes a simulated raw document text excerpt and the expected extraction output, allowing the Streamlit demo to run without needing to upload actual documents.",
+  "_schema_version": "1.0.0",
+
+  "scenarios": [
+
+    {
+      "scenario_id": "DEMO-001",
+      "scenario_name": "SWIFT MT103 — High-Value Wire Transfer (AML Alert Path)",
+      "scenario_description": "A SWIFT MT103 customer credit transfer for $950,000 originating from a correspondent bank in a high-risk jurisdiction. The wire amount is below the CTR threshold but high enough to trigger AML monitoring. The ordering customer has an unusual name match pattern. This scenario demonstrates the financial crime routing path and shows how the agent flags AML risk indicators before routing to Agent 01.",
+      "document_metadata": {
+        "source_filename": "SWIFT_MT103_REF20240315_950K.txt",
+        "file_format": "TEXT",
+        "source_system": "CORE_BANKING",
+        "submitted_by": "treasury.ops@firstnational.example.com"
+      },
+      "raw_document_text": "{1:F01FNBKUS33AXXX1234567890}{2:I103BKCHCH22AXXXN}{3:{108:MT103 20240315}}{4:\n:20:REF20240315-0042\n:23B:CRED\n:32A:240315USD950000,00\n:50K:/****4872\nALPHA TRADING INTERNATIONAL LTD\n14 HARBOR BLVD, LIMASSOL\nCYPRUS CY-3025\n:52A:BKCHCH22\n:59:/****9901\nWEST COAST CAPITAL MANAGEMENT LLC\n550 MONTGOMERY ST SUITE 1200\nSAN FRANCISCO CA 94111\nUSA\n:71A:OUR\n:70:/INV/2024-03-15/CONSULTING FEES\n:72:/ACC/FIRST NATIONAL BANK\n-}",
+      "expected_extraction": {
+        "document_type": "SWIFT_MT103",
+        "document_type_confidence": 0.98,
+        "extracted_fields": {
+          "transaction_reference_number": "REF20240315-0042",
+          "value_date": "2024-03-15",
+          "currency": "USD",
+          "amount": 950000.00,
+          "ordering_customer_name": "ALPHA TRADING INTERNATIONAL LTD",
+          "ordering_customer_account": "****4872",
+          "beneficiary_name": "WEST COAST CAPITAL MANAGEMENT LLC",
+          "beneficiary_account": "****9901",
+          "beneficiary_bank_bic": "FNBKUS33",
+          "ordering_bank_bic": "BKCHCH22",
+          "remittance_information": "/INV/2024-03-15/CONSULTING FEES",
+          "charges_indicator": "OUR"
+        },
+        "confidence_tier": "HIGH",
+        "pii_detected": true,
+        "pii_types_found": ["ACCOUNT_NUMBER", "NAME"],
+        "target_agents": ["01-financial-crime-investigation", "04-fraud-detection"],
+        "anomaly_flags": [
+          "Ordering bank BIC BKCHCH22 (Credit Suisse successor) — Swiss correspondent with elevated AML monitoring",
+          "Ordering customer address: Cyprus — FATF-monitored jurisdiction for shell company risk",
+          "Remittance purpose 'CONSULTING FEES' is a common layering description — verify underlying contract",
+          "Amount $950,000 — near CTR threshold ($10,000 cash threshold inapplicable, but high-value wire monitoring applies)",
+          "Beneficiary is an LLC in San Francisco — verify beneficial ownership via FinCEN CDD records"
+        ],
+        "regulatory_relevance": ["BSA/AML", "OFAC", "FATF Recommendation 16", "31 CFR 1010.410"],
+        "human_review_required": false,
+        "routing_rationale": "SWIFT MT103 auto-routes to financial crime investigation and fraud detection per DOCUMENT_ROUTING table. High confidence extraction. Anomaly flags passed to downstream agents for investigation.",
+        "priority": "HIGH"
+      }
+    },
+
+    {
+      "scenario_id": "DEMO-002",
+      "scenario_name": "Residential Loan Application — Geographic Fair Lending Flag",
+      "scenario_description": "A 1003 residential mortgage application from a borrower with a strong credit profile. The property address falls within a census tract that has historically shown disparate impact patterns. This demonstrates the fair lending screening path and the agent's ability to extract structured underwriting data from an unstructured PDF application form.",
+      "document_metadata": {
+        "source_filename": "1003_Application_James_Wilson_20240312.pdf",
+        "file_format": "PDF",
+        "source_system": "LOS",
+        "submitted_by": "loan.officer.martinez@firstnational.example.com"
+      },
+      "raw_document_text": "UNIFORM RESIDENTIAL LOAN APPLICATION\nForm 1003 (Rev. 11/2020)\n\nBORROWER INFORMATION\nApplicant Name: James R. Wilson\nSSN: ***-**-6789 (masked)\nDate of Birth: 1978-06-15\nPhone: (415) 555-0192\nEmail: james.wilson@email.example.com\n\nEMPLOYMENT\nEmployer: Pacific Tech Solutions Inc.\nPosition: Senior Software Engineer\nYears Employed: 7\nBase Salary: $185,000 per year\n\nLOAN INFORMATION\nLoan Amount: $875,000\nLoan Purpose: Purchase\nLoan Type: Conventional\nLoan Term: 30 years\nSubject Property: 1847 Ridgemont Ave, Oakland, CA 94602\nProperty Type: Single Family Residence\nEstimated Value: $1,100,000\n\nFINANCIAL INFORMATION\nMonthly Debt Payments: $2,100 (auto loan $650, student loans $1,450)\nCredit Score: 742\nDown Payment: $225,000 (20.45%)\nDown Payment Source: Savings\n\nRACE / ETHNICITY (Government Monitoring - HMDA)\nRace: Applicant declined to provide\nEthnicity: Applicant declined to provide\nSex: Male\n\nApplicant Signature: James R. Wilson\nDate: 2024-03-12",
+      "expected_extraction": {
+        "document_type": "LOAN_APPLICATION_RESIDENTIAL",
+        "document_type_confidence": 0.96,
+        "extracted_fields": {
+          "applicant_name": "James R. Wilson",
+          "applicant_ssn_last4": "XXX-XX-6789",
+          "loan_amount_requested": 875000,
+          "property_address": "1847 Ridgemont Ave, Oakland, CA 94602",
+          "property_type": "Single Family Residence",
+          "loan_purpose": "PURCHASE",
+          "annual_income": 185000,
+          "monthly_debt_payments": 2100,
+          "credit_score": 742,
+          "employment_status": "EMPLOYED",
+          "employer_name": "Pacific Tech Solutions Inc.",
+          "years_employed": 7,
+          "property_value": 1100000,
+          "down_payment_amount": 225000,
+          "loan_term_years": 30,
+          "source_of_funds": "Savings",
+          "race_ethnicity_flag": "DECLINED_TO_PROVIDE"
+        },
+        "confidence_tier": "HIGH",
+        "pii_detected": true,
+        "pii_types_found": ["SSN", "NAME", "ADDRESS"],
+        "target_agents": ["08-credit-underwriting"],
+        "anomaly_flags": [
+          "Property address 94602 census tract — flagged for geographic fair lending review. Verify lending patterns in this area do not show disparate impact under HMDA data.",
+          "Borrower declined race/ethnicity — HMDA required field. Record 'Information Not Provided' per HMDA code 7.",
+          "DTI: ($2,100/month debt + est. $4,520/month PITI) / ($185,000/12) = 6,620 / 15,417 = 42.9% — within Fannie Mae 45% limit."
+        ],
+        "regulatory_relevance": ["ECOA/Reg B", "HMDA", "TILA/Reg Z", "Fair Housing Act"],
+        "human_review_required": false,
+        "routing_rationale": "High confidence extraction. Residential loan application auto-routes to credit underwriting. Fair lending flag passed as anomaly for underwriter review.",
+        "priority": "NORMAL"
+      }
+    },
+
+    {
+      "scenario_id": "DEMO-003",
+      "scenario_name": "Trade Confirmation — Equity Block Trade (Surveillance Path)",
+      "scenario_description": "A trade confirmation for a large block purchase of a technology stock executed shortly before the company's earnings announcement. The timing pattern warrants insider trading review by the trading surveillance agent. Demonstrates the securities trading document extraction and surveillance routing path.",
+      "document_metadata": {
+        "source_filename": "TradeConfirm_TECH7_Block_20240311.pdf",
+        "file_format": "PDF",
+        "source_system": "TMS",
+        "submitted_by": "settlement.ops@clearinghouse.example.com"
+      },
+      "raw_document_text": "TRADE CONFIRMATION\nFirst National Securities LLC\nMember FINRA / SIPC\n\nDate: March 11, 2024\nTrade Date: 2024-03-11\nSettlement Date: 2024-03-13 (T+2)\n\nACCOUNT: ****-****-2281\nAccount Name: Meridian Capital Partners LP\n\nTRANSACTION DETAILS:\nAction: BUY\nSecurity: NEXON TECHNOLOGIES INC\nTicker: NXTN\nCUSIP: 654321AB9\nISIN: US654321AB91\nQuantity: 250,000 shares\nExecution Price: $47.82 per share\nTotal Consideration: $11,955,000.00\nCommission: $11,955.00\nNet Amount Due: $11,966,955.00\n\nEXECUTING BROKER: First National Securities LLC\nTRADER ID: TDR-0042\nSTRATEGY: BLOCK\nCLEARING: DTC\n\nThis confirmation is subject to the rules and regulations of FINRA and the DTCC.\nSettlement instructions on file. Any discrepancies must be reported within 24 hours.",
+      "expected_extraction": {
+        "document_type": "TRADE_CONFIRMATION",
+        "document_type_confidence": 0.97,
+        "extracted_fields": {
+          "trade_date": "2024-03-11",
+          "settlement_date": "2024-03-13",
+          "instrument_identifier": "654321AB9",
+          "instrument_type": "EQUITY",
+          "quantity": 250000,
+          "price": 47.82,
+          "notional_value": 11955000.00,
+          "counterparty_name": "Meridian Capital Partners LP",
+          "trader_id": "TDR-0042",
+          "account_number_last4": "****2281",
+          "buy_sell_indicator": "BUY",
+          "instrument_name": "NEXON TECHNOLOGIES INC",
+          "isin": "US654321AB91",
+          "cusip": "654321AB9",
+          "commission": 11955.00,
+          "executing_broker": "First National Securities LLC",
+          "clearing_broker": "DTC",
+          "strategy_code": "BLOCK"
+        },
+        "confidence_tier": "HIGH",
+        "pii_detected": true,
+        "pii_types_found": ["ACCOUNT_NUMBER", "NAME"],
+        "target_agents": ["07-trading-surveillance"],
+        "anomaly_flags": [
+          "Block trade of 250,000 shares ($11.95M notional) — exceeds large trader threshold for FINRA Rule 4511 record retention.",
+          "Trade date 2024-03-11: Nexon Technologies (NXTN) reported earnings 2024-03-14 (3 days post-trade). Timing warrants insider trading review.",
+          "Trader TDR-0042: Confirm no access to material non-public information (MNPI) from investment banking deals involving NXTN during lookback window.",
+          "Counterparty Meridian Capital Partners LP: Verify not on restricted trading list as of trade date."
+        ],
+        "regulatory_relevance": ["SEC Rule 10b-5 (insider trading)", "FINRA Rule 4511", "Dodd-Frank Section 929X", "MAR (if EU counterparty)"],
+        "human_review_required": false,
+        "routing_rationale": "Trade confirmation auto-routes to trading surveillance. High confidence extraction. Timing anomaly flag passed as priority indicator.",
+        "priority": "HIGH"
+      }
+    },
+
+    {
+      "scenario_id": "DEMO-004",
+      "scenario_name": "OCC Examination Letter — BSA/AML Matters Requiring Attention",
+      "scenario_description": "An OCC supervisory letter following a BSA/AML examination, identifying three Matters Requiring Attention (MRAs) related to transaction monitoring, customer risk rating, and SAR filing timeliness. This scenario demonstrates the regulatory change management routing path and the extraction of enforcement details that require a formal response.",
+      "document_metadata": {
+        "source_filename": "OCC_ExamLetter_BSA_AML_2024_Q1.pdf",
+        "file_format": "PDF",
+        "source_system": "EMAIL",
+        "submitted_by": "compliance.officer@firstnational.example.com"
+      },
+      "raw_document_text": "OFFICE OF THE COMPTROLLER OF THE CURRENCY\nWashington, DC 20219\n\nMarch 8, 2024\n\nBoard of Directors\nFirst National Bank\n123 Commerce Street\nChicago, IL 60601\n\nRe: Report of Examination — Bank Secrecy Act / Anti-Money Laundering\nExamination Period: January 2024\nRating: Needs Improvement\n\nDear Members of the Board:\n\nThis report summarizes the findings of the BSA/AML examination conducted during January 2024. The examination identified weaknesses in the bank's BSA/AML compliance program requiring corrective action.\n\nMATTERS REQUIRING ATTENTION (3)\n\nMRA 1 — Transaction Monitoring System Calibration\nThe bank's transaction monitoring system has not been calibrated since Q2 2022. Scenario thresholds are not risk-based and have produced an unacceptable false positive rate of 78%, impairing the quality of SAR investigations. The bank must engage a qualified independent consultant to assess and recalibrate the TMS by June 30, 2024.\n\nMRA 2 — Customer Risk Rating Model\nThe customer risk rating model does not incorporate geographic risk or product risk factors as required under FinCEN's 2016 CDD Rule. Approximately 14,000 customer records must be re-risk-rated. A remediation plan is due within 60 days of this letter.\n\nMRA 3 — SAR Filing Timeliness\nThe bank filed 23 SARs during the examination period with an average delay of 9 days beyond the 30-day filing deadline. Controls must be strengthened to ensure timely SAR filing consistent with 31 CFR 1020.320.\n\nThe bank is required to submit a written response addressing each MRA within 45 days of this letter. The Examiner-in-Charge, Sarah K. Thompson, may be contacted with questions.\n\nSincerely,\nOffice of the Comptroller of the Currency",
+      "expected_extraction": {
+        "document_type": "REGULATORY_EXAM_LETTER",
+        "document_type_confidence": 0.95,
+        "extracted_fields": {
+          "regulator_name": "Office of the Comptroller of the Currency",
+          "examination_date": "2024-01",
+          "institution_name": "First National Bank",
+          "examination_type": "BSA_AML",
+          "findings_summary": "Three MRAs: (1) TMS calibration, (2) customer risk rating model gaps, (3) SAR filing timeliness. Overall rating: Needs Improvement.",
+          "response_deadline": "2024-04-22",
+          "mra_count": 3,
+          "mria_count": 0,
+          "examination_rating": "NEEDS_IMPROVEMENT",
+          "corrective_actions_required": [
+            "Engage independent consultant to recalibrate TMS by 2024-06-30",
+            "Remediate 14,000 customer risk ratings within 60 days",
+            "Strengthen SAR filing timeliness controls"
+          ],
+          "examiner_in_charge": "Sarah K. Thompson"
+        },
+        "confidence_tier": "HIGH",
+        "pii_detected": true,
+        "pii_types_found": ["NAME"],
+        "target_agents": ["06-regulatory-change"],
+        "anomaly_flags": [
+          "3 MRAs identified — triggers mandatory board notification and written response within 45 days (by 2024-04-22).",
+          "SAR filing delays (avg 9 days late) — potential civil money penalty exposure under 31 CFR 1010.820.",
+          "TMS false positive rate 78% — significantly above industry standard of 20-40%, indicating systemic calibration failure.",
+          "14,000 customer re-risk-ratings required — scope suggests remediation will require significant resources; begin triage immediately.",
+          "Examination rating 'Needs Improvement' — if repeated at next exam, may escalate to formal enforcement action."
+        ],
+        "regulatory_relevance": ["BSA/AML", "FinCEN CDD Rule", "31 CFR 1020.320 (SAR)", "OCC Heightened Standards"],
+        "human_review_required": false,
+        "routing_rationale": "Regulatory exam letter auto-routes to regulatory change management. High confidence extraction. MRA count and deadlines passed as priority fields.",
+        "priority": "CRITICAL"
+      }
+    }
+  ]
+}

@@ -1,0 +1,884 @@
+{
+  "_comment": "Document Type Schemas — Document Intelligence Agent (Agent 09)",
+  "_description": "This file defines the required and optional extraction fields for each of the 25 document types the agent can process. Each schema entry includes field definitions, validation rules, and the downstream agents that consume the extracted data. When the field_extraction_node in nodes.py requests field extraction from the LLM, it loads the relevant schema from this file and passes the required/optional field lists in the extraction prompt. Python then validates the LLM's response against the validation_rules in this file.",
+  "_security_note": "Fields marked pii_type will be masked in the audit trail and in the output payload before it is sent to downstream agents. The LLM extraction prompt instructs the model to return only masked versions of these fields (e.g., SSN last 4, PASSPORT_PRESENT). Python regex-based PII detection runs before LLM extraction as a defense-in-depth measure.",
+  "_schema_version": "1.0.0",
+
+  "LOAN_APPLICATION_RESIDENTIAL": {
+    "description": "Consumer mortgage loan application. Covers Fannie Mae Form 1003 and equivalent GSE applications for purchase, refinance, and home equity. Regulated under ECOA, Reg B, HMDA, and TILA/Reg Z.",
+    "downstream_agents": ["08-credit-underwriting"],
+    "required_fields": [
+      "applicant_name",
+      "applicant_ssn_last4",
+      "loan_amount_requested",
+      "property_address",
+      "property_type",
+      "loan_purpose",
+      "annual_income",
+      "monthly_debt_payments",
+      "credit_score"
+    ],
+    "optional_fields": [
+      "co_applicant_name",
+      "co_applicant_ssn_last4",
+      "employment_status",
+      "employer_name",
+      "years_employed",
+      "property_value",
+      "down_payment_amount",
+      "loan_term_years",
+      "interest_rate_requested",
+      "source_of_funds",
+      "race_ethnicity_flag",
+      "hmda_action_taken"
+    ],
+    "pii_fields": {
+      "applicant_ssn_last4": "SSN",
+      "co_applicant_ssn_last4": "SSN",
+      "applicant_name": "NAME",
+      "co_applicant_name": "NAME",
+      "property_address": "ADDRESS"
+    },
+    "validation_rules": {
+      "loan_amount_requested": {"type": "numeric", "min": 1000, "max": 50000000},
+      "credit_score": {"type": "integer", "min": 300, "max": 850},
+      "annual_income": {"type": "numeric", "min": 0},
+      "loan_purpose": {"allowed_values": ["PURCHASE", "REFINANCE", "CASH_OUT_REFINANCE", "HOME_EQUITY", "CONSTRUCTION", "HOME_IMPROVEMENT"]}
+    },
+    "regulatory_basis": ["ECOA/Reg B", "HMDA", "TILA/Reg Z", "RESPA", "FCRA"]
+  },
+
+  "LOAN_APPLICATION_COMMERCIAL": {
+    "description": "Commercial real estate (CRE) or business loan application. Covers term loans, lines of credit, and construction financing for business entities. Regulated under Reg B (business credit), CRA, and SBA regulations when applicable.",
+    "downstream_agents": ["08-credit-underwriting"],
+    "required_fields": [
+      "borrower_legal_name",
+      "borrower_ein",
+      "loan_amount_requested",
+      "loan_purpose",
+      "collateral_description",
+      "collateral_value",
+      "annual_revenue",
+      "years_in_business"
+    ],
+    "optional_fields": [
+      "guarantor_name",
+      "guarantor_ssn_last4",
+      "property_address",
+      "property_type",
+      "noi",
+      "dscr",
+      "ltv",
+      "global_cash_flow",
+      "existing_debt_obligations",
+      "number_of_employees",
+      "industry_naics_code",
+      "sba_program"
+    ],
+    "pii_fields": {
+      "borrower_ein": "EIN",
+      "guarantor_ssn_last4": "SSN",
+      "guarantor_name": "NAME"
+    },
+    "validation_rules": {
+      "loan_amount_requested": {"type": "numeric", "min": 25000},
+      "annual_revenue": {"type": "numeric", "min": 0},
+      "ltv": {"type": "float", "min": 0.0, "max": 1.0},
+      "dscr": {"type": "float", "min": 0.0}
+    },
+    "regulatory_basis": ["Reg B (business credit)", "CRA", "SBA 7(a)/504", "HMDA (if CRE)"]
+  },
+
+  "PROPERTY_APPRAISAL": {
+    "description": "Real estate appraisal report prepared by a licensed appraiser. Must conform to USPAP (Uniform Standards of Professional Appraisal Practice). Used as collateral valuation input for residential and commercial underwriting.",
+    "downstream_agents": ["08-credit-underwriting"],
+    "required_fields": [
+      "property_address",
+      "appraised_value",
+      "appraisal_date",
+      "appraiser_name",
+      "appraiser_license_number",
+      "appraisal_method",
+      "effective_date"
+    ],
+    "optional_fields": [
+      "comparable_sales",
+      "neighborhood_description",
+      "condition_rating",
+      "square_footage",
+      "lot_size",
+      "year_built",
+      "zoning",
+      "environmental_issues_flag",
+      "flood_zone"
+    ],
+    "pii_fields": {
+      "property_address": "ADDRESS",
+      "appraiser_name": "NAME"
+    },
+    "validation_rules": {
+      "appraised_value": {"type": "numeric", "min": 1},
+      "appraisal_date": {"type": "date", "format": "YYYY-MM-DD"},
+      "appraisal_method": {"allowed_values": ["SALES_COMPARISON", "INCOME_APPROACH", "COST_APPROACH", "HYBRID", "DESKTOP"]}
+    },
+    "regulatory_basis": ["USPAP", "FIRREA", "Interagency Appraisal Guidelines"]
+  },
+
+  "TAX_RETURN_1040": {
+    "description": "IRS Form 1040 — Individual Income Tax Return. Primary income documentation for residential mortgage underwriting. Fannie Mae guidelines require 2 years of 1040s for self-employed borrowers.",
+    "downstream_agents": ["08-credit-underwriting"],
+    "required_fields": [
+      "tax_year",
+      "taxpayer_name",
+      "taxpayer_ssn_last4",
+      "adjusted_gross_income",
+      "total_income",
+      "filing_status"
+    ],
+    "optional_fields": [
+      "spouse_name",
+      "spouse_ssn_last4",
+      "wages_salaries",
+      "business_income_schedule_c",
+      "rental_income_schedule_e",
+      "partnership_income_schedule_k1",
+      "total_tax",
+      "tax_due_or_refund",
+      "amended_return_flag"
+    ],
+    "pii_fields": {
+      "taxpayer_ssn_last4": "SSN",
+      "spouse_ssn_last4": "SSN",
+      "taxpayer_name": "NAME",
+      "spouse_name": "NAME"
+    },
+    "validation_rules": {
+      "tax_year": {"type": "integer", "min": 2010, "max": 2030},
+      "adjusted_gross_income": {"type": "numeric"},
+      "filing_status": {"allowed_values": ["SINGLE", "MARRIED_FILING_JOINTLY", "MARRIED_FILING_SEPARATELY", "HEAD_OF_HOUSEHOLD", "QUALIFYING_WIDOW"]}
+    },
+    "regulatory_basis": ["IRS regulations", "Fannie Mae Selling Guide B3-3.1", "FHA Handbook 4000.1"]
+  },
+
+  "TAX_RETURN_1065": {
+    "description": "IRS Form 1065 — U.S. Return of Partnership Income. Used to document partnership income for commercial loan underwriting and to assess global cash flow when a guarantor holds partnership interests.",
+    "downstream_agents": ["08-credit-underwriting"],
+    "required_fields": [
+      "tax_year",
+      "partnership_name",
+      "partnership_ein",
+      "ordinary_business_income",
+      "total_revenue",
+      "number_of_partners"
+    ],
+    "optional_fields": [
+      "guaranteed_payments",
+      "rental_income",
+      "depreciation_amortization",
+      "total_assets",
+      "total_liabilities",
+      "k1_recipients"
+    ],
+    "pii_fields": {
+      "partnership_ein": "EIN",
+      "partnership_name": "NAME"
+    },
+    "validation_rules": {
+      "tax_year": {"type": "integer", "min": 2010, "max": 2030},
+      "ordinary_business_income": {"type": "numeric"},
+      "total_revenue": {"type": "numeric", "min": 0}
+    },
+    "regulatory_basis": ["IRS regulations", "Fannie Mae B3-3.4", "SBA SOP 50-10"]
+  },
+
+  "TAX_RETURN_1120": {
+    "description": "IRS Form 1120 — U.S. Corporation Income Tax Return. Used for C-corporation borrowers. Analysts use to assess entity income, debt service coverage, and global cash flow when a corporate guarantor is involved.",
+    "downstream_agents": ["08-credit-underwriting"],
+    "required_fields": [
+      "tax_year",
+      "corporation_name",
+      "corporation_ein",
+      "total_income",
+      "taxable_income",
+      "total_tax"
+    ],
+    "optional_fields": [
+      "gross_receipts",
+      "cost_of_goods_sold",
+      "total_deductions",
+      "net_income",
+      "accumulated_earnings",
+      "total_assets",
+      "total_liabilities"
+    ],
+    "pii_fields": {
+      "corporation_ein": "EIN",
+      "corporation_name": "NAME"
+    },
+    "validation_rules": {
+      "tax_year": {"type": "integer", "min": 2010, "max": 2030},
+      "total_income": {"type": "numeric"},
+      "taxable_income": {"type": "numeric"}
+    },
+    "regulatory_basis": ["IRS regulations", "OCC Comptroller's Handbook — Commercial RE Lending"]
+  },
+
+  "FINANCIAL_STATEMENT": {
+    "description": "Business financial statement — Balance Sheet, Income Statement, or Cash Flow Statement. May be audited, reviewed, compiled, or internally prepared. Quality tier (audited > reviewed > compiled > internal) affects underwriting confidence.",
+    "downstream_agents": ["08-credit-underwriting"],
+    "required_fields": [
+      "statement_type",
+      "period_end_date",
+      "entity_name",
+      "total_revenue",
+      "net_income",
+      "total_assets",
+      "total_liabilities"
+    ],
+    "optional_fields": [
+      "total_equity",
+      "operating_income",
+      "ebitda",
+      "current_assets",
+      "current_liabilities",
+      "long_term_debt",
+      "cash_and_equivalents",
+      "statement_quality",
+      "cpa_firm_name",
+      "auditor_opinion"
+    ],
+    "pii_fields": {
+      "entity_name": "NAME"
+    },
+    "validation_rules": {
+      "period_end_date": {"type": "date", "format": "YYYY-MM-DD"},
+      "statement_type": {"allowed_values": ["BALANCE_SHEET", "INCOME_STATEMENT", "CASH_FLOW", "COMBINED"]},
+      "statement_quality": {"allowed_values": ["AUDITED", "REVIEWED", "COMPILED", "INTERNAL"]}
+    },
+    "regulatory_basis": ["GAAP", "OCC Comptroller's Handbook", "SBA SOP 50-10"]
+  },
+
+  "BANK_STATEMENT": {
+    "description": "Bank account statement showing deposits, withdrawals, and balances over a period (typically 2–3 months). Used in underwriting to verify income, assess cash flow consistency, and detect NSF/overdraft patterns that may indicate financial stress.",
+    "downstream_agents": ["08-credit-underwriting", "01-financial-crime-investigation"],
+    "required_fields": [
+      "account_number_last4",
+      "account_holder_name",
+      "institution_name",
+      "statement_period_start",
+      "statement_period_end",
+      "beginning_balance",
+      "ending_balance",
+      "total_deposits",
+      "total_withdrawals"
+    ],
+    "optional_fields": [
+      "average_daily_balance",
+      "nsf_count",
+      "overdraft_count",
+      "large_deposits_flagged",
+      "wire_transfers_in",
+      "wire_transfers_out",
+      "cash_deposits_count",
+      "account_type"
+    ],
+    "pii_fields": {
+      "account_number_last4": "ACCOUNT_NUMBER",
+      "account_holder_name": "NAME"
+    },
+    "validation_rules": {
+      "statement_period_start": {"type": "date", "format": "YYYY-MM-DD"},
+      "statement_period_end": {"type": "date", "format": "YYYY-MM-DD"},
+      "beginning_balance": {"type": "numeric"},
+      "ending_balance": {"type": "numeric"}
+    },
+    "regulatory_basis": ["BSA/AML — unusual cash activity", "Fannie Mae B3-4.2 — asset verification"]
+  },
+
+  "SBA_FORM_1919": {
+    "description": "SBA Form 1919 — Borrower Information Form. Required for all SBA 7(a) and 504 loan applications. Captures ownership structure, criminal history certifications, and certifications regarding existing SBA debt. Must be signed by all 20%+ owners.",
+    "downstream_agents": ["08-credit-underwriting", "03-kyc-cdd-perpetual"],
+    "required_fields": [
+      "business_name",
+      "business_ein",
+      "loan_amount_requested",
+      "loan_purpose",
+      "owners_listed",
+      "criminal_history_certification",
+      "existing_sba_debt_flag"
+    ],
+    "optional_fields": [
+      "naics_code",
+      "business_type",
+      "years_in_business",
+      "veteran_owned_flag",
+      "woman_owned_flag",
+      "minority_owned_flag",
+      "hub_zone_flag"
+    ],
+    "pii_fields": {
+      "business_ein": "EIN",
+      "owners_listed": "NAME"
+    },
+    "validation_rules": {
+      "loan_amount_requested": {"type": "numeric", "min": 1, "max": 5000000},
+      "criminal_history_certification": {"type": "boolean"},
+      "existing_sba_debt_flag": {"type": "boolean"}
+    },
+    "regulatory_basis": ["SBA SOP 50-10", "13 CFR Part 120", "Bank Secrecy Act CIP requirements"]
+  },
+
+  "SBA_FORM_1920": {
+    "description": "SBA Form 1920 — Lender's Application for Loan Guaranty. Completed by the lender (not the borrower) as part of the SBA guaranty application package. Certifies the lender's underwriting decision and compliance with SBA eligibility requirements.",
+    "downstream_agents": ["08-credit-underwriting"],
+    "required_fields": [
+      "lender_name",
+      "lender_sba_number",
+      "borrower_name",
+      "loan_amount",
+      "sba_guaranty_requested",
+      "collateral_description",
+      "lender_decision",
+      "underwriter_certification"
+    ],
+    "optional_fields": [
+      "loan_term_months",
+      "interest_rate",
+      "environmental_review_flag",
+      "injection_amount",
+      "standby_agreement_flag"
+    ],
+    "pii_fields": {
+      "borrower_name": "NAME"
+    },
+    "validation_rules": {
+      "loan_amount": {"type": "numeric", "min": 1, "max": 5000000},
+      "sba_guaranty_requested": {"type": "numeric", "min": 0, "max": 3750000},
+      "lender_decision": {"allowed_values": ["APPROVE", "DECLINE", "REFER"]}
+    },
+    "regulatory_basis": ["SBA SOP 50-10", "13 CFR Part 120"]
+  },
+
+  "SWIFT_MT103": {
+    "description": "SWIFT MT103 — Single Customer Credit Transfer. International wire transfer message between banks. Carries payer and payee details, amounts, currency, and correspondent bank routing. High priority for AML/transaction monitoring due to cross-border cash movement. Always routed to financial crime investigation and fraud detection agents.",
+    "downstream_agents": ["01-financial-crime-investigation", "04-fraud-detection"],
+    "required_fields": [
+      "transaction_reference_number",
+      "value_date",
+      "currency",
+      "amount",
+      "ordering_customer_name",
+      "ordering_customer_account",
+      "beneficiary_name",
+      "beneficiary_account",
+      "beneficiary_bank_bic",
+      "ordering_bank_bic"
+    ],
+    "optional_fields": [
+      "remittance_information",
+      "correspondent_bank_bic",
+      "charges_indicator",
+      "regulatory_reporting",
+      "originator_address",
+      "beneficiary_address",
+      "sender_reference"
+    ],
+    "pii_fields": {
+      "ordering_customer_account": "ACCOUNT_NUMBER",
+      "beneficiary_account": "ACCOUNT_NUMBER",
+      "ordering_customer_name": "NAME",
+      "beneficiary_name": "NAME"
+    },
+    "validation_rules": {
+      "value_date": {"type": "date", "format": "YYYY-MM-DD"},
+      "amount": {"type": "numeric", "min": 0.01},
+      "currency": {"type": "string", "length": 3, "pattern": "^[A-Z]{3}$"},
+      "ordering_bank_bic": {"type": "string", "pattern": "^[A-Z]{6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3})?$"},
+      "beneficiary_bank_bic": {"type": "string", "pattern": "^[A-Z]{6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3})?$"}
+    },
+    "high_risk_screening": {
+      "ctr_threshold_usd": 10000,
+      "structuring_detection": true,
+      "ofac_screening_required": true,
+      "high_risk_country_check": true
+    },
+    "regulatory_basis": ["BSA/AML", "31 CFR Part 1010", "OFAC SDN/OFAC", "Reg GG — UIGEA", "FATF Recommendations"]
+  },
+
+  "SWIFT_MT202": {
+    "description": "SWIFT MT202 — General Financial Institution Transfer. Bank-to-bank transfer (no end-customer named in primary fields). Used for interbank settlements, nostro account funding, and correspondent banking. High AML risk when beneficial ownership of the underlying transaction is obscured.",
+    "downstream_agents": ["01-financial-crime-investigation"],
+    "required_fields": [
+      "transaction_reference_number",
+      "value_date",
+      "currency",
+      "amount",
+      "ordering_institution_bic",
+      "beneficiary_institution_bic",
+      "account_with_institution"
+    ],
+    "optional_fields": [
+      "sender_correspondent_bic",
+      "receiver_correspondent_bic",
+      "transaction_type_code",
+      "related_reference",
+      "originator",
+      "beneficiary_customer"
+    ],
+    "pii_fields": {
+      "originator": "NAME",
+      "beneficiary_customer": "NAME"
+    },
+    "validation_rules": {
+      "value_date": {"type": "date", "format": "YYYY-MM-DD"},
+      "amount": {"type": "numeric", "min": 0.01},
+      "currency": {"type": "string", "length": 3, "pattern": "^[A-Z]{3}$"}
+    },
+    "high_risk_screening": {
+      "ctr_threshold_usd": 10000,
+      "correspondent_bank_risk_check": true,
+      "ofac_screening_required": true
+    },
+    "regulatory_basis": ["BSA/AML", "OFAC", "FATF Recommendation 16 (Wire Transfer Rule)"]
+  },
+
+  "WIRE_INSTRUCTION": {
+    "description": "Wire transfer instructions document — typically a PDF or Word document submitted by a customer to initiate a domestic or international wire. HIGH FRAUD RISK: Business Email Compromise (BEC) attacks frequently use spoofed or altered wire instructions to redirect payments. Always requires verification against prior instructions on file.",
+    "downstream_agents": ["04-fraud-detection", "01-financial-crime-investigation"],
+    "required_fields": [
+      "beneficiary_name",
+      "beneficiary_bank_name",
+      "beneficiary_account_last4",
+      "routing_number",
+      "wire_amount",
+      "wire_currency",
+      "wire_purpose"
+    ],
+    "optional_fields": [
+      "beneficiary_address",
+      "beneficiary_bank_swift",
+      "intermediary_bank_name",
+      "intermediary_bank_swift",
+      "memo_reference",
+      "requester_name",
+      "request_date"
+    ],
+    "pii_fields": {
+      "beneficiary_name": "NAME",
+      "beneficiary_account_last4": "ACCOUNT_NUMBER",
+      "routing_number": "ROUTING_NUMBER",
+      "requester_name": "NAME"
+    },
+    "validation_rules": {
+      "wire_amount": {"type": "numeric", "min": 0.01},
+      "routing_number": {"type": "string", "length": 9, "pattern": "^0[0-9]{8}$"},
+      "wire_currency": {"type": "string", "length": 3}
+    },
+    "fraud_screening": {
+      "bec_risk": "HIGH",
+      "verify_against_prior_instructions": true,
+      "callback_verification_required_above_usd": 25000
+    },
+    "regulatory_basis": ["BSA/AML", "NACHA Operating Rules (ACH comparison)", "UCC Article 4A"]
+  },
+
+  "TRADE_CONFIRMATION": {
+    "description": "Trade confirmation document for securities, derivatives, or FX transactions. Confirms the economic terms of an executed trade between counterparties. Regulated under SEC, FINRA, and CFTC depending on instrument type. Used by trading surveillance to detect wash trading, front-running, and spoofing.",
+    "downstream_agents": ["07-trading-surveillance"],
+    "required_fields": [
+      "trade_date",
+      "settlement_date",
+      "instrument_identifier",
+      "instrument_type",
+      "quantity",
+      "price",
+      "notional_value",
+      "counterparty_name",
+      "trader_id",
+      "account_number_last4",
+      "buy_sell_indicator"
+    ],
+    "optional_fields": [
+      "instrument_name",
+      "isin",
+      "cusip",
+      "lei",
+      "currency",
+      "commission",
+      "executing_broker",
+      "clearing_broker",
+      "settlement_currency",
+      "fx_rate",
+      "strategy_code"
+    ],
+    "pii_fields": {
+      "counterparty_name": "NAME",
+      "account_number_last4": "ACCOUNT_NUMBER",
+      "trader_id": "EMPLOYEE_ID"
+    },
+    "validation_rules": {
+      "trade_date": {"type": "date", "format": "YYYY-MM-DD"},
+      "settlement_date": {"type": "date", "format": "YYYY-MM-DD"},
+      "quantity": {"type": "numeric", "min": 0},
+      "price": {"type": "numeric", "min": 0},
+      "notional_value": {"type": "numeric", "min": 0},
+      "buy_sell_indicator": {"allowed_values": ["BUY", "SELL", "SHORT_SELL"]}
+    },
+    "regulatory_basis": ["SEC Rule 10b-5", "FINRA Rule 4511", "CFTC swap reporting", "MiFID II trade reporting"]
+  },
+
+  "BROKERAGE_STATEMENT": {
+    "description": "Brokerage account statement showing holdings, transactions, and account values over a period. Used in KYC/CDD to assess client wealth profile and by credit underwriting as an asset verification document.",
+    "downstream_agents": ["03-kyc-cdd-perpetual", "07-trading-surveillance"],
+    "required_fields": [
+      "account_number_last4",
+      "account_holder_name",
+      "institution_name",
+      "statement_date",
+      "total_account_value",
+      "cash_balance"
+    ],
+    "optional_fields": [
+      "equity_holdings_value",
+      "fixed_income_holdings_value",
+      "options_value",
+      "period_return_pct",
+      "ytd_return_pct",
+      "realized_gains_losses",
+      "unrealized_gains_losses",
+      "margin_balance",
+      "number_of_positions"
+    ],
+    "pii_fields": {
+      "account_number_last4": "ACCOUNT_NUMBER",
+      "account_holder_name": "NAME"
+    },
+    "validation_rules": {
+      "statement_date": {"type": "date", "format": "YYYY-MM-DD"},
+      "total_account_value": {"type": "numeric", "min": 0}
+    },
+    "regulatory_basis": ["SEC Rule 17a-5 (broker-dealer statements)", "FINRA Rule 2231"]
+  },
+
+  "GOVERNMENT_ID": {
+    "description": "Government-issued identity document — passport, driver's license, national ID card, or military ID. ALWAYS requires human review before processing because: (1) it contains highly sensitive PII including biometric data, (2) it is the primary KYC/CDD identity verification document, (3) forgery detection requires human judgment on document security features. Passport numbers are never extracted — the agent records PASSPORT_PRESENT only.",
+    "downstream_agents": ["03-kyc-cdd-perpetual"],
+    "always_hitl": true,
+    "required_fields": [
+      "document_subtype",
+      "issuing_country",
+      "expiration_date",
+      "id_holder_name",
+      "date_of_birth"
+    ],
+    "optional_fields": [
+      "issuing_state_province",
+      "id_number_present_flag",
+      "gender",
+      "nationality",
+      "mrz_detected_flag"
+    ],
+    "pii_fields": {
+      "id_holder_name": "NAME",
+      "date_of_birth": "DOB",
+      "id_number_present_flag": "PASSPORT"
+    },
+    "extraction_constraints": {
+      "id_number": "NEVER_EXTRACT — record id_number_present_flag=true only",
+      "passport_number": "NEVER_EXTRACT — record PASSPORT_PRESENT only",
+      "ssn_on_id": "EXTRACT_LAST_4_ONLY"
+    },
+    "validation_rules": {
+      "expiration_date": {"type": "date", "format": "YYYY-MM-DD"},
+      "date_of_birth": {"type": "date", "format": "YYYY-MM-DD"},
+      "document_subtype": {"allowed_values": ["PASSPORT", "DRIVERS_LICENSE", "NATIONAL_ID", "MILITARY_ID", "RESIDENT_ALIEN_CARD"]}
+    },
+    "regulatory_basis": ["BSA CIP (31 CFR 1020.220)", "FinCEN Customer Due Diligence Rule", "USA PATRIOT Act Section 326"]
+  },
+
+  "ENTITY_DOCUMENT": {
+    "description": "Legal entity formation or governance document — Articles of Incorporation, Articles of Organization, Operating Agreement, Partnership Agreement, or Certificate of Good Standing. Used in KYC/CDD to verify entity structure and legal standing.",
+    "downstream_agents": ["03-kyc-cdd-perpetual"],
+    "required_fields": [
+      "entity_name",
+      "entity_type",
+      "state_of_formation",
+      "formation_date",
+      "registered_agent"
+    ],
+    "optional_fields": [
+      "ein",
+      "officers_directors_listed",
+      "member_manager_listed",
+      "authorized_signers",
+      "expiration_date",
+      "good_standing_flag",
+      "amendments_flag"
+    ],
+    "pii_fields": {
+      "entity_name": "NAME",
+      "ein": "EIN",
+      "officers_directors_listed": "NAME",
+      "registered_agent": "NAME"
+    },
+    "validation_rules": {
+      "formation_date": {"type": "date", "format": "YYYY-MM-DD"},
+      "entity_type": {"allowed_values": ["LLC", "CORPORATION", "PARTNERSHIP", "SOLE_PROPRIETORSHIP", "TRUST", "NON_PROFIT", "GOVERNMENT", "OTHER"]}
+    },
+    "regulatory_basis": ["BSA CIP", "FinCEN CDD Rule (beneficial ownership)", "USA PATRIOT Act"]
+  },
+
+  "TRUST_DOCUMENT": {
+    "description": "Trust agreement or trust certification document. Used in KYC/CDD to identify trustees, beneficiaries, and trust structure. Complex trust structures are a common vehicle for obscuring beneficial ownership and require enhanced due diligence.",
+    "downstream_agents": ["03-kyc-cdd-perpetual"],
+    "required_fields": [
+      "trust_name",
+      "trust_type",
+      "grantor_name",
+      "trustee_name",
+      "execution_date"
+    ],
+    "optional_fields": [
+      "co_trustee_name",
+      "beneficiary_names",
+      "trust_ein",
+      "revocable_flag",
+      "successor_trustee",
+      "trust_purpose",
+      "governing_law_state"
+    ],
+    "pii_fields": {
+      "grantor_name": "NAME",
+      "trustee_name": "NAME",
+      "co_trustee_name": "NAME",
+      "beneficiary_names": "NAME",
+      "trust_ein": "EIN"
+    },
+    "validation_rules": {
+      "execution_date": {"type": "date", "format": "YYYY-MM-DD"},
+      "trust_type": {"allowed_values": ["REVOCABLE_LIVING", "IRREVOCABLE", "TESTAMENTARY", "CHARITABLE", "SPECIAL_NEEDS", "ASSET_PROTECTION"]}
+    },
+    "regulatory_basis": ["BSA CIP", "FinCEN CDD Rule", "State trust law"]
+  },
+
+  "BENEFICIAL_OWNERSHIP_CERT": {
+    "description": "FinCEN Beneficial Ownership Certification — required for legal entity customers under the FinCEN CDD Final Rule (31 CFR 1010.230). Identifies all individuals who own 25%+ of the entity and one individual with significant management control. Must be updated on any ownership change greater than 25%.",
+    "downstream_agents": ["03-kyc-cdd-perpetual"],
+    "required_fields": [
+      "legal_entity_name",
+      "entity_type",
+      "beneficial_owners_listed",
+      "control_person_name",
+      "control_person_title",
+      "certification_date",
+      "certifying_officer_name"
+    ],
+    "optional_fields": [
+      "entity_ein",
+      "ownership_percentages",
+      "exempt_entity_flag",
+      "amendment_flag",
+      "prior_certification_date"
+    ],
+    "pii_fields": {
+      "beneficial_owners_listed": "NAME",
+      "control_person_name": "NAME",
+      "certifying_officer_name": "NAME",
+      "entity_ein": "EIN"
+    },
+    "validation_rules": {
+      "certification_date": {"type": "date", "format": "YYYY-MM-DD"},
+      "ownership_percentages": {"type": "list", "item_max": 100, "item_min": 0}
+    },
+    "regulatory_basis": ["FinCEN CDD Rule (31 CFR 1010.230)", "BSA", "PATRIOT Act"]
+  },
+
+  "REGULATORY_EXAM_LETTER": {
+    "description": "Regulatory examination correspondence — supervisory letter, examination report, matters requiring attention (MRA), matters requiring immediate attention (MRIA), or informal enforcement action correspondence. Issued by federal or state banking regulators (OCC, FDIC, Federal Reserve, CFPB, state DFS). Always routed to the Regulatory Change Management agent for tracking and response management.",
+    "downstream_agents": ["06-regulatory-change"],
+    "always_hitl": false,
+    "required_fields": [
+      "regulator_name",
+      "examination_date",
+      "institution_name",
+      "examination_type",
+      "findings_summary",
+      "response_deadline"
+    ],
+    "optional_fields": [
+      "mra_count",
+      "mria_count",
+      "examination_rating",
+      "camels_component_ratings",
+      "corrective_actions_required",
+      "prior_examination_date",
+      "examiner_in_charge"
+    ],
+    "pii_fields": {
+      "institution_name": "NAME",
+      "examiner_in_charge": "NAME"
+    },
+    "validation_rules": {
+      "examination_date": {"type": "date", "format": "YYYY-MM-DD"},
+      "response_deadline": {"type": "date", "format": "YYYY-MM-DD"},
+      "examination_type": {"allowed_values": ["SAFETY_SOUNDNESS", "CRA", "BSA_AML", "CONSUMER_COMPLIANCE", "TRUST", "IT", "COMBINED"]}
+    },
+    "regulatory_basis": ["12 USC 1820 (examination authority)", "OCC Comptroller's Handbook", "FDIC RMS Manual"]
+  },
+
+  "CONSENT_ORDER": {
+    "description": "Formal enforcement action — consent order, cease and desist order, or formal agreement issued by a banking regulator or the CFPB. These are public documents but may contain institution-specific remediation details. ALWAYS requires human review due to the sensitive nature of enforcement actions and potential market impact.",
+    "downstream_agents": ["06-regulatory-change"],
+    "always_hitl": true,
+    "required_fields": [
+      "regulator_name",
+      "institution_name",
+      "order_date",
+      "order_type",
+      "effective_date",
+      "violations_cited"
+    ],
+    "optional_fields": [
+      "civil_money_penalty_amount",
+      "remediation_requirements",
+      "compliance_officer_required",
+      "board_resolution_required",
+      "independent_consultant_required",
+      "compliance_deadline",
+      "termination_conditions"
+    ],
+    "pii_fields": {
+      "institution_name": "NAME"
+    },
+    "validation_rules": {
+      "order_date": {"type": "date", "format": "YYYY-MM-DD"},
+      "effective_date": {"type": "date", "format": "YYYY-MM-DD"},
+      "order_type": {"allowed_values": ["CONSENT_ORDER", "CEASE_AND_DESIST", "FORMAL_AGREEMENT", "MEMORANDUM_OF_UNDERSTANDING", "CIVIL_MONEY_PENALTY"]}
+    },
+    "regulatory_basis": ["12 USC 1818", "Dodd-Frank Section 1053", "CFPB enforcement authority"]
+  },
+
+  "ADVERSE_MEDIA_ARTICLE": {
+    "description": "News article or report containing adverse information about a customer, counterparty, or entity. Used in KYC/CDD negative news screening and in financial crime investigations. The document_type_confidence threshold for adverse media is lowered to 0.50 because articles vary widely in format.",
+    "downstream_agents": ["01-financial-crime-investigation", "03-kyc-cdd-perpetual"],
+    "required_fields": [
+      "publication_name",
+      "publication_date",
+      "subject_name",
+      "article_headline",
+      "adverse_category"
+    ],
+    "optional_fields": [
+      "author_name",
+      "source_url",
+      "subject_entity_type",
+      "jurisdiction_mentioned",
+      "regulatory_bodies_mentioned",
+      "criminal_allegations_flag",
+      "sanctions_mentioned_flag",
+      "pep_mentioned_flag"
+    ],
+    "pii_fields": {
+      "subject_name": "NAME",
+      "author_name": "NAME"
+    },
+    "validation_rules": {
+      "publication_date": {"type": "date", "format": "YYYY-MM-DD"},
+      "adverse_category": {"allowed_values": ["FRAUD", "MONEY_LAUNDERING", "SANCTIONS", "BRIBERY_CORRUPTION", "REGULATORY_ACTION", "CRIMINAL_ACTIVITY", "PEP_EXPOSURE", "REPUTATIONAL_RISK"]}
+    },
+    "regulatory_basis": ["FinCEN CDD Rule", "OFAC guidance on adverse media", "Wolfsberg Anti-Money Laundering Principles"]
+  },
+
+  "SAR_FORM": {
+    "description": "Suspicious Activity Report (SAR) — internal draft or completed FinCEN SAR form. ALWAYS requires human review. SARs are confidential by law (31 USC 5318(g)(2)) — their existence cannot be disclosed to the subject of the report. The output payload for SAR documents is restricted to BSA Officer routing only. SAR content must NEVER be included in payloads sent to non-BSA agents.",
+    "downstream_agents": ["01-financial-crime-investigation"],
+    "always_hitl": true,
+    "required_fields": [
+      "sar_reference_number",
+      "filing_institution_name",
+      "suspicious_activity_type",
+      "activity_date_range_start",
+      "activity_date_range_end",
+      "amount_involved",
+      "bsa_officer_name"
+    ],
+    "optional_fields": [
+      "subject_name",
+      "subject_account_last4",
+      "narrative_summary",
+      "law_enforcement_contact_flag",
+      "continuing_activity_flag",
+      "prior_sar_reference"
+    ],
+    "pii_fields": {
+      "filing_institution_name": "NAME",
+      "subject_name": "NAME",
+      "subject_account_last4": "ACCOUNT_NUMBER",
+      "bsa_officer_name": "NAME"
+    },
+    "confidentiality_constraints": {
+      "tipping_off_prohibited": true,
+      "restricted_to_bsa_officer": true,
+      "no_external_disclosure": true,
+      "law_enforcement_referral_possible": true
+    },
+    "validation_rules": {
+      "activity_date_range_start": {"type": "date", "format": "YYYY-MM-DD"},
+      "activity_date_range_end": {"type": "date", "format": "YYYY-MM-DD"},
+      "amount_involved": {"type": "numeric", "min": 0},
+      "suspicious_activity_type": {"allowed_values": ["STRUCTURING", "WIRE_FRAUD", "IDENTITY_THEFT", "MORTGAGE_FRAUD", "MONEY_LAUNDERING", "CHECK_FRAUD", "CYBER_CRIME", "EMBEZZLEMENT", "TERRORIST_FINANCING", "OTHER"]}
+    },
+    "regulatory_basis": ["31 USC 5318(g)", "31 CFR 1020.320", "FinCEN SAR Filing Requirements"]
+  },
+
+  "CTR_FORM": {
+    "description": "Currency Transaction Report (CTR) — FinCEN Form 112. Required for cash transactions exceeding $10,000 in a single banking day. Must be filed within 15 days of the transaction. ALWAYS requires human review to verify the cash transaction details and structuring indicators before filing. Structuring (breaking up transactions to avoid CTR filing) is a federal crime (31 USC 5324).",
+    "downstream_agents": ["01-financial-crime-investigation"],
+    "always_hitl": true,
+    "required_fields": [
+      "transaction_date",
+      "transaction_amount",
+      "transaction_type",
+      "filing_institution_name",
+      "conducting_person_name",
+      "account_number_last4",
+      "cash_in_amount",
+      "cash_out_amount"
+    ],
+    "optional_fields": [
+      "on_behalf_of_name",
+      "on_behalf_of_account_last4",
+      "multiple_transactions_flag",
+      "structuring_indicator_flag",
+      "teller_id",
+      "branch_location"
+    ],
+    "pii_fields": {
+      "conducting_person_name": "NAME",
+      "on_behalf_of_name": "NAME",
+      "account_number_last4": "ACCOUNT_NUMBER",
+      "on_behalf_of_account_last4": "ACCOUNT_NUMBER"
+    },
+    "validation_rules": {
+      "transaction_date": {"type": "date", "format": "YYYY-MM-DD"},
+      "transaction_amount": {"type": "numeric", "min": 10000.01},
+      "transaction_type": {"allowed_values": ["CASH_DEPOSIT", "CASH_WITHDRAWAL", "CURRENCY_EXCHANGE", "WIRE_TRANSFER", "MONETARY_INSTRUMENT"]}
+    },
+    "regulatory_basis": ["31 USC 5313", "31 CFR 1010.311", "FinCEN CTR Filing Requirements"]
+  },
+
+  "UNKNOWN": {
+    "description": "Document type could not be determined with sufficient confidence (< 0.40). Always requires human review. Human reviewer will either reclassify to a known type or reject the document as unprocessable.",
+    "downstream_agents": [],
+    "always_hitl": true,
+    "required_fields": [],
+    "optional_fields": [
+      "best_guess_type",
+      "classification_rationale",
+      "legibility_score"
+    ],
+    "pii_fields": {},
+    "validation_rules": {},
+    "regulatory_basis": ["N/A — pending human classification"]
+  }
+}
