@@ -1,0 +1,489 @@
+{
+  "_metadata": {
+    "description": "Complete Nacha ACH return code and NOC (Notification of Change) code reference. Return codes R01-R85 and NOC codes C01-C09. Each entry includes the code, description, return window (banking days), who may return it (RDFI or ODFI), Reg E implications, and whether it qualifies for unauthorized return processing.",
+    "version": "2024",
+    "source": "Nacha Operating Rules & Guidelines"
+  },
+  "return_codes": {
+    "R01": {
+      "code": "R01",
+      "description": "Insufficient Funds",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Not a consumer protection return. Originator may re-present up to 2 times after R01.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R02": {
+      "code": "R02",
+      "description": "Account Closed",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Account no longer active. Originator should obtain new account information.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R03": {
+      "code": "R03",
+      "description": "No Account / Unable to Locate Account",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Account number does not correspond to an open account. Originator should verify account details.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R04": {
+      "code": "R04",
+      "description": "Invalid Account Number Structure",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Account number fails check digit or format validation.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R05": {
+      "code": "R05",
+      "description": "Improper Debit Entry",
+      "return_window_banking_days": 60,
+      "returned_by": "RDFI",
+      "reg_e_applicable": true,
+      "unauthorized_return": true,
+      "consumer_protection_notes": "Debit entry to a corporate account not authorized. Extended 60-day return window applies. Reg E may apply if entry was to a consumer account.",
+      "nacha_section": "OR Section 2.12.2"
+    },
+    "R06": {
+      "code": "R06",
+      "description": "Returned per ODFI Request",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "ODFI-initiated return. Originator requested return.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R07": {
+      "code": "R07",
+      "description": "Authorization Revoked by Customer",
+      "return_window_banking_days": 60,
+      "returned_by": "RDFI",
+      "reg_e_applicable": true,
+      "unauthorized_return": true,
+      "consumer_protection_notes": "Consumer revoked authorization after initially providing it. 60-day window. Reg E § 1005.10(c) governs stop payment rights. Strong Reg E dispute indicator.",
+      "nacha_section": "OR Section 2.12.2"
+    },
+    "R08": {
+      "code": "R08",
+      "description": "Payment Stopped",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": true,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Consumer requested stop payment. Reg E § 1005.10(c) governs stop payment rights for preauthorized transfers. RDFI must honor stop payment within 3 business days of oral request.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R09": {
+      "code": "R09",
+      "description": "Uncollected Funds",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Funds exist but are not yet collected (check hold). Originator may re-present.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R10": {
+      "code": "R10",
+      "description": "Customer Advises Not Authorized / Originator Not Known",
+      "return_window_banking_days": 60,
+      "returned_by": "RDFI",
+      "reg_e_applicable": true,
+      "unauthorized_return": true,
+      "consumer_protection_notes": "Consumer disputes authorization entirely. Strongest Reg E unauthorized transaction return. 60-day extended window. RDFI must obtain written statement from consumer. Investigation required.",
+      "nacha_section": "OR Section 2.12.2"
+    },
+    "R11": {
+      "code": "R11",
+      "description": "Customer Advises Entry Not in Accordance With Authorization",
+      "return_window_banking_days": 60,
+      "returned_by": "RDFI",
+      "reg_e_applicable": true,
+      "unauthorized_return": true,
+      "consumer_protection_notes": "Authorization existed but charge differs from authorized terms (wrong amount, wrong date, etc.). Reg E incorrect amount dispute. 60-day window.",
+      "nacha_section": "OR Section 2.12.2"
+    },
+    "R12": {
+      "code": "R12",
+      "description": "Branch Sold to Another DFI",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Administrative — branch acquisition event.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R13": {
+      "code": "R13",
+      "description": "Invalid ACH Routing Number",
+      "return_window_banking_days": 2,
+      "returned_by": "ACH_OPERATOR",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Routing number not in Federal Reserve routing directory.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R14": {
+      "code": "R14",
+      "description": "Representative Payee Deceased or Unable to Continue in That Capacity",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Benefits payment to representative payee whose authority has ended.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R15": {
+      "code": "R15",
+      "description": "Beneficiary or Account Holder Deceased",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Account holder is deceased. Return benefits payments. Estate notification may be required.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R16": {
+      "code": "R16",
+      "description": "Account Frozen / Restricted",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "CRITICAL: If frozen for OFAC compliance, originating bank must treat as potential sanctions match. Do not re-originate. Contact BSA/Compliance.",
+      "nacha_section": "OR Section 2.12.1",
+      "ofac_flag": true
+    },
+    "R17": {
+      "code": "R17",
+      "description": "File Record Edit Criteria",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Format error in ACH record. Originator must correct and re-originate.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R20": {
+      "code": "R20",
+      "description": "Non-Transaction Account",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Regulation D prohibits debiting this account type for this transaction class.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R21": {
+      "code": "R21",
+      "description": "Invalid Company Identification",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Company identification (Originator Company ID) does not match RDFI records.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R22": {
+      "code": "R22",
+      "description": "Invalid Individual ID Number",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Individual ID number does not correspond to a receiver account.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R23": {
+      "code": "R23",
+      "description": "Credit Entry Refused by Receiver",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Receiver has refused this credit entry. Originator should contact receiver.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R24": {
+      "code": "R24",
+      "description": "Duplicate Entry",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": true,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "RDFI identifies this as a duplicate of a previously received entry. May trigger Reg E duplicate transaction dispute.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R29": {
+      "code": "R29",
+      "description": "Corporate Customer Advises Not Authorized",
+      "return_window_banking_days": 60,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": true,
+      "consumer_protection_notes": "Corporate (non-consumer) equivalent of R10. Debit not authorized by corporate customer. 60-day window. Note: Reg E does not apply to corporate accounts but Nacha unauthorized protections do.",
+      "nacha_section": "OR Section 2.12.2"
+    },
+    "R31": {
+      "code": "R31",
+      "description": "Permissible Return Entry (CCD and CTX Only)",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "RDFI-permitted return for CCD/CTX entries for any reason within 2 banking days.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R33": {
+      "code": "R33",
+      "description": "Return of XCK Entry",
+      "return_window_banking_days": 60,
+      "returned_by": "RDFI",
+      "reg_e_applicable": true,
+      "unauthorized_return": true,
+      "consumer_protection_notes": "Destroyed check entry return. Extended 60-day window applies.",
+      "nacha_section": "OR Section 2.12.2"
+    },
+    "R37": {
+      "code": "R37",
+      "description": "Source Document Presented for Payment",
+      "return_window_banking_days": 60,
+      "returned_by": "RDFI",
+      "reg_e_applicable": true,
+      "unauthorized_return": true,
+      "consumer_protection_notes": "Original check (source document) was separately presented for payment alongside the ACH conversion. Double-payment situation. Extended 60-day window.",
+      "nacha_section": "OR Section 2.12.2"
+    },
+    "R38": {
+      "code": "R38",
+      "description": "Stop Payment on Source Document",
+      "return_window_banking_days": 60,
+      "returned_by": "RDFI",
+      "reg_e_applicable": true,
+      "unauthorized_return": true,
+      "consumer_protection_notes": "Consumer placed stop payment on the original check that was converted to ACH. Extended 60-day window.",
+      "nacha_section": "OR Section 2.12.2"
+    },
+    "R39": {
+      "code": "R39",
+      "description": "Improper Source Document / Source Document Presented for Payment",
+      "return_window_banking_days": 60,
+      "returned_by": "RDFI",
+      "reg_e_applicable": true,
+      "unauthorized_return": true,
+      "consumer_protection_notes": "Check conversion entry did not comply with Nacha rules for check conversion. Extended 60-day window.",
+      "nacha_section": "OR Section 2.12.2"
+    },
+    "R51": {
+      "code": "R51",
+      "description": "Item Related to RCK Entry is Ineligible or RCK Entry is Improper",
+      "return_window_banking_days": 60,
+      "returned_by": "RDFI",
+      "reg_e_applicable": true,
+      "unauthorized_return": true,
+      "consumer_protection_notes": "Re-presented check (RCK) entry is improper or ineligible. Extended 60-day window.",
+      "nacha_section": "OR Section 2.12.2"
+    },
+    "R61": {
+      "code": "R61",
+      "description": "Misrouted Return",
+      "return_window_banking_days": 2,
+      "returned_by": "ODFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Return was routed to the wrong ODFI. Administrative correction needed.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R67": {
+      "code": "R67",
+      "description": "Duplicate Return",
+      "return_window_banking_days": 2,
+      "returned_by": "ODFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Return entry is a duplicate. ODFI received two returns for same entry.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R69": {
+      "code": "R69",
+      "description": "Field Error(s)",
+      "return_window_banking_days": 2,
+      "returned_by": "ODFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "One or more mandatory fields contain invalid data.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R70": {
+      "code": "R70",
+      "description": "Permissible Return Entry Not Accepted / Return Not Requested by ODFI",
+      "return_window_banking_days": 2,
+      "returned_by": "ODFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "ODFI did not request this return and does not accept it.",
+      "nacha_section": "OR Section 2.12.1"
+    },
+    "R77": {
+      "code": "R77",
+      "description": "Non-Acceptance of R62 Dishonored Return",
+      "return_window_banking_days": 2,
+      "returned_by": "RDFI",
+      "reg_e_applicable": false,
+      "unauthorized_return": false,
+      "consumer_protection_notes": "Administrative return dispute between ODFI and RDFI.",
+      "nacha_section": "OR Section 2.12.1"
+    }
+  },
+  "noc_codes": {
+    "C01": {
+      "code": "C01",
+      "description": "Incorrect DFI Account Number",
+      "correction_required": "Originator must update account number with corrected data provided in NOC",
+      "action_deadline_banking_days": 6,
+      "nacha_section": "OR Section 2.4.1",
+      "agent_action": "NOTIFY_ORIGINATOR_NOC"
+    },
+    "C02": {
+      "code": "C02",
+      "description": "Incorrect Routing Transit Number",
+      "correction_required": "Originator must update routing number with corrected data provided in NOC",
+      "action_deadline_banking_days": 6,
+      "nacha_section": "OR Section 2.4.1",
+      "agent_action": "NOTIFY_ORIGINATOR_NOC"
+    },
+    "C03": {
+      "code": "C03",
+      "description": "Incorrect Routing Transit Number and DFI Account Number",
+      "correction_required": "Both routing number and account number must be updated",
+      "action_deadline_banking_days": 6,
+      "nacha_section": "OR Section 2.4.1",
+      "agent_action": "NOTIFY_ORIGINATOR_NOC"
+    },
+    "C04": {
+      "code": "C04",
+      "description": "Incorrect Individual Name / Receiving Company Name",
+      "correction_required": "Originator must update the name field in future entries",
+      "action_deadline_banking_days": 6,
+      "nacha_section": "OR Section 2.4.1",
+      "agent_action": "NOTIFY_ORIGINATOR_NOC"
+    },
+    "C05": {
+      "code": "C05",
+      "description": "Incorrect Transaction Code",
+      "correction_required": "Originator must change the transaction code (e.g., personal checking vs. savings)",
+      "action_deadline_banking_days": 6,
+      "nacha_section": "OR Section 2.4.1",
+      "agent_action": "NOTIFY_ORIGINATOR_NOC"
+    },
+    "C06": {
+      "code": "C06",
+      "description": "Incorrect DFI Account Number and Incorrect Transaction Code",
+      "correction_required": "Both account number and transaction code must be corrected",
+      "action_deadline_banking_days": 6,
+      "nacha_section": "OR Section 2.4.1",
+      "agent_action": "NOTIFY_ORIGINATOR_NOC"
+    },
+    "C07": {
+      "code": "C07",
+      "description": "Incorrect Routing Transit Number, DFI Account Number, and Transaction Code",
+      "correction_required": "All three fields must be updated",
+      "action_deadline_banking_days": 6,
+      "nacha_section": "OR Section 2.4.1",
+      "agent_action": "NOTIFY_ORIGINATOR_NOC"
+    },
+    "C08": {
+      "code": "C08",
+      "description": "Incorrect Receiving DFI Identification (Truncated Entry)",
+      "correction_required": "Routing number used for truncated entry must be corrected",
+      "action_deadline_banking_days": 6,
+      "nacha_section": "OR Section 2.4.1",
+      "agent_action": "NOTIFY_ORIGINATOR_NOC"
+    },
+    "C09": {
+      "code": "C09",
+      "description": "Incorrect Individual Identification Number",
+      "correction_required": "Individual identification number must be corrected in originator records",
+      "action_deadline_banking_days": 6,
+      "nacha_section": "OR Section 2.4.1",
+      "agent_action": "NOTIFY_ORIGINATOR_NOC"
+    }
+  },
+  "sla_reference": {
+    "REG_E_PROVISIONAL_CREDIT": {
+      "description": "Provisional credit must be issued to consumer within this window from when complaint is received",
+      "days": 10,
+      "day_type": "BUSINESS",
+      "regulatory_basis": "12 CFR 1005.11(c)(2)(i)",
+      "extended_window": {
+        "days": 20,
+        "condition": "New account (< 30 days) or foreign-initiated transaction or point-of-sale transaction"
+      }
+    },
+    "REG_E_INVESTIGATION": {
+      "description": "Reg E dispute investigation must be completed within this window",
+      "days": 45,
+      "day_type": "CALENDAR",
+      "regulatory_basis": "12 CFR 1005.11(c)(1)",
+      "extended_window": {
+        "days": 90,
+        "condition": "POS transaction, foreign-initiated transaction, or new account (< 30 days)"
+      }
+    },
+    "NACHA_UNAUTHORIZED_RETURN": {
+      "description": "Unauthorized ACH return must be initiated within this window from settlement date",
+      "days": 60,
+      "day_type": "CALENDAR",
+      "regulatory_basis": "Nacha OR Section 2.12.2",
+      "codes": ["R05", "R07", "R10", "R11", "R29", "R33", "R37", "R38", "R39", "R51"]
+    },
+    "NACHA_STANDARD_RETURN": {
+      "description": "Standard ACH return window from settlement date",
+      "days": 2,
+      "day_type": "BANKING",
+      "regulatory_basis": "Nacha OR Section 2.12.1"
+    },
+    "CTR_FILING": {
+      "description": "Currency Transaction Report must be filed with FinCEN within this window",
+      "days": 15,
+      "day_type": "CALENDAR",
+      "regulatory_basis": "31 CFR 1010.311",
+      "threshold_usd": 10000
+    },
+    "SAR_FILING": {
+      "description": "Suspicious Activity Report must be filed with FinCEN within this window of detecting suspicious activity",
+      "days": 30,
+      "day_type": "CALENDAR",
+      "regulatory_basis": "31 CFR 1020.320",
+      "threshold_usd": 5000,
+      "extended_window": {
+        "days": 60,
+        "condition": "Law enforcement contact — may delay up to 60 days if law enforcement requests"
+      }
+    },
+    "OFAC_REPORT": {
+      "description": "OFAC blocking / rejection report must be submitted within this window of blocking action",
+      "days": 10,
+      "day_type": "BUSINESS",
+      "regulatory_basis": "31 CFR 501.604"
+    },
+    "WIRE_FRAUD_RECALL": {
+      "description": "Wire recall request has best recovery chance within this window. After 24-48 hours, mule account may have been emptied.",
+      "days": 2,
+      "day_type": "CALENDAR",
+      "regulatory_basis": "Fedwire Operating Circular, NIST best practices"
+    }
+  }
+}

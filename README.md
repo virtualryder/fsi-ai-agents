@@ -60,6 +60,27 @@ This suite delivers that reduction, use case by use case, in a way that satisfie
 │  │       11 alert types · Python rule engine · FINRA 3110 / Dodd-Frank │   │
 │  │       $2.6M/yr (6 analysts) · SR 11-7 · SAR automation · Reg SHO    │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  LENDING & UNDERWRITING                                                     │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │  08 · Credit Underwriting Agent                                     │   │
+│  │       12 loan types · ECOA/Reg B adverse action · OFAC hard block   │   │
+│  │       $1.8M–$3.4M/yr · HMDA · CRA · SR 11-7 · FHA · SBA            │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  DOCUMENT INTELLIGENCE (HORIZONTAL — FEEDS ALL AGENTS)                     │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │  09 · Document Intelligence Agent                                   │   │
+│  │       25 doc types · PII masking pre-LLM · SWIFT/PDF/OCR intake     │   │
+│  │       $1.66M–$1.91M/yr · suite multiplier · 3-week payback          │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  PAYMENTS COMPLIANCE                                                        │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │  10 · Payments Compliance Agent                                     │   │
+│  │       Reg E · Nacha · OFAC · BSA · 12-node DAG · SLA management     │   │
+│  │       $713K–$1.95M/yr · 92% dispute time reduction · 6-wk payback   │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -174,6 +195,67 @@ AI copilot for relationship managers: automates meeting prep, proposal writing, 
 
 ---
 
+### 08 · Credit Underwriting Agent
+**[`08-credit-underwriting-agent/`](./08-credit-underwriting-agent/)**
+
+End-to-end loan underwriting: 12 loan types, fair lending compliance (ECOA/HMDA), OFAC hard block, and ECOA-compliant adverse action notices — all in one deterministic pipeline.
+
+| What it does | The number |
+|---|---|
+| Underwriting time | 3–5 days → same-day decisions |
+| Adverse action accuracy | 12 mapped ECOA reasons, Python-only |
+| Annual savings (300 loans/month) | $1.8M–$3.4M |
+| 3-year NPV | $4.7M–$8.5M |
+| Payback period | < 6 weeks |
+
+**Workflow:** Loan application → document verification → credit analysis → DTI/LTV scoring → OFAC hard block → fair lending flags → ECOA adverse action → **underwriter review gate** → decision
+
+**Regulatory coverage:** ECOA/Reg B, FHA, HMDA, CRA, Reg Z/TILA, BSA/OFAC/CIP, SR 11-7, SBA 7(a)/504
+
+---
+
+### 09 · Document Intelligence Agent
+**[`09-document-intelligence-agent/`](./09-document-intelligence-agent/)**
+
+Horizontal entry point for the entire suite. Converts unstructured financial documents (PDFs, SWIFT messages, scanned forms) into structured JSON that every other agent can consume — with PII masking before any LLM sees the data.
+
+| What it does | The number |
+|---|---|
+| Document types supported | 25 (lending, payments, KYC, capital markets, compliance) |
+| Processing time reduction | 90 min (1003 loan app) → 11 min (88% reduction) |
+| Annual savings | $1.66M–$1.91M |
+| Payback period | 3 weeks |
+| Suite multiplier | Every downstream agent benefits from day 1 |
+
+**Workflow:** Intake → text extraction → **PII masking (Python, before LLM)** → document classification → field extraction → validation → confidence scoring → routing → **HITL gate** (for low-confidence / sensitive docs) → enrichment → structured JSON output
+
+**Recommended first deployment:** Deploy Agent 09 before any other agent. Its structured output immediately accelerates every specialist agent you deploy next.
+
+**Regulatory coverage:** GLBA, BSA/AML, OFAC, ECOA/Reg B, HMDA, FinCEN CDD Rule, BSA CIP, SEC/FINRA
+
+---
+
+### 10 · Payments Compliance Agent
+**[`10-payments-compliance-agent/`](./10-payments-compliance-agent/)**
+
+Automates ACH dispute processing, OFAC screening, Nacha return code validation, Reg E SLA management, and compliance risk scoring for the payments operations team. Every compliance determination is Python — the LLM drafts notices and narratives for reviewers.
+
+| What it does | The number |
+|---|---|
+| Dispute processing time | 143 min → 12 min (92% reduction) |
+| Auto-resolve rate | ~40% of events (NOC, administrative) |
+| Annual savings (5K disputes/year) | $713K–$1.95M |
+| 3-year NPV | $1.7M |
+| Payback period | < 6 weeks |
+
+**Workflow:** Intake/masking → OFAC/FATF screening → Nacha validation → Reg E assessment → dispute analysis (LLM) → risk scoring (Python) → compliance narrative (LLM) → routing → **HITL gate** → resolution drafting → audit finalization
+
+**HITL triggers:** OFAC sanctions match · SAR candidate · CTR threshold · High-risk country wire · Unauthorized return (R07/R10/R29) · Late return flag · Amount > $50K · CRITICAL/HIGH tier
+
+**Regulatory coverage:** Reg E (12 CFR Part 1005), Nacha Operating Rules, OFAC (31 CFR Parts 500-598), BSA/FinCEN (31 CFR 1020), FATF Recommendations, CFPB Prepaid Rule, UCC Article 4A, GLBA, SR 11-7
+
+---
+
 ## Architecture Principles
 
 Every agent in this suite is built on the same opinionated architecture. Customers learn it once and deploy it everywhere.
@@ -279,7 +361,10 @@ Security:
 | 05 · Wealth & RM Copilot | 35-40% RM time on admin · Reg BI gaps | $3.5M+ (50 RMs) |
 | 06 · Regulatory Change Management | 200-400 changes/year · exam findings | $849K–$1.5M+ (regional bank) |
 | 07 · Trading Surveillance | 800 alerts/month · 90%+ FP rate · FINRA fines | $2.6M+ (6-analyst team) |
-| **Full suite** | **End-to-end financial crime + fraud + wealth + compliance ops** | **$17M+ annually** |
+| 08 · Credit Underwriting | 3–5 day decisions · ECOA compliance gaps · manual docs | $1.8M–$3.4M (300 loans/month) |
+| 09 · Document Intelligence | Manual re-keying of PDFs/SWIFT · OCR bottlenecks | $1.66M–$1.91M (suite multiplier) |
+| 10 · Payments Compliance | 143-min disputes · missed SLA fines · OFAC exposure | $713K–$1.95M (5K disputes/year) |
+| **Full suite** | **End-to-end financial crime + fraud + wealth + compliance ops** | **$22M+ annually** |
 
 Payback period for full suite deployment: **< 6 months**
 

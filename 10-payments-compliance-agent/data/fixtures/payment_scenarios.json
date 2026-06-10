@@ -1,0 +1,426 @@
+{
+  "_metadata": {
+    "description": "Pre-computed demo scenarios for the Payments Compliance Agent Streamlit dashboard. Each scenario exercises a distinct compliance path and regulatory outcome. Used when OPENAI_API_KEY is not configured (demo mode).",
+    "version": "1.0",
+    "agent": "10-payments-compliance-agent",
+    "scenarios": 4
+  },
+  "scenarios": [
+    {
+      "scenario_id": "DEMO-001",
+      "scenario_name": "ACH Unauthorized Return — Reg E Consumer Dispute",
+      "scenario_description": "A consumer reports an ACH debit they did not authorize. The originator is a gym membership company that debited $1,247.50 after the consumer claims they canceled their membership in writing. The return code R10 (Customer Advises Not Known/Not Authorized) applies. Reg E investigation is required within 45 calendar days, with provisional credit due within 10 business days.",
+      "scenario_tags": ["ACH", "Reg E", "Unauthorized", "Consumer", "R10"],
+      "input": {
+        "payment_event_id": "PMT-2024-001847",
+        "payment_type": "ACH_DEBIT",
+        "sec_code": "PPD",
+        "amount": 1247.50,
+        "currency": "USD",
+        "settlement_date": "2024-01-15",
+        "originator_name": "Peak Performance Fitness LLC",
+        "originator_account_raw": "****7823",
+        "originator_routing": "****0012",
+        "originator_country": "US",
+        "receiver_name": "Sarah M. Thompson",
+        "receiver_account_raw": "****4491",
+        "receiver_routing": "****0071",
+        "receiver_country": "US",
+        "odfi_name": "First National Bank",
+        "rdfi_name": "Community Credit Union",
+        "return_code": "R10",
+        "dispute_type": "UNAUTHORIZED_TRANSACTION",
+        "customer_claim_text": "I never authorized this gym to debit my account. I sent them a written cancellation letter on December 10, 2023, certified mail, tracking number 9400111899223456789012. My membership was supposed to end on December 31, 2023. They charged me again on January 15th after my cancellation was confirmed. I have a copy of the letter and the USPS delivery confirmation showing they received it on December 12, 2023.",
+        "account_tenure_months": 36,
+        "prior_dispute_count": 0,
+        "account_good_standing": true
+      },
+      "computed_output": {
+        "sanctions_screening": {
+          "ofac_hit": false,
+          "high_risk_country_flag": false,
+          "pep_flag": false,
+          "sanctions_notes": "Both originator and receiver are US domestic. No OFAC SDN match. No FATF high-risk country involvement."
+        },
+        "nacha_validation": {
+          "nacha_violations": [],
+          "return_code_valid": true,
+          "return_code_description": "Customer Advises Not Known / Not Authorized",
+          "unauthorized_return_eligible": true,
+          "unauthorized_return_window_days": 60,
+          "noc_required": false,
+          "ctr_threshold_triggered": false,
+          "web_annual_audit_flag": false,
+          "iat_enhanced_due_diligence": false
+        },
+        "reg_e_assessment": {
+          "reg_e_applicable": true,
+          "reg_e_section": "12 CFR Part 1005",
+          "sla_type": "REG_E_INVESTIGATION",
+          "sla_deadline": "2024-03-01",
+          "sla_calendar_days_remaining": 46,
+          "sla_breached": false,
+          "provisional_credit_required": true,
+          "provisional_credit_deadline": "2024-01-29",
+          "provisional_credit_amount": 1247.50,
+          "reg_e_violations": []
+        },
+        "dispute_analysis_llm": {
+          "dispute_type_assessed": "UNAUTHORIZED_TRANSACTION",
+          "reg_e_applicable": true,
+          "reg_e_section": "12 CFR 1005.11(c)(4)",
+          "dispute_strength": "STRONG",
+          "claim_summary": "Consumer alleges unauthorized ACH PPD debit of $1,247.50 by Peak Performance Fitness LLC, citing a written cancellation delivered via certified mail on December 12, 2023 — prior to the January 15, 2024 settlement date. The consumer possesses documentary evidence (certified mail tracking confirmation) establishing both the cancellation notice and its confirmed receipt.",
+          "evidence_present": [
+            "Written cancellation letter dated December 10, 2023",
+            "USPS certified mail tracking number (9400111899223456789012)",
+            "Confirmation of delivery December 12, 2023 — prior to charge",
+            "Consumer identifies the debit as post-cancellation"
+          ],
+          "evidence_needed": [
+            "Originator's authorization records for the January debit",
+            "Originator's acknowledgment of cancellation notice",
+            "Membership agreement terms and cancellation policy",
+            "RDFI account statement showing the debit"
+          ],
+          "unauthorized_transaction_indicators": [
+            "Written cancellation delivered 34 days before debit",
+            "USPS tracking confirms originator received cancellation",
+            "Consumer has zero prior disputes in 36-month relationship",
+            "Return code R10 — Customer Advises Not Known/Not Authorized"
+          ],
+          "authorized_transaction_indicators": [],
+          "provisional_credit_warranted": true,
+          "investigation_complexity": "SIMPLE",
+          "recommended_next_step": "Issue provisional credit within 10 business days and contact originator ODFI (First National Bank) to request authorization documentation under Nacha Operating Rules Section 3.12.2."
+        },
+        "compliance_scoring": {
+          "compliance_risk_score": 0.42,
+          "compliance_risk_tier": "MEDIUM",
+          "risk_factors": {
+            "sanctions_factor": 0.0,
+            "unauthorized_factor": 0.25,
+            "amount_factor": 0.05,
+            "sla_factor": 0.0,
+            "pattern_factor": 0.0
+          }
+        },
+        "routing": {
+          "target_team": "DISPUTES",
+          "human_review_required": true,
+          "resolution_type": "INVESTIGATE_AND_RETURN",
+          "hitl_trigger_reason": "Unauthorized return R10 — Reg E consumer protection requires documented human review"
+        },
+        "customer_notice_draft": {
+          "notice_subject": "Important Information About Your Dispute — Account ending ****4491",
+          "notice_type": "INVESTIGATION_EXTENDED",
+          "notice_text": "Dear Sarah Thompson,\n\nThank you for contacting Community Credit Union about the charge of $1,247.50 from Peak Performance Fitness LLC on January 15, 2024.\n\nWe have opened a dispute investigation on your behalf under the Electronic Fund Transfer Act.\n\nTemporary Credit: We have issued a temporary credit of $1,247.50 to your account ending ****4491. This credit is available while we investigate your dispute. The credit will become permanent if we determine the transaction was unauthorized.\n\nOur Investigation: We are contacting the originating bank to request proof of your authorization for this charge. Under federal law, we have up to 45 days to complete our investigation. We will notify you of our findings in writing.\n\nYour Rights: You may request copies of the documents we used in our investigation. If we determine no error occurred, we will explain our findings and you have the right to request these documents.\n\nQuestions? Please contact us at the number on the back of your card or visit any branch location.\n\nSincerely,\nDispute Resolution Team\nCommunity Credit Union",
+          "customer_action_required": false,
+          "regulatory_rights_included": [
+            "Right to provisional credit within 10 business days (12 CFR 1005.11(c)(2))",
+            "Right to investigation completion within 45 days (12 CFR 1005.11(c)(1))",
+            "Right to request investigation documents (12 CFR 1005.11(d)(1))",
+            "Right to written notice of findings (12 CFR 1005.11(d))"
+          ]
+        }
+      }
+    },
+    {
+      "scenario_id": "DEMO-002",
+      "scenario_name": "OFAC Wire Hold — Sanctions Screening Trigger",
+      "scenario_description": "An outbound FEDWIRE payment of $425,000 to a beneficiary in Iran is intercepted by sanctions screening. The receiving institution's BIC code corresponds to a sanctioned Iranian bank. OFAC regulations require an immediate hold, report to OFAC, and human review before any action. SAR consideration is mandatory for apparent OFAC violations.",
+      "scenario_tags": ["FEDWIRE", "OFAC", "Sanctions", "BSA", "SAR", "CRITICAL"],
+      "input": {
+        "payment_event_id": "PMT-2024-002091",
+        "payment_type": "FEDWIRE",
+        "sec_code": null,
+        "amount": 425000.00,
+        "currency": "USD",
+        "settlement_date": "2024-01-22",
+        "originator_name": "Caspian Trading International Inc.",
+        "originator_account_raw": "****3317",
+        "originator_routing": "****0048",
+        "originator_country": "US",
+        "receiver_name": "Mehr Trading Company",
+        "receiver_account_raw": "****8842",
+        "receiver_routing": null,
+        "receiver_country": "IR",
+        "odfi_name": "Atlantic Commerce Bank",
+        "rdfi_name": "Bank Mellat Tehran",
+        "return_code": null,
+        "dispute_type": null,
+        "customer_claim_text": null,
+        "account_tenure_months": 8,
+        "prior_dispute_count": 0,
+        "account_good_standing": true,
+        "wire_purpose": "Trade payment — textile goods",
+        "wire_bic": "MBTHIBTE"
+      },
+      "computed_output": {
+        "sanctions_screening": {
+          "ofac_hit": true,
+          "ofac_match_type": "COUNTRY_CODE",
+          "ofac_program": "Iran (IRGC, IFSR)",
+          "high_risk_country_flag": true,
+          "high_risk_country_name": "Iran",
+          "high_risk_country_code": "IR",
+          "pep_flag": false,
+          "sanctions_notes": "CRITICAL: Beneficiary country Iran (IR) is an OFAC-sanctioned jurisdiction under the Iranian Financial Sanctions Regulations (31 CFR Part 561). Bank Mellat (BIC: MBTHIBTE) is a designated entity on the OFAC SDN List. All transactions must be blocked immediately. OFAC report required within 10 business days."
+        },
+        "nacha_validation": {
+          "nacha_violations": [],
+          "return_code_valid": null,
+          "unauthorized_return_eligible": false,
+          "ctr_threshold_triggered": false,
+          "iat_enhanced_due_diligence": true,
+          "nacha_notes": "FEDWIRE — Nacha rules do not apply. FEDWIRE subject to Fedwire Funds Service Operating Circular and UCC Article 4A."
+        },
+        "reg_e_assessment": {
+          "reg_e_applicable": false,
+          "reg_e_section": null,
+          "reg_e_notes": "Reg E does not apply to wire transfers (12 CFR 1005.3(c)(4)). UCC Article 4A governs.",
+          "sla_type": "OFAC_REPORT",
+          "sla_deadline": "2024-02-05",
+          "sla_calendar_days_remaining": 14,
+          "sla_breached": false,
+          "provisional_credit_required": false,
+          "reg_e_violations": []
+        },
+        "dispute_analysis_llm": null,
+        "compliance_scoring": {
+          "compliance_risk_score": 1.0,
+          "compliance_risk_tier": "CRITICAL",
+          "ofac_hard_override": true,
+          "risk_factors": {
+            "sanctions_factor": 0.35,
+            "unauthorized_factor": 0.0,
+            "amount_factor": 0.20,
+            "sla_factor": 0.0,
+            "pattern_factor": 0.05
+          },
+          "sar_candidate": true,
+          "sar_candidate_reason": "Apparent OFAC violation — attempted wire to sanctioned Iranian entity exceeds $5,000 SAR threshold (31 CFR 1020.320)"
+        },
+        "routing": {
+          "target_team": "BSA_COMPLIANCE",
+          "human_review_required": true,
+          "resolution_type": "OFAC_HOLD",
+          "hitl_trigger_reason": "CRITICAL — OFAC sanctions hit. Mandatory human review required before any action on sanctioned-entity transaction."
+        },
+        "compliance_analysis_llm": {
+          "compliance_analysis": "This FEDWIRE payment of $425,000 represents an attempted transfer to Mehr Trading Company in Iran via Bank Mellat Tehran (BIC: MBTHIBTE), an entity designated on the OFAC SDN List under the Iranian Financial Sanctions Regulations (31 CFR Part 561). The transaction has been automatically blocked pending human review. Atlantic Commerce Bank is required to file a report with OFAC within 10 business days of blocking (31 CFR 501.604). The 8-month account tenure of Caspian Trading International Inc., combined with a $425,000 first-time wire to a sanctioned jurisdiction, warrants SAR consideration under BSA 31 CFR 1020.320.",
+          "anomaly_flags": [
+            "CRITICAL: Beneficiary country Iran — OFAC-sanctioned jurisdiction (31 CFR Part 561)",
+            "Beneficiary bank Bank Mellat Tehran (MBTHIBTE) on OFAC SDN List",
+            "Relatively new account (8 months) initiating large-value wire to sanctioned entity",
+            "Wire purpose stated as 'trade payment — textile goods' — requires export licensing verification"
+          ],
+          "regulatory_citations": [
+            "31 CFR Part 561 — Iranian Financial Sanctions Regulations",
+            "31 CFR 501.604 — OFAC blocking report (10 business days)",
+            "31 CFR 1020.320 — SAR filing obligation",
+            "18 U.S.C. § 1956 — Money laundering predicate offense",
+            "50 U.S.C. § 1705 — IEEPA civil penalty ($356,579 per transaction)"
+          ],
+          "risk_narrative": "Immediate action required. The transaction has been blocked. BSA Officer must review for SAR filing obligation within 30 calendar days of detecting the suspicious activity. Do NOT disclose the OFAC hold or SAR consideration to the customer (18 U.S.C. § 1960, 31 U.S.C. § 5318(g)(2) tipping-off prohibition). Contact OFAC Compliance at 1-800-540-6322 to confirm blocking procedure.",
+          "sar_consideration": true,
+          "sar_consideration_rationale": "Attempted wire of $425,000 to an OFAC-designated entity in a sanctioned jurisdiction. Transaction amount exceeds $5,000 BSA SAR threshold. Account tenure (8 months) and transaction size combination constitutes unusual activity. SAR consideration mandatory under 31 CFR 1020.320."
+        }
+      }
+    },
+    {
+      "scenario_id": "DEMO-003",
+      "scenario_name": "Business Email Compromise — Fraudulent Wire Instruction",
+      "scenario_description": "A commercial customer's accounts payable team received a fraudulent email spoofing a legitimate vendor, requesting a change of wire destination to a mule account at a different bank. The customer wired $87,500 before detecting the fraud. The wire cannot be recalled — UCC Article 4A final payment rule applies. FBI IC3 complaint recommended. Potential Reg E inapplicability (commercial account) but possible negligence claim.",
+      "scenario_tags": ["WIRE_DOMESTIC", "BEC", "Fraud", "UCC 4A", "Commercial", "HIGH"],
+      "input": {
+        "payment_event_id": "PMT-2024-003512",
+        "payment_type": "WIRE_DOMESTIC",
+        "sec_code": null,
+        "amount": 87500.00,
+        "currency": "USD",
+        "settlement_date": "2024-01-18",
+        "originator_name": "Meridian Construction Partners LLC",
+        "originator_account_raw": "****6634",
+        "originator_routing": "****0023",
+        "originator_country": "US",
+        "receiver_name": "Coastal Supply Distributors",
+        "receiver_account_raw": "****2219",
+        "receiver_routing": "****0087",
+        "receiver_country": "US",
+        "odfi_name": "Metropolitan Business Bank",
+        "rdfi_name": "Online Payment Network Bank",
+        "return_code": null,
+        "dispute_type": "FRAUDULENT_TRANSACTION",
+        "customer_claim_text": "We received an email on January 17th from what appeared to be our vendor Coastal Supply Distributors, asking us to update their bank account for future payments. The email looked legitimate — same domain, same signature block. We updated our records and processed the scheduled payment of $87,500 on January 18th. On January 19th, the real Coastal Supply called asking where their payment was. We realized the email was a spoof. Our IT team confirmed the email came from a spoofed domain (coastalsupply-dist.com vs coastalsupplydist.com). We need the wire reversed immediately.",
+        "account_tenure_months": 84,
+        "prior_dispute_count": 1,
+        "account_good_standing": true,
+        "wire_purpose": "Vendor payment — construction materials"
+      },
+      "computed_output": {
+        "sanctions_screening": {
+          "ofac_hit": false,
+          "high_risk_country_flag": false,
+          "pep_flag": false,
+          "sanctions_notes": "Domestic wire, US originator and receiver. No OFAC match."
+        },
+        "nacha_validation": {
+          "nacha_violations": [],
+          "return_code_valid": null,
+          "unauthorized_return_eligible": false,
+          "ctr_threshold_triggered": false,
+          "nacha_notes": "Domestic wire — Nacha rules do not apply. Governed by Fedwire Operating Circular and UCC Article 4A."
+        },
+        "reg_e_assessment": {
+          "reg_e_applicable": false,
+          "reg_e_section": null,
+          "reg_e_notes": "Reg E does not apply. Customer is a commercial LLC — Reg E protects consumers, not businesses (12 CFR 1005.2(e)). Additionally, wire transfers are excluded from Reg E coverage (12 CFR 1005.3(c)(4)). UCC Article 4A governs. Customer accepted risk of fraudulent payment order under UCC 4A-203 unless bank failed to comply with agreed security procedures.",
+          "reg_e_violations": [],
+          "provisional_credit_required": false,
+          "sla_type": "FRAUD_INVESTIGATION",
+          "sla_deadline": "2024-02-17",
+          "sla_calendar_days_remaining": 30,
+          "sla_breached": false
+        },
+        "dispute_analysis_llm": {
+          "dispute_type_assessed": "FRAUDULENT_TRANSACTION",
+          "reg_e_applicable": false,
+          "reg_e_section": null,
+          "dispute_strength": "MODERATE",
+          "claim_summary": "Commercial customer Meridian Construction Partners LLC reports a Business Email Compromise (BEC) fraud in which fraudsters spoofed vendor Coastal Supply Distributors' domain (coastalsupply-dist.com) to redirect a $87,500 scheduled wire payment to a mule account at Online Payment Network Bank. Customer identified the fraud one day after settlement.",
+          "evidence_present": [
+            "Fraudulent email from spoofed domain (coastalsupply-dist.com)",
+            "IT confirmation of domain spoofing",
+            "Real vendor Coastal Supply confirmed non-receipt of payment",
+            "Wire instruction change request pre-dates payment by 1 day"
+          ],
+          "evidence_needed": [
+            "Full email headers from fraudulent wire instruction email",
+            "Bank's security procedure documentation (UCC 4A-202 compliance)",
+            "Customer's written security procedure agreement",
+            "RDFI (Online Payment Network Bank) account status for ****2219",
+            "FBI IC3 complaint number",
+            "History of prior wire instructions to legitimate Coastal Supply"
+          ],
+          "unauthorized_transaction_indicators": [
+            "Spoofed email domain confirmed by IT",
+            "Legitimate vendor confirmed non-receipt",
+            "Wire instruction change requested one day before payment"
+          ],
+          "authorized_transaction_indicators": [
+            "Customer's own AP team executed the payment",
+            "Customer updated wire instructions in their own system",
+            "Wire matched internal payment records at time of processing"
+          ],
+          "provisional_credit_warranted": false,
+          "investigation_complexity": "COMPLEX",
+          "recommended_next_step": "Contact RDFI (Online Payment Network Bank) immediately via Fedwire recall request (RTRN message type) — wire funds may still be in the mule account if contacted within 24-48 hours. Advise customer to file FBI IC3 complaint at ic3.gov and preserve all email evidence."
+        },
+        "compliance_scoring": {
+          "compliance_risk_score": 0.71,
+          "compliance_risk_tier": "HIGH",
+          "risk_factors": {
+            "sanctions_factor": 0.0,
+            "unauthorized_factor": 0.20,
+            "amount_factor": 0.18,
+            "sla_factor": 0.0,
+            "pattern_factor": 0.05
+          },
+          "sar_candidate": true,
+          "sar_candidate_reason": "BEC fraud exceeds $5,000 SAR threshold. Receiving account at Online Payment Network Bank potentially used for money mule activity (31 CFR 1020.320)."
+        },
+        "routing": {
+          "target_team": "FRAUD_OPERATIONS",
+          "human_review_required": true,
+          "resolution_type": "FRAUD_INVESTIGATION",
+          "hitl_trigger_reason": "HIGH risk tier, amount $87,500 exceeds $50,000 threshold, SAR candidate flagged"
+        }
+      }
+    },
+    {
+      "scenario_id": "DEMO-004",
+      "scenario_name": "ACH NOC — Notification of Change Processing",
+      "scenario_description": "An ODFI returns an ACH NOC (Notification of Change) with code C01 indicating the account number provided by the originator is incorrect and requires updating. The originator must update their records within 6 banking days of settlement or the next origination, whichever is later. This is an administrative compliance matter — no Reg E dispute, no OFAC risk.",
+      "scenario_tags": ["ACH", "NOC", "Administrative", "C01", "LOW"],
+      "input": {
+        "payment_event_id": "PMT-2024-004233",
+        "payment_type": "ACH_CREDIT",
+        "sec_code": "CCD",
+        "amount": 4250.00,
+        "currency": "USD",
+        "settlement_date": "2024-01-23",
+        "originator_name": "Harmony Benefits Administration LLC",
+        "originator_account_raw": "****5521",
+        "originator_routing": "****0031",
+        "originator_country": "US",
+        "receiver_name": "Robert J. Martinez",
+        "receiver_account_raw": "****0088",
+        "receiver_routing": "****0064",
+        "receiver_country": "US",
+        "odfi_name": "Horizon National Bank",
+        "rdfi_name": "Lakeside Community Bank",
+        "return_code": "C01",
+        "dispute_type": null,
+        "customer_claim_text": null,
+        "account_tenure_months": 120,
+        "prior_dispute_count": 0,
+        "account_good_standing": true,
+        "noc_corrected_data": "0077001234"
+      },
+      "computed_output": {
+        "sanctions_screening": {
+          "ofac_hit": false,
+          "high_risk_country_flag": false,
+          "pep_flag": false,
+          "sanctions_notes": "Domestic ACH. No OFAC match. Administrative NOC event."
+        },
+        "nacha_validation": {
+          "nacha_violations": [],
+          "return_code_valid": true,
+          "return_code_description": "Incorrect DFI Account Number — originator must update records",
+          "unauthorized_return_eligible": false,
+          "noc_required": true,
+          "noc_code": "C01",
+          "noc_correction": "Corrected DFI Account Number: ****1234",
+          "noc_action_required": "Originator must update account number within 6 banking days of NOC settlement date (Nacha OR Section 2.4.1.8)",
+          "noc_deadline": "2024-01-31",
+          "ctr_threshold_triggered": false
+        },
+        "reg_e_assessment": {
+          "reg_e_applicable": false,
+          "reg_e_notes": "NOC C01 is an administrative correction event. No Reg E dispute or unauthorized transaction involved.",
+          "reg_e_violations": [],
+          "provisional_credit_required": false,
+          "sla_type": "NACHA_NOC_UPDATE",
+          "sla_deadline": "2024-01-31",
+          "sla_calendar_days_remaining": 8,
+          "sla_breached": false
+        },
+        "compliance_scoring": {
+          "compliance_risk_score": 0.05,
+          "compliance_risk_tier": "LOW",
+          "risk_factors": {
+            "sanctions_factor": 0.0,
+            "unauthorized_factor": 0.0,
+            "amount_factor": 0.0,
+            "sla_factor": 0.0,
+            "pattern_factor": 0.0
+          },
+          "sar_candidate": false
+        },
+        "routing": {
+          "target_team": "PAYMENTS_OPS",
+          "human_review_required": false,
+          "resolution_type": "NOC_UPDATE_REQUIRED",
+          "hitl_trigger_reason": null,
+          "auto_resolve_actions": [
+            "NOTIFY_ORIGINATOR_NOC: Notify Harmony Benefits Administration LLC of C01 NOC with corrected account number",
+            "Record NOC in originator's account management system",
+            "Monitor next origination to verify originator updated records"
+          ]
+        }
+      }
+    }
+  ]
+}

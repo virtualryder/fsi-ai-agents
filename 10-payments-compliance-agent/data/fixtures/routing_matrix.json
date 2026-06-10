@@ -1,0 +1,257 @@
+{
+  "_metadata": {
+    "description": "Routing matrix defining how payment events are classified, routed to compliance teams, and what downstream actions are triggered. This matrix is for UI display and documentation. The authoritative routing logic is in agent/nodes.py (routing_decision_node) using Python constants. The LLM cannot modify routing targets.",
+    "version": "1.0",
+    "agent": "10-payments-compliance-agent"
+  },
+  "target_teams": {
+    "BSA_COMPLIANCE": {
+      "team": "BSA_COMPLIANCE",
+      "description": "Bank Secrecy Act / Anti-Money Laundering Compliance Team",
+      "responsibilities": "OFAC holds, SAR filing decisions, CTR filing, high-risk country wires, PEP reviews",
+      "sla_hours": 4,
+      "escalation_path": "BSA Officer → Chief Compliance Officer → Regulators (OFAC/FinCEN)",
+      "triggers": [
+        "ofac_hit = true",
+        "high_risk_country_flag = true AND payment_type IN [WIRE_INTERNATIONAL, WIRE_DOMESTIC, FEDWIRE]",
+        "sar_candidate = true",
+        "ctr_threshold_triggered = true"
+      ]
+    },
+    "DISPUTES": {
+      "team": "DISPUTES",
+      "description": "Consumer Disputes and Regulation E Team",
+      "responsibilities": "Reg E investigations, unauthorized ACH returns, provisional credit, customer notices",
+      "sla_hours": 24,
+      "escalation_path": "Disputes Analyst → Disputes Manager → Legal",
+      "triggers": [
+        "unauthorized_return_eligible = true",
+        "reg_e_applicable = true AND dispute_type IS NOT NULL",
+        "return_code IN [R07, R10, R11, R29, R33, R37, R38, R51]",
+        "dispute_type = UNAUTHORIZED_TRANSACTION"
+      ]
+    },
+    "FRAUD_OPERATIONS": {
+      "team": "FRAUD_OPERATIONS",
+      "description": "Fraud Operations and Investigation Team",
+      "responsibilities": "BEC fraud investigations, wire fraud, account takeover, coordinating with law enforcement",
+      "sla_hours": 8,
+      "escalation_path": "Fraud Analyst → Fraud Manager → Law Enforcement Liaison",
+      "triggers": [
+        "dispute_type = FRAUDULENT_TRANSACTION",
+        "dispute_type = ACCOUNT_TAKEOVER",
+        "compliance_risk_tier = CRITICAL AND NOT ofac_hit"
+      ]
+    },
+    "LEGAL": {
+      "team": "LEGAL",
+      "description": "Legal Department",
+      "responsibilities": "Late return disputes (potential Nacha rule violations), UCC Article 4A claims, litigation support",
+      "sla_hours": 48,
+      "escalation_path": "Legal Counsel → General Counsel → Outside Counsel",
+      "triggers": [
+        "late_return_flag = true",
+        "dispute involves potential UCC 4A liability",
+        "OFAC violation with potential IEEPA penalty exposure"
+      ]
+    },
+    "PAYMENTS_OPS": {
+      "team": "PAYMENTS_OPS",
+      "description": "Payments Operations Team",
+      "responsibilities": "NOC processing, administrative returns, format corrections, routine processing",
+      "sla_hours": 72,
+      "escalation_path": "Payments Ops Analyst → Payments Ops Manager",
+      "triggers": [
+        "return_code IN [C01, C02, C03, C04, C05, C06, C07, C08, C09] (NOC codes)",
+        "return_code IN [R01, R02, R03, R04, R13, R17] (administrative returns)",
+        "compliance_risk_tier = LOW",
+        "resolution_type = NOC_UPDATE_REQUIRED"
+      ]
+    },
+    "AUTO_RESOLVE": {
+      "team": "AUTO_RESOLVE",
+      "description": "Automated resolution — no human review required",
+      "responsibilities": "Low-risk administrative events that can be processed without human involvement",
+      "sla_hours": 1,
+      "escalation_path": "Automated → Payments Ops on exception",
+      "triggers": [
+        "compliance_risk_tier = LOW",
+        "human_review_required = false",
+        "No Reg E, OFAC, SAR, or unauthorized return flags"
+      ]
+    }
+  },
+  "resolution_types": {
+    "INVESTIGATE_AND_RETURN": {
+      "type": "INVESTIGATE_AND_RETURN",
+      "description": "Conduct full Reg E investigation and initiate unauthorized ACH return if evidence supports",
+      "downstream_actions": ["INITIATE_RETURN", "ISSUE_PROVISIONAL_CREDIT", "SEND_CUSTOMER_NOTICE"],
+      "reg_e_required": true,
+      "hitl_required": true
+    },
+    "OFAC_HOLD": {
+      "type": "OFAC_HOLD",
+      "description": "Block transaction immediately. File OFAC report within 10 business days. Consider SAR.",
+      "downstream_actions": ["FILE_OFAC_REPORT", "SAR_CONSIDERATION"],
+      "reg_e_required": false,
+      "hitl_required": true,
+      "tipping_off_restriction": true
+    },
+    "FRAUD_INVESTIGATION": {
+      "type": "FRAUD_INVESTIGATION",
+      "description": "Initiate fraud investigation. Contact receiving institution for recall. Advise customer to file IC3 complaint.",
+      "downstream_actions": ["INITIATE_WIRE_RECALL", "SAR_CONSIDERATION"],
+      "reg_e_required": false,
+      "hitl_required": true
+    },
+    "NOC_UPDATE_REQUIRED": {
+      "type": "NOC_UPDATE_REQUIRED",
+      "description": "Notify originator of NOC correction required. Must update within 6 banking days.",
+      "downstream_actions": ["NOTIFY_ORIGINATOR_NOC"],
+      "reg_e_required": false,
+      "hitl_required": false
+    },
+    "DENY_CLAIM": {
+      "type": "DENY_CLAIM",
+      "description": "Dispute claim denied after investigation. Reverse provisional credit if issued. Send Reg E denial notice.",
+      "downstream_actions": ["REVERSE_PROVISIONAL_CREDIT", "SEND_CUSTOMER_NOTICE"],
+      "reg_e_required": true,
+      "hitl_required": true
+    },
+    "APPROVE_CLAIM": {
+      "type": "APPROVE_CLAIM",
+      "description": "Dispute claim approved. Make provisional credit permanent. Send confirmation notice.",
+      "downstream_actions": ["MAKE_CREDIT_PERMANENT", "SEND_CUSTOMER_NOTICE"],
+      "reg_e_required": true,
+      "hitl_required": true
+    },
+    "ADMINISTRATIVE_RETURN": {
+      "type": "ADMINISTRATIVE_RETURN",
+      "description": "Process return entry for administrative reason (NSF, account closed, etc.)",
+      "downstream_actions": [],
+      "reg_e_required": false,
+      "hitl_required": false
+    },
+    "ESCALATE_TO_LEGAL": {
+      "type": "ESCALATE_TO_LEGAL",
+      "description": "Escalate to Legal team for late return dispute or UCC 4A liability review",
+      "downstream_actions": [],
+      "reg_e_required": false,
+      "hitl_required": true
+    }
+  },
+  "hitl_triggers": {
+    "description": "Conditions that always require human review before any action is taken",
+    "always_hitl_events": [
+      {
+        "trigger": "OFAC_HOLD",
+        "reason": "Federal regulations require human authorization before any action on a sanctioned entity transaction",
+        "regulatory_basis": "31 CFR 501.604, OFAC SDN regulations"
+      },
+      {
+        "trigger": "UNAUTHORIZED_WIRE",
+        "reason": "Wire fraud requires human investigation; UCC Article 4A customer rights must be evaluated",
+        "regulatory_basis": "UCC 4A-204, BSA SAR requirements"
+      },
+      {
+        "trigger": "SAR_CANDIDATE",
+        "reason": "BSA requires that a qualified BSA officer, not an automated system, make SAR filing determinations",
+        "regulatory_basis": "31 CFR 1020.320, BSA"
+      },
+      {
+        "trigger": "CTR_THRESHOLD",
+        "reason": "CTR filing is a legal obligation. Human verification required before filing.",
+        "regulatory_basis": "31 CFR 1010.311"
+      },
+      {
+        "trigger": "HIGH_RISK_COUNTRY_WIRE",
+        "reason": "FATF guidance and correspondent banking policy require human oversight for high-risk jurisdiction transactions",
+        "regulatory_basis": "FATF Recommendations R.10-R.13, correspondent banking AML policy"
+      },
+      {
+        "trigger": "LATE_RETURN_DISPUTE",
+        "reason": "Late returns may constitute Nacha rule violations exposing institution to fines. Legal review required.",
+        "regulatory_basis": "Nacha OR Section 2.12.2, potential Rule 10000 violation"
+      }
+    ],
+    "threshold_hitl": [
+      {
+        "trigger": "amount > $50,000",
+        "reason": "Large-value payment escalation threshold",
+        "regulatory_basis": "Institution policy"
+      },
+      {
+        "trigger": "compliance_risk_tier IN [CRITICAL, HIGH]",
+        "reason": "SR 11-7 model governance requires human oversight for high-risk automated decisions",
+        "regulatory_basis": "SR 11-7"
+      },
+      {
+        "trigger": "sla_breached = true OR sla_calendar_days_remaining <= 5",
+        "reason": "SLA breaches or near-breaches require escalated human attention",
+        "regulatory_basis": "12 CFR 1005.11, Nacha OR"
+      },
+      {
+        "trigger": "unauthorized_return_eligible = true",
+        "reason": "Consumer protection right — documented human review required per Reg E",
+        "regulatory_basis": "12 CFR 1005.11(c)"
+      },
+      {
+        "trigger": "reg_e_applicable = true AND dispute_type IS NOT NULL",
+        "reason": "Reg E investigation requires an accountable human reviewer",
+        "regulatory_basis": "12 CFR 1005.11"
+      }
+    ]
+  },
+  "reviewer_decisions": {
+    "APPROVE_RESOLUTION": {
+      "decision": "APPROVE_RESOLUTION",
+      "description": "Reviewer confirms the automated resolution recommendation is correct",
+      "next_step": "resolution_drafting — draft customer notice and internal memo"
+    },
+    "OVERRIDE_RESOLUTION": {
+      "decision": "OVERRIDE_RESOLUTION",
+      "description": "Reviewer provides a different resolution type than the automated recommendation",
+      "next_step": "resolution_drafting with reviewer-specified resolution type"
+    },
+    "ESCALATE": {
+      "decision": "ESCALATE",
+      "description": "Reviewer sends to a higher authority (Legal, BSA Officer, etc.)",
+      "next_step": "audit_finalize — record escalation destination, no automated drafting"
+    },
+    "REJECT_CLAIM": {
+      "decision": "REJECT_CLAIM",
+      "description": "Reviewer determines the dispute claim is invalid",
+      "next_step": "audit_finalize — record rejection basis, denial notice drafted separately"
+    }
+  },
+  "risk_tiers": {
+    "CRITICAL": {
+      "tier": "CRITICAL",
+      "score_range": "0.85 - 1.00",
+      "description": "Immediate action required. Mandatory HITL. OFAC hit is a hard override to CRITICAL.",
+      "sla_hours": 4,
+      "examples": ["OFAC sanctions match", "SAR-mandatory event", "Active wire fraud"]
+    },
+    "HIGH": {
+      "tier": "HIGH",
+      "score_range": "0.65 - 0.84",
+      "description": "Elevated risk. Human review required. Action within 24 hours.",
+      "sla_hours": 24,
+      "examples": ["Unauthorized high-value wire", "Strong Reg E dispute with large provisional credit"]
+    },
+    "MEDIUM": {
+      "tier": "MEDIUM",
+      "score_range": "0.40 - 0.64",
+      "description": "Moderate risk. Human review recommended. Standard SLA applies.",
+      "sla_hours": 48,
+      "examples": ["Routine Reg E dispute (strong evidence)", "R10 unauthorized return below threshold"]
+    },
+    "LOW": {
+      "tier": "LOW",
+      "score_range": "0.00 - 0.39",
+      "description": "Low risk. May auto-resolve for administrative events. Human review optional.",
+      "sla_hours": 72,
+      "examples": ["NOC correction notice", "Administrative return (R01, R02)", "Format error"]
+    }
+  }
+}
