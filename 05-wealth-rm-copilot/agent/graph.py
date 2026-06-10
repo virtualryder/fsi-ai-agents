@@ -30,6 +30,7 @@
 import logging
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
+from agent.persistence import get_checkpointer
 
 from agent.state import WealthRMState, SuitabilityStatus
 from agent.nodes import (
@@ -210,7 +211,7 @@ def build_wealth_rm_graph(use_memory: bool = True):
 
     # ── COMPILE ───────────────────────────────────────────────────────────────
     if use_memory:
-        checkpointer = MemorySaver()
+        checkpointer = get_checkpointer()  # PostgresSaver when DATABASE_URL is set; MemorySaver fallback (dev)
         compiled = workflow.compile(
             checkpointer=checkpointer,
             interrupt_before=["rm_approval_gate"],

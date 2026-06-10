@@ -38,9 +38,14 @@ DEFAULT_THRESHOLDS = Thresholds(
 # Certain typologies are high-risk by nature and require tighter thresholds.
 # These override defaults when the alert_type matches.
 ALERT_TYPE_OVERRIDES: dict[str, Thresholds] = {
-    # Layering / rapid movement: genuinely suspicious when it occurs
-    "RAPID_MOVEMENT": Thresholds(suppress=92, downgrade=72, escalate=10),
-    "LAYERING": Thresholds(suppress=92, downgrade=72, escalate=10),
+    # Layering / rapid movement: genuinely suspicious when it occurs.
+    # CONTROL DIRECTION: suppress is HARDER (92 > default 85) AND escalate is
+    # EASIER (20 > default 15). Escalation fires when fp_probability <= the
+    # escalate threshold, so a HIGHER value escalates MORE alerts — setting it
+    # below the default would make the most suspicious typology the hardest
+    # to escalate (the inverse of intent).
+    "RAPID_MOVEMENT": Thresholds(suppress=92, downgrade=72, escalate=20),
+    "LAYERING": Thresholds(suppress=92, downgrade=72, escalate=20),
     # PEP-related: never suppress, always at least pass-through
     "PEP_RELATED": Thresholds(suppress=999, downgrade=999, escalate=25),
     # OFAC / sanctions proximity: never suppress

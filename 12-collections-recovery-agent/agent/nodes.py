@@ -23,6 +23,7 @@ import uuid
 from datetime import datetime, timedelta, date
 from typing import Any, Dict, List
 import pytz
+from agent.persistence import audit_sink
 
 from .state import (
     CollectionsState,
@@ -358,6 +359,8 @@ def _append_audit_entry(state: Dict[str, Any], event_type: str, details: Dict[st
         "account_id": state.get("account_id", "UNKNOWN"),
         "details": details,
     }
+    # WRITE-AHEAD: durable audit record at creation (agent/persistence.py)
+    audit_sink().record(new_entry)
     return current_trail + [new_entry]
 
 # ---------------------------------------------------------------------------

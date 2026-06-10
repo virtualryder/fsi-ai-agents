@@ -64,6 +64,7 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from langgraph.checkpoint.memory import MemorySaver
+from agent.persistence import get_checkpointer
 from langgraph.graph import END, START, StateGraph
 
 from .nodes import (
@@ -371,7 +372,7 @@ def build_payments_compliance_graph(checkpointer=None):
     # and interrupt_before never fires.
 
     if checkpointer is None:
-        checkpointer = MemorySaver()
+        checkpointer = get_checkpointer()  # PostgresSaver when DATABASE_URL is set; MemorySaver fallback (dev)
 
     return builder.compile(
         checkpointer=checkpointer,
@@ -448,7 +449,7 @@ def get_production_graph(postgres_connection_string: str):
 #
 # For production deployment, use get_production_graph() with a PostgresSaver.
 
-graph = build_payments_compliance_graph(checkpointer=MemorySaver())
+graph = build_payments_compliance_graph(checkpointer = get_checkpointer())
 
 graph_no_checkpointer = StateGraph(PaymentsComplianceState)
 # Assemble without checkpointer for testing

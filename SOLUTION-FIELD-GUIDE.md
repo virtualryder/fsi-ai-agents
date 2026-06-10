@@ -537,7 +537,7 @@ Every compliance routing decision in the suite is Python code, not LLM output. P
 LangGraph's interrupt mechanism means human review gates are not UI add-ons — they are nodes in the graph. Every agent in the suite has at least one mandatory human approval gate before any record is filed, any risk rating is changed, or any client communication is sent. This is the "AI drafts; humans decide" principle implemented at the platform level.
 
 ### 3. AWS-Native, Regulation-Grade Architecture
-- **Data residency**: AWS Bedrock keeps all inference in-account. Customer data never leaves the customer's AWS environment for LLM processing.
+- **Data residency**: in the production (Bedrock) deployment, inference runs in-account via VPC endpoint and customer data does not leave the customer's AWS environment for LLM processing. The accelerator's default configuration calls the Anthropic API — state this distinction explicitly in security reviews.
 - **Audit trail**: DynamoDB append-only audit log with IAM-enforced immutability (UpdateItem and DeleteItem denied). Every decision, every tool call, every human override is recorded.
 - **Retention**: S3 Object Lock (WORM, COMPLIANCE mode) for SAR documents. 5-year BSA retention enforced at the storage layer, not just application policy.
 - **Identity**: Cognito + Okta SAML federation. No user credentials in the application. BSA roles derived from Active Directory group membership. Offboarding an investigator means removing them from AD — no Cognito admin action needed.
@@ -593,10 +593,10 @@ Same alert, same customer, same investigation steps — every time. Every node t
 ## Common Objections and Responses
 
 **"We're concerned about putting sensitive customer data through an LLM."**
-> AWS Bedrock runs inference within your AWS account. Customer data is not sent to Anthropic or any third party. The VPC endpoint for Bedrock means traffic never leaves AWS infrastructure. Your data residency requirements are met.
+> Two honest layers to this answer. First, the controls that exist in the code today: PII is masked in Python BEFORE any text reaches the LLM, and the LLM never makes routing or compliance decisions — those are deterministic Python. Second, deployment architecture: the accelerator ships calling Claude via the Anthropic API; the production deployment swaps in AWS Bedrock (Claude on Bedrock) through a VPC interface endpoint, at which point inference traffic stays inside the customer's AWS environment. The data-residency guarantee is a property of the Bedrock deployment configuration — scope it explicitly in the SOW; do not present it as a property of the demo codebase.
 
 **"How does this integrate with our existing TMS (Actimize/Verafin/NICE)?"**
-> Each agent has a dedicated MCP Connector for the major TMS platforms. The TMS remains your system of record — the agent reads from it (alert details, transaction history) and writes back (alert disposition). Your TMS configuration and tuning are unchanged.
+> The integration architecture is MCP-based: each agent is designed to read from and write back to the major TMS platforms through dedicated MCP connectors. The connectors are built per-engagement against the customer's TMS version (the accelerator ships with fixture-backed integration points, not live connectors — scope connector build in the SOW). The TMS remains your system of record — the agent reads from it (alert details, transaction history) and writes back (alert disposition). Your TMS configuration and tuning are unchanged.
 
 **"What happens if the LLM makes a wrong recommendation?"**
 > The LLM never makes a routing decision. It drafts narratives and surfaces evidence. The routing logic is deterministic Python — thresholds, hard rules for PEP/OFAC, 30-day SAR deadlines. Every routing decision has a human review gate before action is taken. SR 11-7 documentation is generated with every model output.

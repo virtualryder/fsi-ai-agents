@@ -54,6 +54,7 @@ from typing import Any, Dict, List, Optional, Tuple
 # ─────────────────────────────────────────────────────────────────────────────
 import os as _os_llm
 from langchain_anthropic import ChatAnthropic
+from agent.persistence import audit_sink
 CLAUDE_NARRATIVE_MODEL = _os_llm.getenv("CLAUDE_NARRATIVE_MODEL", "claude-sonnet-4-6")
 CLAUDE_FAST_MODEL = _os_llm.getenv("CLAUDE_FAST_MODEL", "claude-haiku-4-5")
 CLAUDE_DEFAULT_MODEL = CLAUDE_NARRATIVE_MODEL
@@ -298,6 +299,8 @@ def _append_audit(
     # Mask any 8–17 digit sequences (account numbers)
     entry_str = re.sub(r"\b(\d{4,13})(\d{4})\b", r"****\2", entry_str)
     prior.append(json.loads(entry_str))
+    # WRITE-AHEAD: durable audit record at creation (agent/persistence.py)
+    audit_sink().record(prior[-1])
     return prior
 
 

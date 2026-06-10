@@ -24,6 +24,7 @@ from __future__ import annotations
 
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
+from agent.persistence import get_checkpointer
 
 from agent.state import AlertScoringState
 from agent.nodes import (
@@ -116,7 +117,7 @@ def build_graph():
     graph.add_edge("finalize_scoring", END)
 
     # In-memory checkpointing (swap to PostgresSaver in production)
-    memory = MemorySaver()
+    memory = get_checkpointer()  # PostgresSaver when DATABASE_URL is set; MemorySaver fallback (dev)
     return graph.compile(checkpointer=memory)
 
 

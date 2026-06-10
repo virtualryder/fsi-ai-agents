@@ -29,6 +29,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 
 from langchain_anthropic import ChatAnthropic
+from agent.persistence import audit_sink
 from langchain_core.messages import HumanMessage, SystemMessage
 
 # ── Claude model tiers (Anthropic) ───────────────────────────────────────────
@@ -115,6 +116,8 @@ def _append_audit(current: List[Dict], node_name: str, data: Dict) -> List[Dict]
         "timestamp_utc": _get_utc_timestamp(),
         **data,
     }
+    # WRITE-AHEAD: durable audit record at creation (agent/persistence.py)
+    audit_sink().record(entry)
     return list(current) + [entry]
 
 

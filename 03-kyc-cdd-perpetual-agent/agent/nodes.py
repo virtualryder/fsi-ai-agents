@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any
 
 from langchain_anthropic import ChatAnthropic
+from agent.persistence import audit_sink
 from langchain_core.messages import SystemMessage, HumanMessage
 
 from agent.state import KYCReviewState, TriggerType, RiskTier, ReviewOutcome
@@ -90,6 +91,8 @@ def _add_audit_entry(
         "customer_id": state.get("customer_id"),
     }
     trail.append(entry)
+    # WRITE-AHEAD: durable audit record at creation time (see agent/persistence.py)
+    audit_sink().record(entry)
     return trail
 
 

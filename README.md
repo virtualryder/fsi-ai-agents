@@ -5,6 +5,27 @@
 
 ---
 
+## ⚠️ Asset Classification: Accelerator / Reference Implementation
+
+**This suite is a production-shaped accelerator, not a production product.** It is delivery IP:
+the regulatory control patterns, LangGraph architecture, and GTM collateral are designed to
+compress an SI engagement by months — but a hardening sprint is in scope before any customer
+production deployment. Specifically, in the current codebase:
+
+| Implemented and tested | Documented design — built during hardening |
+|---|---|
+| Deterministic regulatory controls as code (OFAC hard overrides, fail-safe HITL routing, FDCPA/Reg F/SCRA/Reg E rules) | Real connectors (TMS, core banking, watchlist vendors) — all integrations currently run on fixtures |
+| All 12 test suites green in CI (`.github/workflows/ci.yml`); control tests gate merges | MCP tool gateway (architecture documented; servers not yet built) |
+| Claude (Sonnet 4.6 / Haiku 4.5) via Anthropic API, with a documented Bedrock integration point | Bedrock + Guardrails in-VPC inference (required to make the data-residency story literally true) |
+| Durable audit sink + persistent checkpointing, **environment-activated** (`agent/persistence.py`: JSONL write-ahead by default; DynamoDB/S3 Object Lock and PostgresSaver when configured) | Terraform/IaC, Cognito/Okta authentication, Secrets Manager, observability — described per-agent in `docs/aws-deployment-guide.md`, not yet shipped as code |
+| Demo mode without API keys for every regulatory decision path | LLM eval harness, grounding verification, fairness/disparate-impact testing (Agent 08) |
+
+Replace any use of "production-grade" in customer conversations with **"production-shaped,
+hardening-scoped"** — bank technical evaluators will verify claims against the code, and
+credibility is the asset.
+
+---
+
 ## The Suite
 
 Financial crime compliance, KYC, and fraud together consume **$274 billion annually** across global institutions. AI agents don't eliminate that cost — they eliminate the manual, repetitive, low-judgment work so your best analysts can focus on the 5% of cases that require human expertise.
@@ -620,7 +641,7 @@ docker compose up
 
 ## About
 
-Built by [David Ryder](https://github.com/virtualryder) as part of a "art of the possible", production-grade agentic AI portfolio for financial services.
+Built by [David Ryder](https://github.com/virtualryder) as part of an "art of the possible", production-shaped agentic AI accelerator portfolio for financial services.
 
 All agents are designed for real deployment — customization, security,  and verification are a user responsibility. Every regulatory citation is accurate. Every integration point reflects actual FSI system landscapes (Actimize, Verafin, Fiserv, FIS, Refinitiv, LexisNexis).
 

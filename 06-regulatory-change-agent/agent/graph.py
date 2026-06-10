@@ -29,6 +29,7 @@
 import logging
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
+from agent.persistence import get_checkpointer
 
 from agent.state import ChangeManagementState, ImpactTier, CaseStatus
 from agent.nodes import (
@@ -247,7 +248,7 @@ def build_regulatory_change_graph(use_memory: bool = True):
     # COMPILE
     # ══════════════════════════════════════════════════════════════════════
     if use_memory:
-        checkpointer = MemorySaver()
+        checkpointer = get_checkpointer()  # PostgresSaver when DATABASE_URL is set; MemorySaver fallback (dev)
         compiled_graph = workflow.compile(
             checkpointer=checkpointer,
             interrupt_before=["human_review_gate"],

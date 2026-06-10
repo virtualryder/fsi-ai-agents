@@ -19,6 +19,7 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 from langchain_anthropic import ChatAnthropic
+from agent.persistence import audit_sink
 
 # ── Claude model tiers (Anthropic) ───────────────────────────────────────────
 # NARRATIVE tier — Claude Sonnet 4.6: regulatory narratives, SAR/dispute
@@ -186,6 +187,8 @@ def _add_audit_entry(
         "regulatory_basis": regulatory_basis,
         "human_review_required": state.get("human_review_required", False),
     })
+    # WRITE-AHEAD: durable audit record at creation (agent/persistence.py)
+    audit_sink().record(trail[-1])
     return trail
 
 

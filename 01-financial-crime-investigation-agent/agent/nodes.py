@@ -24,6 +24,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict
 
 from langchain_anthropic import ChatAnthropic
+from agent.persistence import audit_sink
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from agent.state import InvestigationState, RecommendedAction
@@ -148,6 +149,8 @@ def _log_audit_entry(
 
     audit_trail = state.get("audit_trail", [])
     audit_trail.append(entry)
+    # WRITE-AHEAD: durable audit record at creation (agent/persistence.py)
+    audit_sink().record(entry)
     state["audit_trail"] = audit_trail
 
 

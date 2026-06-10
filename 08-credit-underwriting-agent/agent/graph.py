@@ -31,6 +31,7 @@
 from __future__ import annotations
 
 from langgraph.checkpoint.memory import MemorySaver
+from agent.persistence import get_checkpointer
 from langgraph.graph import END, StateGraph
 
 from agent.nodes import (
@@ -99,7 +100,7 @@ def build_underwriting_graph(checkpointer=None):
         Compiled LangGraph application with HITL interrupt.
     """
     if checkpointer is None:
-        checkpointer = MemorySaver()
+        checkpointer = get_checkpointer()  # PostgresSaver when DATABASE_URL is set; MemorySaver fallback (dev)
 
     builder = StateGraph(CreditUnderwritingState)
 
@@ -167,5 +168,5 @@ def build_underwriting_graph(checkpointer=None):
 
 
 # ── Module-level default instance (development) ───────────────────────────────
-_default_checkpointer = MemorySaver()
+_default_checkpointer = get_checkpointer()  # PostgresSaver when DATABASE_URL is set; MemorySaver fallback (dev)
 graph = build_underwriting_graph(checkpointer=_default_checkpointer)

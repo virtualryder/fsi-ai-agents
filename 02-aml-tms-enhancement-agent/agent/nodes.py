@@ -25,6 +25,7 @@ from datetime import datetime
 from typing import Any
 
 from langchain_anthropic import ChatAnthropic
+from agent.persistence import audit_sink
 
 from agent.state import AlertScoringState, AuditEntry
 from agent.prompts import (
@@ -90,6 +91,8 @@ def _append_audit(state: AlertScoringState, action: str, details: dict, sources:
         data_sources=sources,
         ai_model_used=None,
     ))
+    # WRITE-AHEAD: durable audit record at creation (agent/persistence.py)
+    audit_sink().record(trail[-1])
     return trail
 
 
@@ -103,6 +106,8 @@ def _append_audit_llm(state: AlertScoringState, action: str, details: dict, sour
         data_sources=sources,
         ai_model_used="claude-sonnet-4-6",
     ))
+    # WRITE-AHEAD: durable audit record at creation (agent/persistence.py)
+    audit_sink().record(trail[-1])
     return trail
 
 
@@ -502,6 +507,26 @@ def determine_routing(state: AlertScoringState) -> AlertScoringState:
         regulatory_override_reason=reg_override_reason,
     )
 
+    # ── LLM-agreement guard (conservative, one-direction) ─────────────────
+    # An alert may be auto-suppressed or auto-downgraded ONLY when the LLM
+    # contextual layer itself supports the false-positive determination.
+    # If the deterministic components (rule prescore + historical FP rates)
+    # drive the composite over a disposition threshold while the LLM reads
+    # the alert as uncertain (fp below the downgrade line), the components
+    # disagree — the alert routes to a human analyst instead. This guard can
+    # only ADD analyst review; it can never suppress more.
+    llm_fp = float(state.get("llm_fp_probability", 50.0))
+    if decision in ("SUPPRESS", "DOWNGRADE") and llm_fp < thresholds.downgrade:
+        disagreement_note = (
+            f"Component disagreement: deterministic composite {composite:.0f} supports "
+            f"{decision}, but LLM contextual assessment is {llm_fp:.0f} (< downgrade "
+            f"threshold {thresholds.downgrade:.0f}) — conservative PASS_THROUGH to analyst"
+        )
+        decision = "PASS_THROUGH"
+        pass_through_factors = list(state.get("llm_pass_through_factors", [])) + [disagreement_note]
+    else:
+        pass_through_factors = state.get("llm_pass_through_factors", [])
+
     # Determine recommended priority for queued alerts
     recommended_priority = _recommend_priority(composite, decision, features)
 
@@ -512,7 +537,7 @@ def determine_routing(state: AlertScoringState) -> AlertScoringState:
         confidence=state.get("llm_confidence", 0.5),
         primary_reason=state.get("llm_primary_reason", ""),
         suppression_factors=state.get("llm_suppression_factors", []),
-        pass_through_factors=state.get("llm_pass_through_factors", []),
+        pass_through_factors=pass_through_factors,
         recommended_priority=recommended_priority,
         regulatory_override=reg_override,
         regulatory_override_reason=reg_override_reason,

@@ -39,6 +39,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
 from langchain_anthropic import ChatAnthropic
+from agent.persistence import audit_sink
 
 logger = logging.getLogger(__name__)
 
@@ -267,6 +268,8 @@ def _append_audit(state: CreditUnderwritingState, step: str, details: Dict[str, 
         "application_id": state.get("application_id", "UNKNOWN"),
         **details,
     })
+    # WRITE-AHEAD: durable audit record at creation (agent/persistence.py)
+    audit_sink().record(trail[-1])
     return trail
 
 def _sanitize_text(value: str) -> str:

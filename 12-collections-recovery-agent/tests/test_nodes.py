@@ -65,7 +65,7 @@ class TestSecurityProperties:
 
     def test_always_hitl_conditions_immutable(self):
         """Adding to ALWAYS_HITL_CONDITIONS must raise TypeError."""
-        with pytest.raises(TypeError):
+        with pytest.raises((TypeError, AttributeError)):
             ALWAYS_HITL_CONDITIONS.add("FAKE_CONDITION")
 
     def test_always_hitl_conditions_count(self):
@@ -90,14 +90,14 @@ class TestSecurityProperties:
         assert isinstance(CONSUMER_DEBT_TYPES, frozenset)
 
     def test_consumer_debt_types_immutable(self):
-        with pytest.raises(TypeError):
+        with pytest.raises((TypeError, AttributeError)):
             CONSUMER_DEBT_TYPES.add("FAKE_DEBT_TYPE")
 
     def test_fdcpa_prohibited_representations_is_frozenset(self):
         assert isinstance(FDCPA_PROHIBITED_REPRESENTATIONS, frozenset)
 
     def test_fdcpa_prohibited_representations_immutable(self):
-        with pytest.raises(TypeError):
+        with pytest.raises((TypeError, AttributeError)):
             FDCPA_PROHIBITED_REPRESENTATIONS.add("FAKE_PROHIBITED")
 
     def test_bankruptcy_stay_exceptions_is_frozenset(self):
@@ -243,11 +243,18 @@ class TestSOLComputation:
     """Verify statute of limitations date arithmetic."""
 
     def test_sol_lookup_ohio_credit_card(self):
+        # Time-robust fixture: anchor charge-off 2 years before "now" so the
+        # 6-year Ohio SOL is always in-window regardless of when tests run.
+        # (The original hard-coded 2020-06-01 charge-off expired in real time
+        # on 2026-06-01 and turned this test into a time bomb.)
+        from datetime import datetime, timedelta, timezone
+        charge_off = (datetime.now(timezone.utc) - timedelta(days=730)).date().isoformat()
+        delinquency = (datetime.now(timezone.utc) - timedelta(days=900)).date().isoformat()
         sol, expiry, expired, warning = _compute_sol_expiration(
-            "2019-01-01", "2020-06-01", "OH", "CREDIT_CARD"
+            delinquency, charge_off, "OH", "CREDIT_CARD"
         )
         assert sol == 6  # Ohio open account = 6 years
-        assert not expired  # Not yet expired from 2020
+        assert not expired  # 2 years into a 6-year SOL
 
     def test_sol_lookup_california_credit_card(self):
         sol, expiry, expired, warning = _compute_sol_expiration(

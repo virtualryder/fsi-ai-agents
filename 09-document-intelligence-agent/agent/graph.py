@@ -103,6 +103,7 @@ import logging
 from typing import Callable, Optional
 
 from langgraph.checkpoint.memory import MemorySaver
+from agent.persistence import get_checkpointer
 from langgraph.graph import END, START, StateGraph
 
 from .nodes import (
@@ -421,7 +422,7 @@ def build_document_intelligence_graph(
 # multiple threads in the Streamlit app can share the same in-memory
 # checkpoint store. LangGraph's MemorySaver is thread-safe.
 
-_dev_checkpointer = MemorySaver()
+_dev_checkpointer = get_checkpointer()  # PostgresSaver when DATABASE_URL is set; MemorySaver fallback (dev)
 graph = build_document_intelligence_graph(checkpointer=_dev_checkpointer)
 
 # TEST INSTANCE (no checkpointer)

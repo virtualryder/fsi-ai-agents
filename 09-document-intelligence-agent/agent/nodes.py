@@ -68,6 +68,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from langchain_anthropic import ChatAnthropic
+from agent.persistence import audit_sink
 
 # ── Claude model tiers (Anthropic) ───────────────────────────────────────────
 # NARRATIVE tier — Claude Sonnet 4.6: regulatory narratives, SAR/dispute
@@ -232,6 +233,8 @@ def _append_audit(state: DocumentIntelligenceState, step: str, details: Dict[str
         "document_id": state.get("document_id", "UNKNOWN"),
         **details,
     })
+    # WRITE-AHEAD: durable audit record at creation (agent/persistence.py)
+    audit_sink().record(trail[-1])
     return trail
 
 def _sanitize_text(text: str, max_length: int = 2000) -> str:

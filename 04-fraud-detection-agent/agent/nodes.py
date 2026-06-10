@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from langchain_anthropic import ChatAnthropic
+from agent.persistence import audit_sink
 from langchain_core.messages import HumanMessage, SystemMessage
 
 # ── Claude model tiers (Anthropic) ───────────────────────────────────────────
@@ -95,6 +96,8 @@ def _add_audit_entry(
         "response_time_ms": response_ms,
         "regulatory_basis": regulatory_basis,
     })
+    # WRITE-AHEAD: durable audit record at creation (agent/persistence.py)
+    audit_sink().record(trail[-1])
     return trail
 
 
