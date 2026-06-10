@@ -1,0 +1,158 @@
+{
+  "description": "Agent 12 — Collections & Recovery Agent payment plan and settlement configuration reference",
+  "version": "1.0",
+  "python_constants_documented_here": true,
+
+  "fdcpa_time_restrictions": {
+    "regulation": "FDCPA § 805(a)(1) — 15 U.S.C. § 1692c(a)(1)",
+    "permitted_contact_hours_local": "8:00am to 9:00pm in consumer's local time",
+    "prohibited_before_hour": 8,
+    "prohibited_at_or_after_hour": 21,
+    "enforcement": "Python datetime comparison with pytz timezone conversion — not LLM",
+    "fail_safe": "Unknown timezone defaults to contact_prohibited (False)"
+  },
+
+  "regulation_f_limits": {
+    "regulation": "CFPB Regulation F — 12 CFR Part 1006",
+    "effective_date": "November 30, 2021",
+    "7_in_7_rule": {
+      "description": "No more than 7 telephone calls within 7 consecutive days per debt",
+      "limit": 7,
+      "period_days": 7
+    },
+    "post_conversation_wait": {
+      "description": "No telephone call within 7 days after a telephone conversation with the consumer",
+      "wait_days": 7
+    },
+    "electronic_communication": {
+      "opt_out_required": true,
+      "limited_content_messages": "Voicemail may use limited content message that does not reveal debt collection purpose"
+    }
+  },
+
+  "validation_notice": {
+    "regulation": "FDCPA § 809 / 12 CFR 1006.34",
+    "required_within_days": 5,
+    "dispute_window_days": 30,
+    "dispute_hold_collection_days": 30,
+    "required_content": [
+      "Amount of debt",
+      "Name of creditor to whom debt is owed",
+      "Consumer right to dispute within 30 days",
+      "Verification will be obtained if disputed",
+      "Name and address of original creditor upon written request"
+    ]
+  },
+
+  "scra_provisions": {
+    "regulation": "Servicemembers Civil Relief Act — 50 U.S.C. § 3937",
+    "max_interest_rate_pct": 6.0,
+    "applicability": "Pre-service debt only; rate cap applies retroactively to date of active duty",
+    "required_action": "Reduce interest rate to 6% max; recalculate balance; credit excess interest paid",
+    "hitl_required": true,
+    "documentation": "Written notice and copy of military orders required from servicemember"
+  },
+
+  "bankruptcy_provisions": {
+    "regulation": "11 U.S.C. § 362 — Automatic Stay",
+    "effect": "All collection activity must immediately stop upon bankruptcy filing",
+    "exceptions": [
+      "Criminal prosecution",
+      "Family support enforcement (alimony, child support)",
+      "Government regulatory enforcement",
+      "Secured creditor relief after § 362(d) motion approved by court"
+    ],
+    "permitted_actions": [
+      "File proof of claim with bankruptcy court",
+      "Monitor bankruptcy proceedings",
+      "Contact debtor's attorney"
+    ],
+    "hitl_required": true,
+    "escalation": "COMPLIANCE"
+  },
+
+  "settlement_tiers": {
+    "description": "Settlement discount tiers by balance and authorization level",
+    "python_constants": "SETTLEMENT_TIERS in agent/state.py — not configurable at runtime",
+    "tiers": {
+      "TIER_1": {
+        "max_discount_pct": 20.0,
+        "min_balance": 0,
+        "auth_level": "COLLECTOR",
+        "notes": "Standard collector authority for fresh accounts"
+      },
+      "TIER_2": {
+        "max_discount_pct": 35.0,
+        "min_balance": 1000,
+        "auth_level": "SUPERVISOR",
+        "notes": "Most common settlement tier — 35% off is standard industry offer"
+      },
+      "TIER_3": {
+        "max_discount_pct": 50.0,
+        "min_balance": 5000,
+        "auth_level": "MANAGER",
+        "notes": "High discount for aged or difficult accounts"
+      },
+      "TIER_4": {
+        "max_discount_pct": 70.0,
+        "min_balance": 10000,
+        "auth_level": "VP_COLLECTIONS",
+        "notes": "Maximum settlement — SOL-expired or litigation-adverse accounts"
+      }
+    },
+    "high_value_threshold": {
+      "description": "Settlement amount >$10K OR discount >40% triggers SETTLEMENT_HIGH_VALUE HITL condition",
+      "dollar_threshold": 10000,
+      "discount_threshold_pct": 40
+    }
+  },
+
+  "payment_plan_parameters": {
+    "min_payment_pct_of_balance": 0.015,
+    "max_term_months": 60,
+    "hardship_min_payment": 25.00,
+    "standard_terms_offered": [12, 24, 36, 48, 60],
+    "hardship_eligibility_threshold": 0.60
+  },
+
+  "credit_reporting": {
+    "regulation": "Fair Credit Reporting Act — 15 U.S.C. § 1681 et seq.",
+    "charge_off_days": 180,
+    "min_balance_report": 100.00,
+    "medical_debt_min_balance_2025": 500.00,
+    "paid_in_full_removal_days": 7,
+    "settled_account_reporting_years": 7,
+    "negative_item_limit_years": 7,
+    "1099_c_threshold": 600.00,
+    "notes": "CFPB proposed rule (2025) would remove medical debt under $500 from credit reports"
+  },
+
+  "always_hitl_conditions": {
+    "description": "9 conditions that always require human review — Python frozenset, immutable at runtime",
+    "conditions": {
+      "SCRA_DETECTED": "Active military — SCRA interest rate cap, all collection requires supervisor",
+      "BANKRUPTCY_STAY_DETECTED": "Automatic stay — ALL collection must stop, escalate to compliance",
+      "DISPUTE_RECEIVED": "Consumer disputed debt — validation notice + 30-day collection hold",
+      "CEASE_DESIST_RECEIVED": "C&D received — only legal action notice permitted per FDCPA § 805(c)",
+      "DECEASED_ACCOUNT": "Consumer is deceased — estate/executor procedures, state probate law",
+      "SETTLEMENT_HIGH_VALUE": "Settlement >$10K or discount >40% — supervisor authorization required",
+      "LITIGATION_HIGH_RISK": "Legal review before any further collection action",
+      "REGULATORY_COMPLAINT": "CFPB/state AG complaint received — compliance officer review",
+      "MINOR_ACCOUNT": "Debtor under 18 — legal guardian required, state consumer protection law"
+    }
+  },
+
+  "state_sol_notes": {
+    "description": "Statute of limitations varies by state and debt category",
+    "credit_card_category": "open_account (revolving credit)",
+    "personal_loan_category": "written_contract",
+    "oral_contract_category": "oral_contract (rare in collections)",
+    "important_notes": [
+      "SOL does not eliminate the debt — it limits the right to sue",
+      "Threatening to sue on time-barred debt violates FDCPA § 807(2)(A) — prohibited false representation",
+      "Collecting on time-barred debt voluntarily paid by consumer is generally permissible",
+      "SOL clock restarts from date of last payment in most states",
+      "Some states (NY, WI) bar collection activity entirely on time-barred debt — check state law"
+    ]
+  }
+}

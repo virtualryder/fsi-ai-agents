@@ -81,6 +81,20 @@ This suite delivers that reduction, use case by use case, in a way that satisfie
 │  │       Reg E · Nacha · OFAC · BSA · 12-node DAG · SLA management     │   │
 │  │       $713K–$1.95M/yr · 92% dispute time reduction · 6-wk payback   │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  MODEL GOVERNANCE                                                           │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │  11 · Model Risk Management Agent                                   │   │
+│  │       SR 11-7 §§ 4-11 · 5 models validated · Gini/KS/PSI/FNR       │   │
+│  │       $735K–$1.28M/yr · ≤30-day degradation detection · 14-wk PBK  │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  CONSUMER COLLECTIONS                                                       │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │  12 · Collections & Recovery Agent                                  │   │
+│  │       FDCPA · Reg F 7-in-7 · SCRA 6% · Bankruptcy § 362            │   │
+│  │       $890K–$3.8M/yr · 9 HITL conditions · frozenset enforced       │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -326,6 +340,30 @@ The independent model validation function for the FSI AI Suite. Validates the fi
 
 ---
 
+### 12 · Collections & Recovery Agent
+**[`12-collections-recovery-agent/`](./12-collections-recovery-agent/)**
+
+FDCPA/Reg F/SCRA-compliant debt collections automation. Enforces contact time restrictions (pytz UTC conversion), Regulation F 7-in-7 call limits, SCRA 6% interest rate caps, bankruptcy automatic stay detection, 50-state SOL computation, and Python-computed payment plan optimization — while routing all high-risk regulatory conditions to mandatory human review through an immutable frozenset that the LLM cannot modify.
+
+| What it does | The number |
+|---|---|
+| Annual FDCPA violation exposure avoided | $340K–$2.4M per year |
+| Collector compliance research eliminated | 25–49 min per account |
+| Supervisor HITL review time reduction | 65–78% per case |
+| Recovery rate improvement (payment plans) | 25–35% lower plan default rate |
+| Agent 12 infrastructure cost | $6,200–$9,800/year |
+| Payback period | 8–14 weeks |
+
+**Collections pipeline (12 nodes):** PII masking → FDCPA contact check (pytz timezone) → SCRA/bankruptcy detection → hardship assessment (LLM narrative) → debt validation (FCRA, SOL, medical debt) → payment plan optimization (Python: balance ÷ term) + settlement tiers → collections strategy (LLM narrative) → HITL conditions (Python frozenset) → routing decision (fail-safe `is False`) → **HITL gate** (supervisor/compliance decision) → communication drafting (LLM + Python-injected disclosures) → audit finalization (7-year FCRA retention)
+
+**HITL triggers (9 conditions, Python frozenset — immutable at runtime):** SCRA detected (6% rate cap) · Bankruptcy stay (ALL collection stops) · Dispute received (30-day hold) · Cease & desist (FDCPA § 805(c)) · Deceased account · Settlement high-value (>$10K or >40% discount) · Litigation high risk · Regulatory complaint · Minor account
+
+**Python vs. LLM boundary:** Contact time check · Reg F 7-in-7 · SCRA rate cap · SOL matrix (all 50 states + DC) · Collectability score · Payment plan math · Settlement tier authorization · HITL condition detection · HITL routing — ALL Python. LLM produces: hardship narrative, strategy summary, letter body (with Python-injected mini-Miranda, validation notice, SCRA note, 1099-C notice).
+
+**Regulatory coverage:** FDCPA 15 U.S.C. § 1692 · CFPB Regulation F 12 CFR Part 1006 · SCRA 50 U.S.C. § 3937 · Bankruptcy Code 11 U.S.C. § 362 · FCRA 15 U.S.C. § 1681 · UDAAP Dodd-Frank § 1031 · TCPA 47 U.S.C. § 227 · IRS § 6050P (1099-C) · 7-year S3 Object Lock GOVERNANCE retention
+
+---
+
 ## Architecture Principles
 
 Every agent in this suite is built on the same opinionated architecture. Customers learn it once and deploy it everywhere.
@@ -391,42 +429,51 @@ Security:
 
 ## Regulatory Coverage Map
 
-| Regulation | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | 10 | 11 |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| BSA 31 U.S.C. § 5318 (SAR filing) | ✅ | ✅ | ✅ | ✅ | — | — | ✅ | — | ✅ | ✅ | ✅ |
-| FinCEN CDD Rule (31 CFR 1020.210) | ✅ | ✅ | ✅ | — | — | ✅ | — | — | ✅ | ✅ | — |
-| OFAC IEEPA (SDN screening, 50% rule) | ✅ | ✅ | ✅ | ✅ | — | — | — | ✅ | ✅ | ✅ | — |
-| FATF R.10 (Customer due diligence) | ✅ | — | ✅ | — | — | — | — | — | — | ✅ | — |
-| FATF R.12 (PEP enhanced due diligence) | ✅ | ✅ | ✅ | — | — | — | — | — | — | — | — |
-| FATF R.20 (Suspicious transaction reporting) | ✅ | ✅ | — | ✅ | — | — | ✅ | — | — | ✅ | — |
-| USA PATRIOT Act § 326 (CIP) | ✅ | — | ✅ | — | — | — | — | ✅ | ✅ | — | — |
-| FIN-2014-G001 (SAR narrative format) | ✅ | — | — | — | — | — | ✅ | — | — | ✅ | — |
-| SR 11-7 (Model risk management) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| FFIEC BSA/AML Examination Manual | ✅ | ✅ | ✅ | — | — | ✅ | — | — | — | — | ✅ |
-| 18 U.S.C. § 1960 (No tipping off) | ✅ | — | — | — | ✅ | — | ✅ | — | — | ✅ | — |
-| 5-year BSA record retention | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| 10-year model validation retention | — | — | — | — | — | — | — | — | — | — | ✅ |
-| Reg E (EFTA) — provisional credit / disputes | — | — | — | ✅ | — | — | — | — | — | ✅ | — |
-| Nacha Operating Rules (ACH return / NOC) | — | — | — | ✅ | — | — | — | — | — | ✅ | — |
-| Reg BI (17 CFR 240.15l-1) | — | — | — | — | ✅ | — | — | — | — | — | — |
-| FINRA Rule 2111 (Suitability) | — | — | — | — | ✅ | — | ✅ | — | — | — | — |
-| FINRA Rule 2210 (Communications) | — | — | — | — | ✅ | — | — | — | — | — | — |
-| FINRA Rule 3110 (Supervisory procedures) | — | — | — | — | — | — | ✅ | — | — | — | — |
-| FINRA Rule 4511 (Books and records) | — | — | — | — | — | — | ✅ | — | — | — | — |
-| ERISA (retirement account fiduciary) | — | — | — | — | ✅ | — | — | — | — | — | — |
-| GLBA (data privacy / PII safeguards) | ✅ | ✅ | ✅ | ✅ | ✅ | — | — | ✅ | ✅ | ✅ | — |
-| Dodd-Frank § 747 (Spoofing ban) | — | — | — | — | — | — | ✅ | — | — | — | — |
-| SEC Regulation SHO (Short selling) | — | — | — | — | — | — | ✅ | — | — | — | — |
-| SEC Rule 10b-5 (Market manipulation) | — | — | — | — | — | — | ✅ | — | — | — | — |
-| ECOA / Reg B (Fair lending, adverse action) | — | — | — | — | — | — | — | ✅ | ✅ | — | ✅ |
-| HMDA (Home Mortgage Disclosure Act) | — | — | — | — | — | — | — | ✅ | ✅ | — | — |
-| CRA (Community Reinvestment Act) | — | — | — | — | — | — | — | ✅ | — | — | — |
-| Reg Z / TILA (Truth in Lending) | — | — | — | — | — | — | — | ✅ | — | — | — |
-| SBA 7(a) / 504 Program Rules | — | — | — | — | — | — | — | ✅ | — | — | — |
-| CFPB Prepaid Rule (12 CFR Part 1005) | — | — | — | — | — | — | — | — | — | ✅ | — |
-| UCC Article 4A (Wire transfer liability) | — | — | — | — | — | — | — | — | — | ✅ | — |
-| OFAC Blocking Report (501.604 SLA) | — | — | — | — | — | — | — | — | — | ✅ | — |
-| CTR (31 CFR 1010.311 — $10K threshold) | ✅ | — | — | — | — | — | — | — | — | ✅ | — |
+| Regulation | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | 10 | 11 | 12 |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| BSA 31 U.S.C. § 5318 (SAR filing) | ✅ | ✅ | ✅ | ✅ | — | — | ✅ | — | ✅ | ✅ | ✅ | — |
+| FinCEN CDD Rule (31 CFR 1020.210) | ✅ | ✅ | ✅ | — | — | ✅ | — | — | ✅ | ✅ | — | — |
+| OFAC IEEPA (SDN screening, 50% rule) | ✅ | ✅ | ✅ | ✅ | — | — | — | ✅ | ✅ | ✅ | — | — |
+| FATF R.10 (Customer due diligence) | ✅ | — | ✅ | — | — | — | — | — | — | ✅ | — | — |
+| FATF R.12 (PEP enhanced due diligence) | ✅ | ✅ | ✅ | — | — | — | — | — | — | — | — | — |
+| FATF R.20 (Suspicious transaction reporting) | ✅ | ✅ | — | ✅ | — | — | ✅ | — | — | ✅ | — | — |
+| USA PATRIOT Act § 326 (CIP) | ✅ | — | ✅ | — | — | — | — | ✅ | ✅ | — | — | — |
+| FIN-2014-G001 (SAR narrative format) | ✅ | — | — | — | — | — | ✅ | — | — | ✅ | — | — |
+| SR 11-7 (Model risk management) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| FFIEC BSA/AML Examination Manual | ✅ | ✅ | ✅ | — | — | ✅ | — | — | — | — | ✅ | — |
+| 18 U.S.C. § 1960 (No tipping off) | ✅ | — | — | — | ✅ | — | ✅ | — | — | ✅ | — | — |
+| 5-year BSA record retention | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — |
+| 10-year model validation retention | — | — | — | — | — | — | — | — | — | — | ✅ | — |
+| 7-year FCRA record retention | — | — | — | — | — | — | — | — | — | — | — | ✅ |
+| FDCPA (15 U.S.C. § 1692) | — | — | — | — | — | — | — | — | — | — | — | ✅ |
+| CFPB Regulation F (12 CFR Part 1006) | — | — | — | — | — | — | — | — | — | — | — | ✅ |
+| SCRA (50 U.S.C. § 3937) | — | — | — | — | — | — | — | — | — | — | — | ✅ |
+| Bankruptcy Code 11 U.S.C. § 362 | — | — | — | — | — | — | — | — | — | — | — | ✅ |
+| FCRA (15 U.S.C. § 1681) | — | — | — | — | — | — | — | — | — | — | — | ✅ |
+| UDAAP / Dodd-Frank § 1031 | — | — | — | — | — | — | — | — | — | — | — | ✅ |
+| TCPA (47 U.S.C. § 227) | — | — | — | — | — | — | — | — | — | — | — | ✅ |
+| IRS 26 U.S.C. § 6050P (1099-C) | — | — | — | — | — | — | — | — | — | — | — | ✅ |
+| Reg E (EFTA) — provisional credit / disputes | — | — | — | ✅ | — | — | — | — | — | ✅ | — | — |
+| Nacha Operating Rules (ACH return / NOC) | — | — | — | ✅ | — | — | — | — | — | ✅ | — | — |
+| Reg BI (17 CFR 240.15l-1) | — | — | — | — | ✅ | — | — | — | — | — | — | — |
+| FINRA Rule 2111 (Suitability) | — | — | — | — | ✅ | — | ✅ | — | — | — | — | — |
+| FINRA Rule 2210 (Communications) | — | — | — | — | ✅ | — | — | — | — | — | — | — |
+| FINRA Rule 3110 (Supervisory procedures) | — | — | — | — | — | — | ✅ | — | — | — | — | — |
+| FINRA Rule 4511 (Books and records) | — | — | — | — | — | — | ✅ | — | — | — | — | — |
+| ERISA (retirement account fiduciary) | — | — | — | — | ✅ | — | — | — | — | — | — | — |
+| GLBA (data privacy / PII safeguards) | ✅ | ✅ | ✅ | ✅ | ✅ | — | — | ✅ | ✅ | ✅ | — | ✅ |
+| Dodd-Frank § 747 (Spoofing ban) | — | — | — | — | — | — | ✅ | — | — | — | — | — |
+| SEC Regulation SHO (Short selling) | — | — | — | — | — | — | ✅ | — | — | — | — | — |
+| SEC Rule 10b-5 (Market manipulation) | — | — | — | — | — | — | ✅ | — | — | — | — | — |
+| ECOA / Reg B (Fair lending, adverse action) | — | — | — | — | — | — | — | ✅ | ✅ | — | ✅ | — |
+| HMDA (Home Mortgage Disclosure Act) | — | — | — | — | — | — | — | ✅ | ✅ | — | — | — |
+| CRA (Community Reinvestment Act) | — | — | — | — | — | — | — | ✅ | — | — | — | — |
+| Reg Z / TILA (Truth in Lending) | — | — | — | — | — | — | — | ✅ | — | — | — | — |
+| SBA 7(a) / 504 Program Rules | — | — | — | — | — | — | — | ✅ | — | — | — | — |
+| CFPB Prepaid Rule (12 CFR Part 1005) | — | — | — | — | — | — | — | — | — | ✅ | — | — |
+| UCC Article 4A (Wire transfer liability) | — | — | — | — | — | — | — | — | — | ✅ | — | — |
+| OFAC Blocking Report (501.604 SLA) | — | — | — | — | — | — | — | — | — | ✅ | — | — |
+| CTR (31 CFR 1010.311 — $10K threshold) | ✅ | — | — | — | — | — | — | — | — | ✅ | — | — |
 
 ---
 
@@ -445,7 +492,8 @@ Security:
 | 09 · Document Intelligence | Manual re-keying of PDFs/SWIFT · OCR bottlenecks | $1.66M–$1.91M (suite multiplier) |
 | 10 · Payments Compliance | 143-min disputes · missed SLA fines · OFAC exposure | $713K–$1.95M (5K disputes/year) |
 | 11 · Model Risk Management | $20K–$57K per manual validation · undetected degradation losses · SR 11-7 exam gaps | $735K–$1.28M (5 models) |
-| **Full suite** | **End-to-end financial crime + fraud + wealth + compliance ops + model governance** | **$23M+ annually** |
+| 12 · Collections & Recovery | $340K–$2.4M FDCPA violations · 25–49 min/account compliance research · SCRA/bankruptcy mishandling | $890K–$3.8M (5K accounts/year) |
+| **Full suite** | **End-to-end financial crime + fraud + wealth + compliance ops + model governance + collections** | **$27M+ annually** |
 
 Payback period for full suite deployment: **< 6 months**
 
@@ -541,6 +589,11 @@ cd ../11-model-risk-agent
 cp .env.example .env
 docker compose up
 # Open: http://localhost:8511
+
+cd ../12-collections-recovery-agent
+cp .env.example .env
+docker compose up
+# Open: http://localhost:8512
 ```
 
 > **Demo mode:** All agents run with pre-computed scenarios when `OPENAI_API_KEY` is absent. Start any agent without an API key to explore the full UI and all regulatory decision paths.
@@ -560,6 +613,7 @@ docker compose up
 | 09 · Document Intelligence | 8509 |
 | 10 · Payments Compliance | 8510 |
 | 11 · Model Risk Management | 8511 |
+| 12 · Collections & Recovery | 8512 |
 
 ---
 

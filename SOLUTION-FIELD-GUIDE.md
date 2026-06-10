@@ -5,17 +5,17 @@
 
 ---
 
-## The Platform Story: One Problem, Eleven Entry Points
+## The Platform Story: One Problem, Twelve Entry Points
 
 Financial institutions lose **$274 billion annually** to the combined burden of financial crime compliance, KYC overhead, fraud losses, RM administrative drag, regulatory change management, market surveillance, credit underwriting overhead, document processing bottlenecks, payments dispute management, and — increasingly — unvalidated AI scoring models that create SR 11-7 examination exposure. That number isn't going away — regulatory requirements are tightening, not loosening.
 
 The status quo response is more analysts, more tools, and more complexity. The AI-native response is different: **let AI handle the high-volume, low-judgment work so your best people can focus on the 5% of decisions that actually require human expertise.**
 
-This suite is eleven purpose-built AI agents, each solving one high-cost problem. They are designed to be deployed independently — each delivers ROI on its own — but they share a common architecture, a common data model, and common regulatory controls. When deployed together, they form a closed-loop platform where every agent reinforces the others. Agent 11 (Model Risk Management) is the governance layer that makes every other agent's scoring model defensible in front of SR 11-7 examiners.
+This suite is twelve purpose-built AI agents, each solving one high-cost problem. They are designed to be deployed independently — each delivers ROI on its own — but they share a common architecture, a common data model, and common regulatory controls. When deployed together, they form a closed-loop platform where every agent reinforces the others. Agent 11 (Model Risk Management) is the governance layer that makes every other agent's scoring model defensible in front of SR 11-7 examiners. Agent 12 (Collections & Recovery) closes the credit lifecycle, applying FDCPA/Reg F/SCRA-compliant automation to the debt collections pipeline after Agent 08 (Credit Underwriting) issues a loan.
 
 ---
 
-## The Eleven-Agent Architecture
+## The Twelve-Agent Architecture
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────┐
@@ -79,7 +79,16 @@ This suite is eleven purpose-built AI agents, each solving one high-cost problem
 │  │   $735K–$1.28M/yr labor savings · ≤30-day degradation detection window     │  │
 │  └──────────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                    │
-│  SHARED PLATFORM LAYER (All 11 Agents)                                             │
+│  ┌──────────────────────────────────────────────────────────────────────────────┐  │
+│  │  CONSUMER COLLECTIONS (Closes the Credit Lifecycle — After Agent 08)        │  │
+│  │                                                                              │  │
+│  │  [12 · Collections & Recovery]  FDCPA · Reg F 7-in-7 · SCRA 6%             │  │
+│  │   · Bankruptcy § 362 · FCRA · UDAAP · TCPA · IRS § 6050P (1099-C)          │  │
+│  │   · pytz timezone enforcement · 50-state SOL matrix · frozenset HITL        │  │
+│  │   $890K–$3.8M/yr · 9 HITL conditions · 8-week payback                      │  │
+│  └──────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                    │
+│  SHARED PLATFORM LAYER (All 12 Agents)                                             │
 │  LangGraph StateGraph · AWS Bedrock · Cognito + Okta/AD Auth                      │
 │  Immutable Append-Only Audit Trail · SR 11-7 Explainability · BSA/FATF Controls   │
 │  MCP Auth Gateway · ECS Fargate · Aurora PostgreSQL · S3 Object Lock (WORM)       │
@@ -114,7 +123,9 @@ The linkages between agents are what make the suite more than the sum of its par
 
 12. **Agent 10 (Payments Compliance)** receives structured SWIFT and wire instruction data from Agent 09, eliminating manual re-keying for international wires. OFAC hits detected by Agent 10 are routed to Agent 01 for BSA/SAR investigation. When a SAR candidate is detected in a payments pattern, Agent 10 flags it for the BSA Officer — Agent 01 handles the investigation workflow.
 
-13. **Agent 11 (Model Risk Management)** is the governance layer that sits above all scoring models in the suite. It validates the five scoring models in Agents 02, 03, 04, 07, and 08 on a monthly (automated), annual (full revalidation), and triggered (CloudWatch alarm) basis. Every validation event produces a tamper-evident SR 11-7 audit record. When Agent 04's fraud Gini coefficient declines, Agent 11 detects it within 30 days, triggers MRO review, and generates a remediation plan — before the degradation becomes a regulatory examination finding. Agent 11 is the answer to every examiner question about model governance: "Is your AI model independently validated? Who approved it? Where is the record?" The answer is: S3 Object Lock, 10-year retention, MRO-signed, node-by-node audit trail.
+13. **Agent 11 (Model Risk Management)** is the governance layer that sits above all scoring models in the suite. It validates the five scoring models in Agents 02, 03, 04, 07, and 08 on a monthly (automated), annual (full revalidation), and triggered (CloudWatch alarm) basis. Every validation event produces a tamper-evident SR 11-7 audit record. When Agent 04's fraud Gini coefficient declines, Agent 11 detects it within 30 days, triggers MRO review, and generates a remediation plan — before the degradation becomes a regulatory examination finding. Agent 11 is the answer to every examiner question about model governance: "Is your AI model independently validated? Who approved it? Where is the record?" The answer is: S3 Object Lock, 10-year retention, MRO-signed, node-by-node audit trail. Agent 11 also validates Agent 12's collectability scoring model — a credit model subject to ECOA/Reg B fair lending requirements.
+
+14. **Agent 12 (Collections & Recovery)** closes the credit lifecycle that begins with Agent 08 (Credit Underwriting). When a loan originated by Agent 08 becomes delinquent, Agent 12 handles the collections pipeline: FDCPA contact time enforcement (pytz UTC conversion for consumer local timezone), Regulation F 7-in-7 call limit tracking, SCRA active military detection (6% rate cap, mandatory supervisor approval), bankruptcy automatic stay detection (ALL collection stops, compliance escalation), 50-state SOL computation with 4 debt categories, collectability scoring, and payment plan/settlement optimization. Agent 12 uses Agent 09 (Document Intelligence) to process dispute letters and bankruptcy filing documents. Agent 10 (Payments Compliance) confirms ACH authorization before payment plan agreements execute. The 9 HITL conditions in Agent 12's `ALWAYS_HITL_CONDITIONS` frozenset are immutable at runtime — the LLM cannot add, remove, or bypass them.
 
 ---
 
@@ -731,6 +742,35 @@ Same alert, same customer, same investigation steps — every time. Every node t
 
 ---
 
+### Agent 12 · Collections & Recovery Agent
+
+**The headline:** *"Your collectors spend 25–49 minutes per account on compliance research before they make a single call. That's not collections — that's compliance overhead. Agent 12 eliminates that overhead completely, enforces FDCPA contact rules in milliseconds, and makes SCRA and bankruptcy mishandling virtually impossible."*
+
+**The problem narrative:** The FDCPA is the most litigated consumer protection law in America — over 8,000 lawsuits per year, 25–30% of all CFPB complaints, and class actions that settle for $500,000 to $25M. The specific violations that generate this litigation are almost entirely preventable: calling at 10pm in the consumer's timezone (§ 805(a)(1)), calling 8 times in 7 days (Reg F), failing to send a validation notice (§ 809), threatening to sue on a debt that expired under the statute of limitations 18 months ago (§ 807). For every violation in this list, the law was knowable in advance. The contact time could be checked. The call count could be tracked. The SOL could be looked up. Collectors make these errors not because they don't care — they make them because checking 50-state SOL tables, tracking Reg F call counts, doing timezone math, and verifying SCRA status for every account is genuinely time-consuming when done manually.
+
+And the two violations that generate the largest exposure — SCRA mishandling and bankruptcy stay violations — are not collector errors. They're system failures. An active-duty servicemember's account makes it into the collections pipeline because the SCRA database lookup didn't happen. A bankruptcy filing makes it to the auto-dialer because the court records integration has a 48-hour lag. The collector calls. The servicemember gets a collection call during deployment. The DOJ Civil Rights Division opens an investigation. The average DOJ SCRA settlement for a pattern of violations: $3M–$25M.
+
+**The AI-native answer:** Agent 12 runs all FDCPA/Reg F compliance checks in Python before any contact decision is made — timezone conversion (pytz), Reg F 7-in-7 count, C&D flag, dispute flag, SCRA flag, bankruptcy flag — in milliseconds per account. The `ALWAYS_HITL_CONDITIONS` frozenset is immutable: 9 conditions that always route to human review, including SCRA, bankruptcy stay, dispute, C&D, deceased account, minor account, and high-value settlement. The frozenset raises `TypeError` if code attempts `.add()` — it cannot be modified at runtime, and the LLM cannot influence it. The routing function uses `is False` — not a falsy check — so `None`, `0`, or a missing key all route to HITL. It is a fail-safe by design.
+
+The LLM (GPT-4o) produces only: hardship assessment narrative, collections strategy summary for supervisor review, and collection letter body. All financial amounts, payment terms, FDCPA disclosures (mini-Miranda, validation notice, SCRA rate cap, IRS 1099-C notice) are Python-computed and Python-injected into the letter verbatim. A CFPB examiner reviewing the letter can trace every disclosure to a Python constant — not to an LLM that might have produced something slightly different the next time.
+
+**The 50-state SOL story:** The statute of limitations matrix covers all 50 states plus DC across four debt categories (written contract, open account, oral contract, judgment). Credit cards are classified as "open account" (revolving credit) — which often has a shorter SOL than written contracts. The SOL clock restarts from the date of last payment, not origination. Agent 12 computes `sol_expired` and `sol_warning` (within 90 days of expiry) in Python using these constants. When SOL is expired: collectability score drops (×0.3 multiplier on the debt age factor), `LITIGATION_HIGH_RISK` is disabled (can't sue on expired debt), and the LLM prompt includes an explicit constraint: "Do not threaten legal action — SOL expired — FDCPA § 807(2)(A) prohibits false representation of legal status."
+
+**The settlement story:** Four Python-defined settlement tiers (TIER_1 through TIER_4) set authorization levels: COLLECTOR can approve up to 20% discount; SUPERVISOR up to 35%; MANAGER up to 50%; VP_COLLECTIONS up to 70%. When a settlement would exceed $10,000 or a discount exceeds 40%, the `SETTLEMENT_HIGH_VALUE` condition triggers — which is in the `ALWAYS_HITL_CONDITIONS` frozenset — requiring supervisor authorization. When the forgiven amount is ≥$600, the IRS 1099-C notice is Python-injected into the settlement letter. None of these amounts are LLM-generated.
+
+### Agent 12 — The Collections & Recovery Demo
+1. Open the Submit Case tab — show the 4 pre-loaded scenarios; select DEMO-002 (SCRA Active Military — Marcus W., U.S. Army)
+2. Run the pipeline — watch all 12 nodes execute: intake → FDCPA check → SCRA/bankruptcy check → hardship → validation → payment plan → strategy → risk scoring → routing
+3. Open the Case Findings tab — show the red HITL alert: "SCRA_DETECTED — Escalation: SUPERVISOR. This case cannot proceed to communication drafting without supervisor review." Show the SCRA 6% rate cap notice: "Interest rate must be reduced to 6% from date active duty began."
+4. Open the Collections Analysis tab — show the collectability score, payment plan options (Python math: $8,750 ÷ 12 months = $729.17/month), and settlement tiers
+5. Go to Tab 4 (Collector Review) — walk through the HITL gate: "Look at the conditions — SCRA_DETECTED. The frozenset contains this condition. The routing function sees human_review_required=True. The graph is paused at interrupt_before=['human_review_gate']. Marcus cannot receive a collection call until a supervisor submits this decision."
+6. Enter supervisor decision: PAYMENT_PLAN, reviewer ID: SUP-00312, notes: "SCRA rate cap verified — balance recalculated at 6%. Approved modified 24-month plan at $365/month."
+7. Open Tab 5 (Audit Trail) — show all 12 node entries, the HITL decision record with supervisor ID, the "human_review_required set to False (explicit Python False — gate cleared)" entry. "This is what you show the DOJ Civil Rights Division."
+
+**Key moment (DEMO-003 — Bankruptcy Stay):** Load DEMO-003 (Chapter 7 bankruptcy — Patricia L., Illinois). "BANKRUPTCY_STAY_DETECTED. Escalation: COMPLIANCE — not supervisor, compliance officer. All collection must stop. The audit trail entry says: 'Automatic stay in effect — ALL collection must stop (11 U.S.C. § 362).' Permitted actions: file proof of claim, monitor proceedings, contact debtor's attorney. The agent tells the compliance officer exactly what they can do and what they cannot. And the HITL gate is physically blocking the pipeline — no letter is drafted, no communication is authorized, until a compliance officer submits a decision."
+
+---
+
 ## ROI Summary by Institution Profile
 
 ### Community Bank (Assets $1B–$5B)
@@ -745,7 +785,8 @@ Same alert, same customer, same investigation steps — every time. Every node t
 | Agent 08 (Credit Underwriting) | $600K–$1.2M | 100-200 loans/month |
 | Agent 06 (Regulatory Change Mgmt) | $400K–$700K | 2 compliance analysts |
 | Agent 11 (Model Risk Management) | $500K–$900K | 3-5 HIGH-tier models; includes degradation detection savings |
-| **Full Suite** | **$5.5M–$10.0M** | Payback < 5 months |
+| Agent 12 (Collections & Recovery) | $500K–$1.8M | 3K accounts/yr; FDCPA violations + collector productivity |
+| **Full Suite** | **$6.0M–$11.8M** | Payback < 5 months |
 
 ### Regional Bank (Assets $5B–$50B)
 | Use Case | Annual Savings | Notes |
@@ -761,7 +802,8 @@ Same alert, same customer, same investigation steps — every time. Every node t
 | Agent 06 (Regulatory Change Mgmt) | $849K–$1.5M | 4-analyst compliance team |
 | Agent 07 (Trading Surveillance) | $1.5M–$3.0M | Regional trading desk, 3-4 analysts |
 | Agent 11 (Model Risk Management) | $735K–$1.28M | 5 HIGH-tier models; monthly automated monitoring |
-| **Full Suite** | **$13.6M–$31.1M** | Payback < 3 months |
+| Agent 12 (Collections & Recovery) | $890K–$3.8M | 5K accounts/yr; FDCPA violations + compliance research + recovery |
+| **Full Suite** | **$14.5M–$34.9M** | Payback < 3 months |
 
 ### Credit Union (Assets $500M–$5B)
 | Use Case | Annual Savings | Notes |
@@ -773,7 +815,8 @@ Same alert, same customer, same investigation steps — every time. Every node t
 | Agent 03 (KYC/CDD Perpetual) | $300K–$800K | Member reviews |
 | Agent 06 (Regulatory Change Mgmt) | $300K–$600K | 1-2 compliance staff |
 | Agent 11 (Model Risk Management) | $350K–$700K | SR 11-7 compliance for AML and fraud models |
-| **Priority Suite** | **$2.55M–$5.9M** | Agents 09 + 02 + 04 + 10 + 03 + 06 + 11 |
+| Agent 12 (Collections & Recovery) | $300K–$900K | FDCPA/Reg F compliance; limited portfolio size |
+| **Priority Suite** | **$2.85M–$6.8M** | Agents 09 + 02 + 04 + 10 + 03 + 06 + 11 + 12 |
 
 ### Mortgage Bank / SBA Lender / CDFI
 | Use Case | Annual Savings | Notes |
@@ -922,6 +965,20 @@ Before a customer POC, collect the following:
 - [ ] Does the institution originate ACH transactions as ODFI? (Affects scope of Nacha return code exposure)
 - [ ] Any Nacha audit findings related to return code timelines or unauthorized return handling?
 - [ ] Does the institution issue prepaid cards? (CFPB Prepaid Rule applies — confirms Reg E scope)
+
+### Collections & Recovery (Agent 12 — Banks, Credit Unions, Debt Buyers, Third-Party Collectors)
+- [ ] How many active collection accounts does the institution manage per year? What is the total portfolio balance?
+- [ ] Are collections handled in-house or by a third-party agency? (Third-party is a FDCPA "debt collector" — first-party originator has narrower FDCPA exposure but still faces Reg F and state law)
+- [ ] What is the current process for FDCPA contact time compliance? Is timezone conversion automated or manual?
+- [ ] How does the institution track the Regulation F 7-in-7 call limit per account? What system maintains the contact count?
+- [ ] Does the institution have a SCRA database integration for active military verification? How current is the DoD SCRA data feed?
+- [ ] How are bankruptcy filings detected? What is the lag between a consumer's bankruptcy filing and the institution's awareness of the automatic stay?
+- [ ] What is the current process for SOL tracking across multi-state portfolios? Is the SOL expiration date calculated at the time of each contact attempt?
+- [ ] Have there been any FDCPA or Reg F civil actions, CFPB complaints, or state AG investigations in the past 3 years?
+- [ ] How are SCRA violations currently handled — what is the escalation path when a servicemember account is identified?
+- [ ] What is the current payment plan and settlement authorization structure (who can authorize what discount levels)?
+- [ ] How are collection letters currently generated — templated, manually written, or LLM-assisted? Who reviews before send?
+- [ ] What is the current audit trail for collections decisions — can the institution demonstrate contact time compliance to a CFPB examiner?
 
 ### Model Risk Management (Agent 11 — Any Institution Using AI Scoring Models)
 - [ ] How many AI or statistical scoring models are currently in production? What risk tiers are they classified under SR 11-7?
