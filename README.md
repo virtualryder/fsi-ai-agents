@@ -3,6 +3,9 @@
 
 > Built for banks, broker-dealers, credit unions, and wealth management firms navigating the intersection of AI capability and regulatory obligation. Every agent in this suite ships with working code, documented regulatory controls, AWS reference architecture, and illustrative ROI modeling.
 
+> **The agents are not the product. The platform that makes them governable is the product.**
+> Read [ENTERPRISE-PLATFORM.md](./ENTERPRISE-PLATFORM.md) for the full platform story: API modernization, MCP authorization gateway, federated identity, agent catalog governance, and A2A audit standards — and how each layer maps to SR 11-7, FFIEC, NIST AI RMF, and GLBA.
+
 ---
 
 ## The Suite
