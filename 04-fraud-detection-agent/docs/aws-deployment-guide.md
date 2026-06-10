@@ -112,7 +112,7 @@ CapacityProviderStrategy:
 
 Environment:
   - Name: BEDROCK_ASYNC_MODEL
-    Value: "anthropic.claude-3-5-sonnet-20241022-v2:0"  # Quality LLM synthesis
+    Value: "anthropic.claude-sonnet-4-6-20260601-v1:0"  # Quality LLM synthesis
   - Name: SQS_ASYNC_QUEUE_URL
     ValueFrom: arn:aws:secretsmanager:REGION:ACCOUNT:secret:/fraud/CUSTOMER_ID/async-sqs
 ```
@@ -366,7 +366,7 @@ module "fraud_detection_customer" {
   # LLM
   llm_provider             = "bedrock"
   bedrock_realtime_model   = "anthropic.claude-haiku-4-5-20251001"
-  bedrock_async_model      = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+  bedrock_async_model      = "anthropic.claude-sonnet-4-6-20260601-v1:0"
 
   # Authentication
   cognito_okta_saml_metadata_url = "https://customer.okta.com/app/APP_ID/sso/saml/metadata"

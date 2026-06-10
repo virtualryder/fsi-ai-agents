@@ -130,7 +130,7 @@ RequiresCompatibilities: [FARGATE]
 
 Environment:
   - Name: BEDROCK_MODEL_ID
-    Value: "anthropic.claude-3-5-sonnet-20241022-v2:0"
+    Value: "anthropic.claude-sonnet-4-6-20260601-v1:0"
     # Sonnet for all nodes — client-facing content quality is paramount
   - Name: DATABASE_URL
     ValueFrom: arn:aws:secretsmanager:REGION:ACCOUNT:secret:/wealth-rm/CUSTOMER_ID/db-url
@@ -369,7 +369,7 @@ module "wealth_rm_copilot_customer" {
 
   # LLM (Sonnet — client-facing content quality is paramount)
   llm_provider    = "bedrock"
-  bedrock_model_id = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+  bedrock_model_id = "anthropic.claude-sonnet-4-6-20260601-v1:0"
 
   # Authentication
   cognito_okta_saml_metadata_url = "https://customer.okta.com/app/APP_ID/sso/saml/metadata"

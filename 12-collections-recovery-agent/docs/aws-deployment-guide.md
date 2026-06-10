@@ -198,7 +198,7 @@ def get_llm():
     return ChatOpenAI(model="gpt-4o", temperature=0, api_key=key)
 ```
 
-### Option B: AWS Bedrock Claude 3 Sonnet (recommended for data residency)
+### Option B: AWS Bedrock Claude Sonnet 4.6 (recommended for data residency)
 
 For institutions requiring data to remain within AWS (no third-party API calls):
 
@@ -207,7 +207,7 @@ from langchain_aws import ChatBedrock
 
 def get_llm():
     return ChatBedrock(
-        model_id="anthropic.claude-3-sonnet-20240229-v1:0",
+        model_id="anthropic.claude-sonnet-4-6-20260601-v1:0",
         region_name="us-east-1",
         model_kwargs={"temperature": 0, "max_tokens": 4096},
     )
@@ -220,7 +220,7 @@ def get_llm():
   "Sid": "BedrockInvoke",
   "Effect": "Allow",
   "Action": ["bedrock:InvokeModel"],
-  "Resource": "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0"
+  "Resource": "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-sonnet-4-6-20260601-v1:0"
 }
 ```
 

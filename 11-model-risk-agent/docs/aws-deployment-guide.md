@@ -175,12 +175,12 @@ Agent 11's LLM calls produce narratives only — conceptual soundness review tex
 Bedrock keeps LLM inference within the AWS account boundary — no data leaves your VPC perimeter. This satisfies data residency requirements and eliminates concerns about validation findings appearing in third-party model training data.
 
 ```bash
-# Enable Bedrock model access (claude-3-sonnet-20241022 recommended)
+# Enable Bedrock model access (claude-sonnet-4-6 recommended)
 aws bedrock put-foundation-model-entitlement \
-  --model-id anthropic.claude-3-sonnet-20241022-v1:0
+  --model-id anthropic.claude-sonnet-4-6-20260601-v1:0
 
 # Update the application environment to use Bedrock
-# Set BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20241022-v1:0
+# Set BEDROCK_MODEL_ID=anthropic.claude-sonnet-4-6-20260601-v1:0
 # Set USE_BEDROCK=true in institution config secret
 ```
 
@@ -190,7 +190,7 @@ Add Bedrock invoke permission to the ECS task role:
   "Sid": "BedrockInvokeModel",
   "Effect": "Allow",
   "Action": ["bedrock:InvokeModel"],
-  "Resource": "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20241022-v1:0"
+  "Resource": "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-sonnet-4-6-20260601-v1:0"
 }
 ```
 

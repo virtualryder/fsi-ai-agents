@@ -79,7 +79,7 @@
 │  │                                                                                    │  │
 │  │  AWS Bedrock (VPC Endpoint — no internet egress) or OpenAI via NAT Gateway        │  │
 │  │  ┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐    │  │
-│  │  │ Claude Sonnet /      │  │ Claude Haiku /        │  │ Bedrock Guardrails   │    │  │
+│  │  │ Claude Sonnet 4.6 /  │  │ Claude Haiku 4.5 /    │  │ Bedrock Guardrails   │    │  │
 │  │  │ GPT-4o               │  │ GPT-4o-mini           │  │ PII protection       │    │  │
 │  │  │ SAR drafting         │  │ Triage / scoring      │  │ Output filtering     │    │  │
 │  │  │ Dispute analysis     │  │ Fast-path nodes       │  │ Hallucination guard  │    │  │

@@ -417,7 +417,7 @@ import boto3
 # No API key needed — uses IAM role credentials
 
 llm = ChatBedrock(
-    model_id="anthropic.claude-3-5-sonnet-20241022-v2:0",
+    model_id="anthropic.claude-sonnet-4-6-20260601-v1:0",
     region_name="us-east-1",
     model_kwargs={
         "temperature": 0.1,      # Low temp for compliance precision
@@ -1314,7 +1314,7 @@ module "fcia_customer" {
 
   # ─── LLM Configuration ────────────────────────────────────────────────────
   llm_provider        = "bedrock"   # "bedrock" | "openai" | "azure_openai"
-  bedrock_model_id    = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+  bedrock_model_id    = "anthropic.claude-sonnet-4-6-20260601-v1:0"
 
   # ─── Authentication (Okta → AD federation) ────────────────────────────────
   # From: Okta Admin Console → Applications → FCIA App → Sign On → Identity Provider metadata

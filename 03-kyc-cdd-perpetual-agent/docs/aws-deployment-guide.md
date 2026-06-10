@@ -68,7 +68,7 @@ RequiresCompatibilities: [FARGATE]
 
 Environment:
   - Name: BEDROCK_MODEL_ID
-    Value: "anthropic.claude-3-5-sonnet-20241022-v2:0"
+    Value: "anthropic.claude-sonnet-4-6-20260601-v1:0"
     # Sonnet for all nodes — EDD packages need high-quality, citation-accurate output
   - Name: SQS_QUEUE_URL
     ValueFrom: arn:aws:secretsmanager:REGION:ACCOUNT:secret:/kyc-cdd/CUSTOMER_ID/sqs-url
@@ -321,7 +321,7 @@ module "kyc_cdd_customer" {
 
   # LLM (Sonnet for all nodes — EDD quality is critical)
   llm_provider    = "bedrock"
-  bedrock_model_id = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+  bedrock_model_id = "anthropic.claude-sonnet-4-6-20260601-v1:0"
 
   # Authentication
   cognito_okta_saml_metadata_url = "https://customer.okta.com/app/APP_ID/sso/saml/metadata"

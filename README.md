@@ -504,7 +504,8 @@ Payback period for full suite deployment: **< 6 months**
 | Component | Technology |
 |---|---|
 | Agent orchestration | LangGraph 0.2.28+ |
-| LLM | OpenAI GPT-4o (configurable: AWS Bedrock Claude, Azure OpenAI) |
+| LLM — primary (analysis/narrative) | OpenAI GPT-4o · AWS Bedrock **Claude Sonnet 4.6** (`anthropic.claude-sonnet-4-6-20260601-v1:0`) |
+| LLM — fast-path (triage/scoring) | AWS Bedrock **Claude Haiku 4.5** (`anthropic.claude-haiku-4-5-20251001`) |
 | UI | Streamlit (demo/POC) · FastAPI + Next.js (production) |
 | Vector store | ChromaDB (dev) · pgvector on Aurora (prod) |
 | Audit log | JSONL append-only (dev) · DynamoDB (prod) |

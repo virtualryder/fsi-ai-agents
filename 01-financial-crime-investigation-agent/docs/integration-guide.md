@@ -373,7 +373,7 @@ def _get_llm():
     )
     return ChatBedrock(
         client=bedrock_client,
-        model_id="anthropic.claude-3-5-sonnet-20241022-v2:0",
+        model_id="anthropic.claude-sonnet-4-6-20260601-v1:0",
         model_kwargs={"temperature": 0.1},
     )
 ```

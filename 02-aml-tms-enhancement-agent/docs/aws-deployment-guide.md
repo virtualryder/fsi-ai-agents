@@ -89,7 +89,7 @@ Environment:
   - Name: AWS_BEDROCK_MODEL_SCORING
     Value: "anthropic.claude-haiku-4-5-20251001"  # Fast, low-cost for scoring
   - Name: AWS_BEDROCK_MODEL_ANALYSIS
-    Value: "anthropic.claude-3-5-sonnet-20241022-v2:0"  # Full analysis node
+    Value: "anthropic.claude-sonnet-4-6-20260601-v1:0"  # Full analysis node
   - Name: SQS_QUEUE_URL
     ValueFrom: arn:aws:secretsmanager:REGION:ACCOUNT:secret:/tms-enhancement/CUSTOMER_ID/sqs-url
 
@@ -134,7 +134,7 @@ scoring_llm = ChatBedrock(
 # LLM contextual analysis node — full customer context review
 # Use Sonnet: higher quality reasoning for the 50%-weight analysis component
 analysis_llm = ChatBedrock(
-    model_id="anthropic.claude-3-5-sonnet-20241022-v2:0",
+    model_id="anthropic.claude-sonnet-4-6-20260601-v1:0",
     model_kwargs={
         "temperature": 0.1,
         "max_tokens": 2048,    # Full contextual analysis narrative
@@ -382,7 +382,7 @@ module "tms_enhancement_customer" {
   # LLM
   llm_provider              = "bedrock"
   bedrock_scoring_model_id  = "anthropic.claude-haiku-4-5-20251001"
-  bedrock_analysis_model_id = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+  bedrock_analysis_model_id = "anthropic.claude-sonnet-4-6-20260601-v1:0"
 
   # Authentication
   cognito_okta_saml_metadata_url = "https://customer.okta.com/app/APP_ID/sso/saml/metadata"

@@ -89,7 +89,7 @@ This suite is twelve purpose-built AI agents, each solving one high-cost problem
 │  └──────────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                    │
 │  SHARED PLATFORM LAYER (All 12 Agents)                                             │
-│  LangGraph StateGraph · AWS Bedrock · Cognito + Okta/AD Auth                      │
+│  LangGraph StateGraph · AWS Bedrock (Claude Sonnet 4.6 / Haiku 4.5) · Cognito + Okta/AD Auth │
 │  Immutable Append-Only Audit Trail · SR 11-7 Explainability · BSA/FATF Controls   │
 │  MCP Auth Gateway · ECS Fargate · Aurora PostgreSQL · S3 Object Lock (WORM)       │
 └────────────────────────────────────────────────────────────────────────────────────┘
