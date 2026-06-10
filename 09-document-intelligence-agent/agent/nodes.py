@@ -67,7 +67,25 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
+
+# ── Claude model tiers (Anthropic) ───────────────────────────────────────────
+# NARRATIVE tier — Claude Sonnet 4.6: regulatory narratives, SAR/dispute
+#   analysis, anything an examiner, reviewer, or customer will read.
+# FAST tier — Claude Haiku 4.5: high-volume triage, classification, and
+#   scoring-assist nodes where latency and unit cost dominate.
+# Override via env: CLAUDE_NARRATIVE_MODEL / CLAUDE_FAST_MODEL.
+# ── INTEGRATION POINT (production) ───────────────────────────────────────────
+# For VPC-contained inference, swap ChatAnthropic for ChatBedrockConverse
+# (langchain-aws) with Bedrock model IDs:
+#   anthropic.claude-sonnet-4-6-20260601-v1:0  (narrative)
+#   anthropic.claude-haiku-4-5-20251001        (fast)
+# ─────────────────────────────────────────────────────────────────────────────
+import os as _os_llm
+CLAUDE_NARRATIVE_MODEL = _os_llm.getenv("CLAUDE_NARRATIVE_MODEL", "claude-sonnet-4-6")
+CLAUDE_FAST_MODEL = _os_llm.getenv("CLAUDE_FAST_MODEL", "claude-haiku-4-5")
+CLAUDE_DEFAULT_MODEL = CLAUDE_NARRATIVE_MODEL
+
 
 from agent.prompts import (
     CLASSIFICATION_SYSTEM_PROMPT,
@@ -172,7 +190,7 @@ DOCUMENT_PRIORITY: Dict[str, str] = {
 
 # PII patterns for Python detection (never LLM)
 PII_PATTERNS = {
-    "SSN":            re.compile(r"\b(?!000|666|9\d{2})\d{3}[-\s]?\d{2}[-\s]?\d{4}\b"),
+    "SSN":            re.compile(r"\b(?!000|666)\d{3}[-\s]?\d{2}[-\s]?\d{4}\b"),
     "EIN":            re.compile(r"\b\d{2}-\d{7}\b"),
     "PASSPORT":       re.compile(r"\b[A-Z]{1,2}\d{6,9}\b"),
     "ACCOUNT_NUMBER": re.compile(r"\b\d{8,17}\b"),
@@ -194,11 +212,10 @@ PII_MASKS = {
 
 # ── LLM factory ───────────────────────────────────────────────────────────────
 
-def _get_llm() -> ChatOpenAI:
-    return ChatOpenAI(
-        model="gpt-4o",
+def _get_llm() -> ChatAnthropic:
+    return ChatAnthropic(model=CLAUDE_DEFAULT_MODEL,
         temperature=0,
-        api_key=os.getenv("OPENAI_API_KEY"),
+        api_key=os.getenv("ANTHROPIC_API_KEY"),
     )
 
 # ── Utility ───────────────────────────────────────────────────────────────────
@@ -216,6 +233,21 @@ def _append_audit(state: DocumentIntelligenceState, step: str, details: Dict[str
         **details,
     })
     return trail
+
+def _sanitize_text(text: str, max_length: int = 2000) -> str:
+    """
+    Strip control characters (except newline/tab) and cap length.
+
+    INPUT SANITIZATION CONTROL: free-text fields are sanitized before any
+    LLM call or state write. Newlines/tabs are legitimate document structure
+    and are preserved; NUL and other control bytes are removed; output is
+    truncated to max_length to bound LLM context and prevent resource abuse.
+    """
+    if not text:
+        return ""
+    cleaned = "".join(ch for ch in str(text) if ch in ("\n", "\t") or ord(ch) >= 32)
+    return cleaned[:max_length]
+
 
 def _sanitize_filename(filename: str) -> str:
     """Remove path components and control characters from filenames."""
@@ -246,6 +278,32 @@ def _mask_pii_in_text(text: str) -> Tuple[str, List[str], List[str]]:
             pii_found.append(pii_type)
             masked = pattern.sub(PII_MASKS[pii_type], masked)
     return masked, pii_found, []
+
+
+def _detect_and_mask_pii(text: str) -> Tuple[str, List[str]]:
+    """
+    Public PII masking contract: returns (masked_text, pii_types_found).
+
+    This is the stable two-tuple interface the test suite and downstream
+    callers depend on; _mask_pii_in_text is the internal three-tuple variant.
+    Keep BOTH names exported — renaming this again will break the security
+    test contract (tests/test_nodes.py PII section).
+    """
+    masked, pii_found, _ = _mask_pii_in_text(text)
+    return masked, pii_found
+
+
+def _mask_account_numbers(account: str) -> str:
+    """
+    Mask an account number preserving only the last 4 digits.
+    Contract: last-4 visible for identification; leading digits never survive.
+    """
+    if not account:
+        return "****"
+    cleaned = re.sub(r"[^\d]", "", str(account))
+    if not cleaned:
+        return "****"
+    return f"****{cleaned[-4:]}"
 
 def _detect_file_format(filename: str, content_bytes: Optional[bytes] = None) -> str:
     """Determine file format from extension and magic bytes."""
@@ -363,18 +421,27 @@ def document_intake_node(state: DocumentIntelligenceState) -> Dict[str, Any]:
     raw_bytes: Optional[bytes] = state.get("_raw_bytes")  # Transient — cleared after extraction
     content_text: Optional[str] = state.get("_content_text")  # Pre-extracted text path
 
-    file_size = len(raw_bytes) if raw_bytes else (len(content_text.encode()) if content_text else 0)
+    computed_size = len(raw_bytes) if raw_bytes else (len(content_text.encode()) if content_text else 0)
+    declared_size = int(state.get("file_size_bytes") or 0)
+    # Honor the larger of computed vs declared size — a caller cannot under-
+    # declare a payload to slip past the limit, and the LOS-integration path
+    # (metadata only, bytes fetched later) is sized by its declaration.
+    file_size = max(computed_size, declared_size)
 
-    # Size limit — 50MB
-    MAX_SIZE = 50 * 1024 * 1024
+    # Size limit — 10MB (memory-exhaustion control)
+    MAX_SIZE = 10 * 1024 * 1024
     if file_size > MAX_SIZE:
-        errors.append(f"Document size {file_size:,} bytes exceeds 50MB limit")
+        errors.append(f"Document size {file_size:,} bytes exceeds 10MB limit")
 
     # Compute SHA-256 hash
     if raw_bytes:
         doc_hash = hashlib.sha256(raw_bytes).hexdigest()
     elif content_text:
         doc_hash = hashlib.sha256(content_text.encode()).hexdigest()
+    elif state.get("document_hash"):
+        # LOS-integration path: metadata-first submission with a pre-computed
+        # hash; bytes are fetched by text_extraction. Accepted at intake.
+        doc_hash = state["document_hash"]
     else:
         doc_hash = hashlib.sha256(b"empty").hexdigest()
         errors.append("No document content provided")
@@ -387,6 +454,20 @@ def document_intake_node(state: DocumentIntelligenceState) -> Dict[str, Any]:
     if state.get("file_format"):
         file_format = state["file_format"]  # Respect explicitly set format
 
+    # SECURITY: unsupported/unknown formats are rejected at the gate —
+    # an .exe or unidentifiable file must never flow into text extraction.
+    if file_format == "UNKNOWN":
+        errors.append(
+            f"Unsupported file format for '{source_filename}' — document rejected at intake"
+        )
+
+    # Status contract: intake returns RECEIVED on success; REJECTED whenever
+    # any intake-level error exists (size, missing content, unknown format).
+    # The text_extraction node — not intake — moves the status to EXTRACTING.
+    intake_status = (
+        DocumentStatus.REJECTED.value if errors else DocumentStatus.RECEIVED.value
+    )
+
     audit = _append_audit(state, "document_intake", {
         "document_id": document_id,
         "source_filename_hash": _hash_filename(source_filename),  # Never plain filename in audit
@@ -394,6 +475,7 @@ def document_intake_node(state: DocumentIntelligenceState) -> Dict[str, Any]:
         "file_size_bytes": file_size,
         "document_hash": doc_hash[:16] + "...",  # Partial hash in audit (not full fingerprint)
         "source_system": state.get("source_system", "MANUAL"),
+        "status": intake_status,
         "errors": errors,
     })
 
@@ -406,7 +488,7 @@ def document_intake_node(state: DocumentIntelligenceState) -> Dict[str, Any]:
         "source_system": state.get("source_system", "MANUAL"),
         "submitted_by": state.get("submitted_by", "UNKNOWN"),
         "submission_timestamp": _now_utc(),
-        "document_status": DocumentStatus.EXTRACTING.value,
+        "document_status": intake_status,
         "audit_trail": audit,
         "completed_steps": list(state.get("completed_steps", [])) + ["document_intake"],
         "errors": errors,
@@ -434,6 +516,7 @@ def text_extraction_node(state: DocumentIntelligenceState) -> Dict[str, Any]:
 
     raw_bytes: Optional[bytes] = state.get("_raw_bytes")
     content_text: Optional[str] = state.get("_content_text")
+    cached_text = _get_text_from_cache(doc_hash) if doc_hash else ""
 
     if content_text:
         # Pre-extracted text path (fixture mode, plain text documents)
@@ -443,6 +526,14 @@ def text_extraction_node(state: DocumentIntelligenceState) -> Dict[str, Any]:
         ocr_conf = None
     elif raw_bytes:
         full_text, method, warnings, ocr_conf = _extract_text_from_bytes(raw_bytes, file_format, source_filename)
+    elif cached_text:
+        # LOS-integration path: text was extracted upstream and staged in the
+        # cache under this document's hash before graph invocation. Use it —
+        # this is the metadata-first submission flow accepted at intake.
+        full_text = cached_text
+        method = "PRE_STAGED_CACHE"
+        warnings = []
+        ocr_conf = None
     else:
         full_text = ""
         method = "FAILED"
@@ -457,8 +548,12 @@ def text_extraction_node(state: DocumentIntelligenceState) -> Dict[str, Any]:
     # This avoids passing large strings through state unnecessarily
     _store_text_in_cache(doc_hash, full_text)
 
-    # Only store a preview in state (500 chars)
-    preview = full_text[:500].replace("\n", " ").strip()
+    # Only store a preview in state (500 chars).
+    # SECURITY: state writes are a masking boundary. This node runs BEFORE
+    # pii_detection_node, so the preview must be masked here — raw PII must
+    # never enter graph state (checkpoints/audit serialize the full state).
+    masked_preview, _, _ = _mask_pii_in_text(full_text[:500])
+    preview = masked_preview.replace("\n", " ").strip()
     char_count = len(full_text)
 
     # Count pages (PDF) or estimate from line count
@@ -823,12 +918,51 @@ def validation_node(state: DocumentIntelligenceState) -> Dict[str, Any]:
                 pass
 
     if document_type in (DocumentType.SWIFT_MT103.value, DocumentType.WIRE_INSTRUCTION.value):
-        beneficiary_country = extracted.get("beneficiary_country", "")
-        high_risk_countries = {"IR", "KP", "SY", "CU", "VE", "MM", "BY"}
-        if beneficiary_country.upper() in high_risk_countries:
-            business_rule_violations.append(
-                f"Beneficiary country {beneficiary_country} is on OFAC high-risk country list — AML review required"
-            )
+        # ── CONTROL: screen ALL jurisdiction sources, fail-closed ─────────
+        # Jurisdiction lives in the BIC (chars 5–6) as well as any explicit
+        # country field. A wire whose jurisdiction cannot be determined is a
+        # violation, not a pass (mirrors Agent 10's sanctions fail-closed rule).
+        high_risk_countries = {"IR", "KP", "SY", "CU", "VE", "MM", "BY", "ZW", "RU", "AF", "SO", "SS", "LY", "YE"}
+        known_iso2 = {
+            "US", "GB", "DE", "FR", "CH", "JP", "CA", "AU", "NL", "SG", "HK",
+            "IE", "LU", "BE", "ES", "IT", "SE", "NO", "DK", "FI", "AT", "PT",
+            "NZ", "MX", "BR", "IN", "CN", "KR", "AE", "SA", "ZA", "PL", "CZ",
+        } | high_risk_countries
+
+        jurisdiction_sources = []
+        explicit_country = (extracted.get("beneficiary_country") or "").strip().upper()
+        if explicit_country:
+            jurisdiction_sources.append(("beneficiary_country", explicit_country))
+        for bic_field in ("beneficiary_bank_bic", "ordering_bank_bic"):
+            bic = (extracted.get(bic_field) or "").strip().upper()
+            if len(bic) >= 6:
+                jurisdiction_sources.append((bic_field, bic[4:6]))
+
+        for source, cc in jurisdiction_sources:
+            if cc in high_risk_countries:
+                business_rule_violations.append(
+                    f"{source} resolves to high-risk jurisdiction {cc} — "
+                    "OFAC/AML enhanced review required before processing"
+                )
+            elif cc not in known_iso2:
+                business_rule_violations.append(
+                    f"{source} country code '{cc}' is not a recognized jurisdiction — "
+                    "cannot verify sanctions status; fail-closed AML review required"
+                )
+
+    # ── Document date sanity: future-dated documents are invalid ──────────
+    doc_date = state.get("document_date") or extracted.get("document_date")
+    if doc_date:
+        try:
+            parsed = datetime.fromisoformat(str(doc_date).replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            if parsed > datetime.now(timezone.utc):
+                validation_errors.append(
+                    f"Document date {doc_date} is in the future — invalid document date"
+                )
+        except (ValueError, TypeError):
+            validation_warnings.append(f"Document date '{doc_date}' could not be parsed")
 
     validation_passed = len(validation_errors) == 0
 
@@ -882,9 +1016,16 @@ def confidence_scoring_node(state: DocumentIntelligenceState) -> Dict[str, Any]:
     f1 = doc_type_confidence
 
     # Factor 2: Field completeness (30%)
+    # CONTROL: missing_required_fields in state is authoritative evidence of
+    # incompleteness. A schema-lookup miss (total_required == 0) must NEVER
+    # convert declared-missing fields into a perfect completeness score —
+    # missing data degrades confidence, it does not inflate it.
     if total_required > 0:
-        fields_found = total_required - len(missing_required)
+        fields_found = max(total_required - len(missing_required), 0)
         f2 = fields_found / total_required
+    elif missing_required:
+        found_count = len([v for v in field_confidence_scores.values() if v is not None])
+        f2 = found_count / (found_count + len(missing_required))
     else:
         f2 = 1.0 if field_confidence_scores else 0.5
 
@@ -1047,7 +1188,7 @@ def human_review_gate(state: DocumentIntelligenceState) -> Dict[str, Any]:
         "corrections_count": len(reviewer_corrections),
     })
 
-    return {
+    result = {
         "reviewer_id": reviewer_id,
         "reviewer_decision": reviewer_decision,
         "reviewer_notes": reviewer_notes,
@@ -1056,6 +1197,17 @@ def human_review_gate(state: DocumentIntelligenceState) -> Dict[str, Any]:
         "audit_trail": audit,
         "completed_steps": list(state.get("completed_steps", [])) + ["human_review_gate"],
     }
+
+    # Terminal reviewer decisions set the document's final status here —
+    # audit_finalize reads document_status as-is, so a REJECT must flip the
+    # status at the gate or the document would finish as PENDING_REVIEW.
+    if reviewer_decision == "REJECT":
+        result["document_status"] = DocumentStatus.REJECTED.value
+    elif reviewer_decision == "REQUEST_RESUBMIT":
+        result["document_status"] = DocumentStatus.REJECTED.value
+        result["resubmission_requested"] = True
+
+    return result
 
 
 # ── Node 10: Enrichment ───────────────────────────────────────────────────────
@@ -1255,8 +1407,23 @@ def audit_finalize_node(state: DocumentIntelligenceState) -> Dict[str, Any]:
     # Clear text from cache (document processed — release memory)
     _TEXT_CACHE.pop(doc_hash, None)
 
+    # ── Resolve terminal status ────────────────────────────────────────────
+    # On HITL resume the reviewer decision may be injected directly into
+    # state (update_state as_node="human_review_gate"), in which case the
+    # gate function body never executes — so the terminal status must be
+    # resolved here, at the single point every path flows through.
+    reviewer_decision = state.get("reviewer_decision", "")
+    current_status = state.get("document_status", "UNKNOWN")
+    if reviewer_decision in ("REJECT", "REQUEST_RESUBMIT"):
+        final_status = DocumentStatus.REJECTED.value
+    elif reviewer_decision in ("APPROVE_AND_ROUTE", "CORRECT_AND_ROUTE"):
+        final_status = DocumentStatus.ROUTED.value
+    else:
+        final_status = current_status
+
     audit = _append_audit(state, "audit_finalize", {
-        "final_status": state.get("document_status", "UNKNOWN"),
+        "final_status": final_status,
+        "reviewer_decision": reviewer_decision or "N/A",
         "target_agents": state.get("target_agents", []),
         "composite_confidence": round(state.get("composite_confidence", 0.0), 4),
         "processing_time_seconds": round(elapsed, 2),
@@ -1264,7 +1431,13 @@ def audit_finalize_node(state: DocumentIntelligenceState) -> Dict[str, Any]:
     })
 
     return {
+        "document_status": final_status,
         "processing_time_seconds": elapsed,
         "audit_trail": audit,
         "completed_steps": list(state.get("completed_steps", [])) + ["audit_finalize"],
     }
+
+
+# ── Contract alias ───────────────────────────────────────────────────────────
+# tests/test_graph.py imports the HITL gate as human_review_gate_node.
+human_review_gate_node = human_review_gate

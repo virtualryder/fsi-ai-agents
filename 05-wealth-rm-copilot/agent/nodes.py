@@ -17,8 +17,26 @@ import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
+
+# ── Claude model tiers (Anthropic) ───────────────────────────────────────────
+# NARRATIVE tier — Claude Sonnet 4.6: regulatory narratives, SAR/dispute
+#   analysis, anything an examiner, reviewer, or customer will read.
+# FAST tier — Claude Haiku 4.5: high-volume triage, classification, and
+#   scoring-assist nodes where latency and unit cost dominate.
+# Override via env: CLAUDE_NARRATIVE_MODEL / CLAUDE_FAST_MODEL.
+# ── INTEGRATION POINT (production) ───────────────────────────────────────────
+# For VPC-contained inference, swap ChatAnthropic for ChatBedrockConverse
+# (langchain-aws) with Bedrock model IDs:
+#   anthropic.claude-sonnet-4-6-20260601-v1:0  (narrative)
+#   anthropic.claude-haiku-4-5-20251001        (fast)
+# ─────────────────────────────────────────────────────────────────────────────
+import os as _os_llm
+CLAUDE_NARRATIVE_MODEL = _os_llm.getenv("CLAUDE_NARRATIVE_MODEL", "claude-sonnet-4-6")
+CLAUDE_FAST_MODEL = _os_llm.getenv("CLAUDE_FAST_MODEL", "claude-haiku-4-5")
+CLAUDE_DEFAULT_MODEL = CLAUDE_NARRATIVE_MODEL
+
 
 from agent.state import (
     WealthRMState,
@@ -73,12 +91,12 @@ def _add_audit_entry(
     return trail
 
 
-def _get_llm(temperature: float = 0.3) -> ChatOpenAI:
+def _get_llm(temperature: float = 0.3) -> ChatAnthropic:
     """
     Return LLM instance for content drafting.
     temperature=0.3 for professional variation (vs. 0.0 for scoring).
     """
-    return ChatOpenAI(model="gpt-4o", temperature=temperature)
+    return ChatAnthropic(model=CLAUDE_DEFAULT_MODEL, temperature=temperature)
 
 
 def _steps_done(state: WealthRMState, node: str) -> List[str]:
@@ -869,7 +887,7 @@ def recommendation_engine(state: WealthRMState) -> Dict[str, Any]:
                f"rebalancing trades: {len(rebalancing_trades or [])}",
         node="recommendation_engine",
         data_sources=["ips_repository", "portfolio_data", "market_intel"],
-        ai_model="gpt-4o",
+        ai_model=CLAUDE_DEFAULT_MODEL,
         regulatory_basis="Reg BI care obligation — recommendations with alternatives documented",
     )
 
@@ -1053,7 +1071,7 @@ def content_drafting(state: WealthRMState) -> Dict[str, Any]:
         action=f"{output_type_map.get(request_type, 'DOCUMENT')} draft generated — "
                f"{len(draft)} characters, {len(talking_points)} talking points",
         node="content_drafting",
-        ai_model="gpt-4o",
+        ai_model=CLAUDE_DEFAULT_MODEL,
         regulatory_basis="FINRA 2210 — draft subject to compliance review before RM delivery",
     )
 

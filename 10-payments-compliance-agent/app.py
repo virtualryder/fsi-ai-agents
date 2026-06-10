@@ -11,7 +11,7 @@ management, and compliance risk scoring for financial institutions.
 
 DEMO MODE
 ---------
-When OPENAI_API_KEY is not configured, the app runs in demo mode using
+When ANTHROPIC_API_KEY is not configured, the app runs in demo mode using
 pre-computed outputs from data/fixtures/payment_scenarios.json. All four
 primary compliance paths are demonstrated:
   1. ACH Unauthorized Return (Reg E dispute, provisional credit)
@@ -62,7 +62,7 @@ SCENARIOS_PATH = BASE_DIR / "data" / "fixtures" / "payment_scenarios.json"
 RETURN_CODES_PATH = BASE_DIR / "data" / "fixtures" / "return_code_reference.json"
 ROUTING_MATRIX_PATH = BASE_DIR / "data" / "fixtures" / "routing_matrix.json"
 
-DEMO_MODE = not bool(os.getenv("OPENAI_API_KEY", "").strip())
+DEMO_MODE = not bool(os.getenv("ANTHROPIC_API_KEY", "").strip())
 
 RISK_TIER_COLORS = {
     "CRITICAL": "#D32F2F",
@@ -195,7 +195,7 @@ def render_submit_tab():
     if DEMO_MODE:
         st.info(
             "**Demo Mode:** Select a pre-built scenario below to see the full compliance "
-            "workflow output. Add `OPENAI_API_KEY` to your `.env` file to process live events."
+            "workflow output. Add `ANTHROPIC_API_KEY` to your `.env` file to process live events."
         )
         _render_demo_selector()
     else:
@@ -1340,7 +1340,7 @@ pip install -r requirements.txt
 **Step 2 — Configure environment**
 ```bash
 cp .env.example .env
-# Add your OPENAI_API_KEY to .env
+# Add your ANTHROPIC_API_KEY to .env
 ```
 
 **Step 3 — Run the dashboard**
@@ -1354,7 +1354,7 @@ Navigate to http://localhost:8510 in your browser.
 
 ### Demo Mode (No API Key Required)
 
-Without `OPENAI_API_KEY`, the app runs in demo mode using 4 pre-computed scenarios:
+Without `ANTHROPIC_API_KEY`, the app runs in demo mode using 4 pre-computed scenarios:
 
 | Scenario | Path | Key Concepts |
 |---|---|---|

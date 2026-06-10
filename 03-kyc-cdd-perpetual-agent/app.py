@@ -65,7 +65,7 @@ with st.sidebar:
     st.markdown("- **03 · KYC/CDD** ← you are here")
     st.divider()
     st.markdown("**Stack**")
-    st.markdown("LangGraph · GPT-4o · Streamlit")
+    st.markdown("LangGraph · Claude Sonnet 4.6 · Streamlit")
     st.markdown("**Regulatory**")
     st.markdown("FinCEN CDD Rule · FATF R.10/R.12 · FFIEC · SR 11-7")
 

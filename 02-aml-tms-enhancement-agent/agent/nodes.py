@@ -24,7 +24,7 @@ import time
 from datetime import datetime
 from typing import Any
 
-from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
 
 from agent.state import AlertScoringState, AuditEntry
 from agent.prompts import (
@@ -43,6 +43,24 @@ from scoring.threshold_manager import ThresholdManager
 from tools.customer_context import get_customer_summary
 from tools.historical_patterns import get_historical_patterns
 from tools.tms_connector import update_alert_disposition
+
+# ── Claude model tiers (Anthropic) ───────────────────────────────────────────
+# NARRATIVE tier — Claude Sonnet 4.6: regulatory narratives, SAR/dispute
+#   analysis, anything an examiner, reviewer, or customer will read.
+# FAST tier — Claude Haiku 4.5: high-volume triage, classification, and
+#   scoring-assist nodes where latency and unit cost dominate.
+# Override via env: CLAUDE_NARRATIVE_MODEL / CLAUDE_FAST_MODEL.
+# ── INTEGRATION POINT (production) ───────────────────────────────────────────
+# For VPC-contained inference, swap ChatAnthropic for ChatBedrockConverse
+# (langchain-aws) with Bedrock model IDs:
+#   anthropic.claude-sonnet-4-6-20260601-v1:0  (narrative)
+#   anthropic.claude-haiku-4-5-20251001        (fast)
+# ─────────────────────────────────────────────────────────────────────────────
+import os as _os_llm
+CLAUDE_NARRATIVE_MODEL = _os_llm.getenv("CLAUDE_NARRATIVE_MODEL", "claude-sonnet-4-6")
+CLAUDE_FAST_MODEL = _os_llm.getenv("CLAUDE_FAST_MODEL", "claude-haiku-4-5")
+CLAUDE_DEFAULT_MODEL = CLAUDE_FAST_MODEL
+
 from tools.suppression_engine import (
     record_suppression,
     record_downgrade,
@@ -52,7 +70,7 @@ from tools.suppression_engine import (
 
 logger = logging.getLogger(__name__)
 
-_llm = ChatOpenAI(model="gpt-4o", temperature=0.0)
+_llm = ChatAnthropic(model=CLAUDE_DEFAULT_MODEL, temperature=0.0)
 _threshold_manager = ThresholdManager()
 
 
@@ -83,7 +101,7 @@ def _append_audit_llm(state: AlertScoringState, action: str, details: dict, sour
         action=action,
         details=details,
         data_sources=sources,
-        ai_model_used="gpt-4o",
+        ai_model_used="claude-sonnet-4-6",
     ))
     return trail
 
@@ -388,7 +406,7 @@ def llm_false_positive_analysis(state: AlertScoringState) -> AlertScoringState:
         state, "LLM_ANALYSIS_COMPLETE",
         {"fp_probability": llm_fp_prob, "confidence": llm_confidence,
          "recommendation": llm_recommendation, "regulatory_override": llm_reg_override},
-        ["gpt-4o", "scoring_features", "historical_patterns"],
+        ["claude-sonnet-4-6", "scoring_features", "historical_patterns"],
     )
 
     return {
@@ -584,7 +602,7 @@ def execute_suppression(state: AlertScoringState) -> AlertScoringState:
         {"suppression_id": suppression_record["suppression_id"],
          "fp_probability": routing["fp_probability"],
          "review_date": suppression_record["mandatory_review_date"]},
-        ["suppression_engine", "tms_connector", "gpt-4o"],
+        ["suppression_engine", "tms_connector", "claude-sonnet-4-6"],
     )
 
     logger.info(

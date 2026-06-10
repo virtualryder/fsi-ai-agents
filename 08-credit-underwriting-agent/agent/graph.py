@@ -56,10 +56,14 @@ def _route_after_routing_decision(state: CreditUnderwritingState) -> str:
     """
     Route to HITL gate or skip directly to memo drafting.
     Python-only — no LLM involvement in this decision.
+
+    FAIL-SAFE (Agent 12 idiom): only an EXPLICIT False skips human review.
+    None / missing / 0 / any truthy value all route to the HITL gate, so a
+    dropped or corrupted flag can never bypass mandatory review.
     """
-    if state.get("human_review_required"):
-        return "human_review_gate"
-    return "credit_memo_drafting"
+    if state.get("human_review_required") is False:
+        return "credit_memo_drafting"
+    return "human_review_gate"
 
 
 def _route_after_human_review(state: CreditUnderwritingState) -> str:

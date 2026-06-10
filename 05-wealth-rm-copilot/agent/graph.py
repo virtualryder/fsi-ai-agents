@@ -152,7 +152,7 @@ def build_wealth_rm_graph(use_memory: bool = True):
     workflow.add_node("recommendation_engine", recommendation_engine)
 
     # NODE 8: Content Drafting
-    # GPT-4o drafts the primary output document based on request type:
+    # Claude Sonnet 4.6 drafts the primary output document based on request type:
     #   MEETING_PREP     → client briefing with talking points
     #   INVESTMENT/REBAL → formal proposal with Reg BI rationale
     #   PORTFOLIO_REVIEW → performance review with forward commentary
@@ -233,7 +233,7 @@ graph TD
     E --> F[suitability_check<br/>Reg BI · FINRA 2111 · ERISA<br/>Python — not LLM]
     F -->|UNSUITABLE| G[block_unsuitable<br/>Surface to RM · Stop Workflow]
     F -->|SUITABLE / NOTE / REVIEW| H[recommendation_engine<br/>IPS-Aligned Ideas · Cost Analysis<br/>Alternatives Considered]
-    H --> I[content_drafting<br/>GPT-4o Draft<br/>Briefing · Proposal · Review · Letter]
+    H --> I[content_drafting<br/>Claude Sonnet 4.6 Draft<br/>Briefing · Proposal · Review · Letter]
     I --> J[compliance_review<br/>FINRA 2210 · Disclosures<br/>Prohibited Language Check]
     J --> K[👤 rm_approval_gate<br/>RM Reviews · Approves · Modifies<br/>RM is Accountable Professional]
     K --> L[finalize_output<br/>Archive · CRM Log · Audit Trail]

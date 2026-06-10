@@ -6,7 +6,7 @@
 #
 #   REAL-TIME PATH (target < 200ms — runs before transaction approval):
 #     transaction_intake → account_context_lookup → feature_extraction →
-#     rule_engine_prescoring → composite_scoring → routing_decision →
+#     rule_engine_prescoring → composite_scoring → [conditional route] →
 #     {BLOCK → block_transaction | STEP_UP → step_up_auth |
 #      ALLOW → allow_transaction | ANALYST_REVIEW → flag_for_review}
 #     → finalize_decision
@@ -22,7 +22,7 @@
 #
 # LangGraph concepts used:
 #   - StateGraph with FraudDetectionState TypedDict
-#   - Conditional edges: routing_decision branches to 4 outcomes
+#   - Conditional edges: _route_after_scoring branches to 4 outcomes
 #   - interrupt_before human_review_gate: analyst reviews ANALYST_REVIEW cases
 #   - MemorySaver: enables HITL interrupt + resume pattern
 # ============================================================
@@ -41,7 +41,6 @@ from agent.nodes import (
     behavioral_analysis,
     llm_fraud_analysis,
     composite_scoring,
-    routing_decision,
     block_transaction,
     step_up_authentication,
     flag_for_analyst_review,
@@ -163,7 +162,7 @@ def build_fraud_detection_graph(use_memory: bool = True):
     workflow.add_node("behavioral_analysis", behavioral_analysis)
 
     # NODE 7: LLM Fraud Analysis
-    # GPT-4o contextual analysis across all gathered signals.
+    # Claude Sonnet 4.6 contextual analysis across all gathered signals.
     # Generates: fraud probability (0-100), fraud type hypothesis,
     # plain-language reasoning for analyst review.
     workflow.add_node("llm_fraud_analysis", llm_fraud_analysis)
@@ -271,7 +270,7 @@ graph TD
     D --> E[rule_engine_prescoring<br/>Deterministic Rules<br/>Velocity · Geography · MCC]
     E --> F[device_intelligence<br/>Device Risk · Impossible Travel<br/>VPN/Proxy · IP Reputation]
     F --> G[behavioral_analysis<br/>Session Anomaly · Time-of-Day<br/>New Payee · Login Pattern]
-    G --> H[llm_fraud_analysis<br/>GPT-4o Contextual Analysis<br/>Fraud Type Hypothesis]
+    G --> H[llm_fraud_analysis<br/>Claude Sonnet 4.6 Contextual Analysis<br/>Fraud Type Hypothesis]
     H --> I[composite_scoring<br/>Rule 30% · LLM 50% · History 20%]
     I --> J{{routing_decision<br/>Fraud Score Threshold}}
     J -->|score ≥ 85| K[block_transaction<br/>Decline · Reg E Disclosure<br/>Case Created]

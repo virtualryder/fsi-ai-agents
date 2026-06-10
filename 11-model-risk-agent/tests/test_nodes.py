@@ -458,7 +458,11 @@ class TestAuditTrail(unittest.TestCase):
         self.assertIn("timestamp_utc", trail[0])
         ts = trail[0]["timestamp_utc"]
         self.assertIn("T", ts)  # ISO format
-        self.assertIn("+", ts) or self.assertIn("Z", ts)
+        # UTC marker: either explicit offset (+00:00) or Z suffix is valid ISO-8601 UTC
+        self.assertTrue(
+            ts.endswith("+00:00") or ts.endswith("Z"),
+            f"Timestamp must be UTC-marked ISO-8601, got: {ts}",
+        )
 
     def test_audit_finalize_records_retention_policy(self):
         """Audit finalize must document the 10-year retention policy."""

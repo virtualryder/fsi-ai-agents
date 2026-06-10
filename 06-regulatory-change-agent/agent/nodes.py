@@ -23,8 +23,26 @@ import os
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 
-from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import SystemMessage, HumanMessage
+
+# ── Claude model tiers (Anthropic) ───────────────────────────────────────────
+# NARRATIVE tier — Claude Sonnet 4.6: regulatory narratives, SAR/dispute
+#   analysis, anything an examiner, reviewer, or customer will read.
+# FAST tier — Claude Haiku 4.5: high-volume triage, classification, and
+#   scoring-assist nodes where latency and unit cost dominate.
+# Override via env: CLAUDE_NARRATIVE_MODEL / CLAUDE_FAST_MODEL.
+# ── INTEGRATION POINT (production) ───────────────────────────────────────────
+# For VPC-contained inference, swap ChatAnthropic for ChatBedrockConverse
+# (langchain-aws) with Bedrock model IDs:
+#   anthropic.claude-sonnet-4-6-20260601-v1:0  (narrative)
+#   anthropic.claude-haiku-4-5-20251001        (fast)
+# ─────────────────────────────────────────────────────────────────────────────
+import os as _os_llm
+CLAUDE_NARRATIVE_MODEL = _os_llm.getenv("CLAUDE_NARRATIVE_MODEL", "claude-sonnet-4-6")
+CLAUDE_FAST_MODEL = _os_llm.getenv("CLAUDE_FAST_MODEL", "claude-haiku-4-5")
+CLAUDE_DEFAULT_MODEL = CLAUDE_NARRATIVE_MODEL
+
 
 from agent.state import (
     ChangeManagementState,
@@ -54,10 +72,9 @@ logger = logging.getLogger(__name__)
 
 def _get_llm():
     """Initialize LLM client. Centralized for easy model swapping."""
-    return ChatOpenAI(
-        model="gpt-4o",
+    return ChatAnthropic(model=CLAUDE_DEFAULT_MODEL,
         temperature=0,
-        api_key=os.getenv("OPENAI_API_KEY"),
+        api_key=os.getenv("ANTHROPIC_API_KEY"),
     )
 
 
@@ -77,7 +94,7 @@ def _add_audit_entry(
         "action": action,
         "node": node,
         "data_sources_accessed": data_sources or [],
-        "ai_model_used": "gpt-4o" if used_llm else None,
+        "ai_model_used": "claude-sonnet-4-6" if used_llm else None,
         "regulatory_basis": regulatory_basis,
         "change_id": state.get("change_id"),
         "change_title": state.get("change_title"),

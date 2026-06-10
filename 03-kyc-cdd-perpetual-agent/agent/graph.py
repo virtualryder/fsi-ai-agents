@@ -42,7 +42,6 @@ from agent.nodes import (
     watchlist_screening,
     adverse_media_check,
     risk_rescoring,
-    routing_decision,
     edd_package_generation,
     rm_notification,
     human_review_gate,

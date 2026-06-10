@@ -20,7 +20,7 @@ class AuditEntry(TypedDict):
     action: str
     details: Dict[str, Any]
     data_sources: List[str]
-    ai_model_used: Optional[str]  # e.g. "gpt-4o" — required by SR 11-7
+    ai_model_used: Optional[str]  # e.g. "claude-sonnet-4-6" — required by SR 11-7
 
 
 class RawAlert(TypedDict):

@@ -79,9 +79,9 @@ with st.sidebar:
     """)
 
     st.divider()
-    api_key = st.text_input("OpenAI API Key", type="password", value=os.getenv("OPENAI_API_KEY", ""))
+    api_key = st.text_input("OpenAI API Key", type="password", value=os.getenv("ANTHROPIC_API_KEY", ""))
     if api_key:
-        os.environ["OPENAI_API_KEY"] = api_key
+        os.environ["ANTHROPIC_API_KEY"] = api_key
 
     st.divider()
     st.markdown("**Suitability Routing:**")
@@ -99,7 +99,7 @@ with st.sidebar:
 st.title("💼 Wealth & RM Copilot")
 st.markdown(
     "**LangGraph 10-Node Pipeline** · Client Profile · Portfolio Analysis · Reg BI Suitability · "
-    "GPT-4o Drafting · FINRA 2210 Compliance · RM Approval Gate"
+    "Claude Sonnet 4.6 Drafting · FINRA 2210 Compliance · RM Approval Gate"
 )
 
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
@@ -157,7 +157,7 @@ with tab1:
     st.divider()
     if st.session_state.selected_request:
         if st.button("🚀 Run Workflow", type="primary", use_container_width=True):
-            if not os.getenv("OPENAI_API_KEY"):
+            if not os.getenv("ANTHROPIC_API_KEY"):
                 st.warning("OpenAI API key required.")
             else:
                 st.session_state.running = True

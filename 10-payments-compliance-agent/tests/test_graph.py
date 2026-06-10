@@ -17,7 +17,7 @@ These tests verify properties of the full 12-node pipeline:
 MOCKING STRATEGY
 -----------------
 The OpenAI API is mocked in all tests. Tests use unittest.mock.patch
-to replace the ChatOpenAI class. The mock returns structurally valid
+to replace the ChatAnthropic class. The mock returns structurally valid
 JSON responses for the three LLM nodes (dispute_analysis, compliance_analysis,
 resolution_drafting). This isolates integration test outcomes from API
 availability and cost.
@@ -89,7 +89,7 @@ CUSTOMER_NOTICE_RESPONSE = json.dumps({
 
 
 def _make_mock_llm_response(content: str) -> MagicMock:
-    """Create a mock ChatOpenAI response with the given JSON content."""
+    """Create a mock ChatAnthropic response with the given JSON content."""
     mock_message = MagicMock()
     mock_message.content = content
     mock_response = MagicMock()
@@ -265,12 +265,12 @@ class TestRoutingFunctions:
 class TestHITLBehavior:
     """Tests for Human-in-the-Loop pause behavior."""
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_graph_pauses_for_ofac_hit(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_graph_pauses_for_ofac_hit(self, mock_anthropic_class):
         """Graph must pause at human_review_gate when OFAC hit is detected."""
         mock_instance = MagicMock()
         mock_instance.invoke.return_value = _make_mock_llm_response(COMPLIANCE_ANALYSIS_RESPONSE)
-        mock_openai_class.return_value = mock_instance
+        mock_anthropic_class.return_value = mock_instance
 
         from agent.graph import build_payments_compliance_graph
 
@@ -296,13 +296,13 @@ class TestHITLBehavior:
             "Graph must be paused for OFAC hit — interrupt_before should be active"
         )
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_noc_event_auto_resolves_without_hitl(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_noc_event_auto_resolves_without_hitl(self, mock_anthropic_class):
         """Low-risk NOC event should complete without triggering HITL pause."""
         mock_instance = MagicMock()
         # NOC events don't trigger dispute_analysis or compliance_analysis LLM nodes
         mock_instance.invoke.return_value = _make_mock_llm_response(COMPLIANCE_ANALYSIS_RESPONSE)
-        mock_openai_class.return_value = mock_instance
+        mock_anthropic_class.return_value = mock_instance
 
         from agent.graph import build_payments_compliance_graph
 
@@ -336,8 +336,8 @@ class TestHITLBehavior:
 class TestSecurityIntegration:
     """End-to-end security property tests."""
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_no_full_account_number_in_final_state(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_no_full_account_number_in_final_state(self, mock_anthropic_class):
         """Full account numbers must not appear in final state after pipeline execution.
 
         CRITICAL: This test verifies the PII masking architecture end-to-end.
@@ -349,7 +349,7 @@ class TestSecurityIntegration:
             _make_mock_llm_response(DISPUTE_ANALYSIS_RESPONSE),
             _make_mock_llm_response(COMPLIANCE_ANALYSIS_RESPONSE),
         ]
-        mock_openai_class.return_value = mock_instance
+        mock_anthropic_class.return_value = mock_instance
 
         from agent.nodes import payment_intake_node, sanctions_screening_node
 
@@ -445,15 +445,15 @@ class TestSecurityIntegration:
 class TestFullPipeline:
     """Full pipeline tests with mocked LLM."""
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_unauthorized_return_pipeline_complete(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_unauthorized_return_pipeline_complete(self, mock_anthropic_class):
         """R10 unauthorized return should traverse all nodes and pause for HITL."""
         mock_instance = MagicMock()
         mock_instance.invoke.side_effect = [
             _make_mock_llm_response(DISPUTE_ANALYSIS_RESPONSE),
             _make_mock_llm_response(COMPLIANCE_ANALYSIS_RESPONSE),
         ]
-        mock_openai_class.return_value = mock_instance
+        mock_anthropic_class.return_value = mock_instance
 
         from agent.graph import build_payments_compliance_graph
 
@@ -480,8 +480,8 @@ class TestFullPipeline:
         # Verify routing was set
         assert state_values.get("target_team") is not None or True
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_reviewer_approve_leads_to_resolution(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_reviewer_approve_leads_to_resolution(self, mock_anthropic_class):
         """After HITL pause, APPROVE_RESOLUTION should trigger resolution drafting."""
         mock_instance = MagicMock()
         # First set of calls: dispute analysis + compliance analysis
@@ -492,7 +492,7 @@ class TestFullPipeline:
             _make_mock_llm_response(CUSTOMER_NOTICE_RESPONSE),
             _make_mock_llm_response(RESOLUTION_MEMO_RESPONSE),
         ]
-        mock_openai_class.return_value = mock_instance
+        mock_anthropic_class.return_value = mock_instance
 
         from agent.graph import build_payments_compliance_graph
 
@@ -531,15 +531,15 @@ class TestFullPipeline:
             # Resolution type should still be set
             assert final_state.get("resolution_type") is not None or True
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_audit_trail_grows_across_full_pipeline(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_audit_trail_grows_across_full_pipeline(self, mock_anthropic_class):
         """Audit trail should grow (not shrink) as nodes execute across the pipeline."""
         mock_instance = MagicMock()
         mock_instance.invoke.side_effect = [
             _make_mock_llm_response(DISPUTE_ANALYSIS_RESPONSE),
             _make_mock_llm_response(COMPLIANCE_ANALYSIS_RESPONSE),
         ]
-        mock_openai_class.return_value = mock_instance
+        mock_anthropic_class.return_value = mock_instance
 
         from agent.graph import build_payments_compliance_graph
 
@@ -551,6 +551,10 @@ class TestFullPipeline:
         trail_lengths = []
         for chunk in graph.stream(event, config=config):
             for node_name, node_state in chunk.items():
+                # Newer langgraph versions emit "__interrupt__" entries whose
+                # value is a tuple, not a node-state dict — skip those markers.
+                if not isinstance(node_state, dict):
+                    continue
                 trail = node_state.get("audit_trail", [])
                 if trail:
                     trail_lengths.append((node_name, len(trail)))

@@ -16,7 +16,7 @@ services:
       - "8501:8501"
     environment:
       - PORT=8501
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - DATABASE_URL=postgresql://aml_user:aml_pass@postgres:5432/aml_db
       - LOG_LEVEL=INFO
       - BANK_NAME=${BANK_NAME:-First National Bank Demo}

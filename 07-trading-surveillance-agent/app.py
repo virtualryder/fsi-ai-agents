@@ -857,5 +857,5 @@ with tab6:
         st.dataframe(weights_df, use_container_width=True, hide_index=True)
 
         st.subheader("API Configuration")
-        st.text_input("OpenAI API Key", type="password", value=os.getenv("OPENAI_API_KEY", ""),
-                      help="Managed via OPENAI_API_KEY environment variable")
+        st.text_input("OpenAI API Key", type="password", value=os.getenv("ANTHROPIC_API_KEY", ""),
+                      help="Managed via ANTHROPIC_API_KEY environment variable")

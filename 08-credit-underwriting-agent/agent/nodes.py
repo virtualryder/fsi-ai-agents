@@ -32,12 +32,33 @@ from __future__ import annotations
 
 import json
 import os
+import logging
 import re
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
-from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
+
+logger = logging.getLogger(__name__)
+
+# ── Claude model tiers (Anthropic) ───────────────────────────────────────────
+# NARRATIVE tier — Claude Sonnet 4.6: regulatory narratives, SAR/dispute
+#   analysis, anything an examiner, reviewer, or customer will read.
+# FAST tier — Claude Haiku 4.5: high-volume triage, classification, and
+#   scoring-assist nodes where latency and unit cost dominate.
+# Override via env: CLAUDE_NARRATIVE_MODEL / CLAUDE_FAST_MODEL.
+# ── INTEGRATION POINT (production) ───────────────────────────────────────────
+# For VPC-contained inference, swap ChatAnthropic for ChatBedrockConverse
+# (langchain-aws) with Bedrock model IDs:
+#   anthropic.claude-sonnet-4-6-20260601-v1:0  (narrative)
+#   anthropic.claude-haiku-4-5-20251001        (fast)
+# ─────────────────────────────────────────────────────────────────────────────
+import os as _os_llm
+CLAUDE_NARRATIVE_MODEL = _os_llm.getenv("CLAUDE_NARRATIVE_MODEL", "claude-sonnet-4-6")
+CLAUDE_FAST_MODEL = _os_llm.getenv("CLAUDE_FAST_MODEL", "claude-haiku-4-5")
+CLAUDE_DEFAULT_MODEL = CLAUDE_NARRATIVE_MODEL
+
 
 from agent.prompts import (
     ADVERSE_ACTION_SYSTEM_PROMPT,
@@ -164,18 +185,78 @@ FLAGGED_CENSUS_TRACTS = {"17031838400", "06037207400", "36061010000"}
 
 # ── LLM factory ───────────────────────────────────────────────────────────────
 
-def _get_llm() -> ChatOpenAI:
+def _get_llm() -> ChatAnthropic:
     """Return a deterministic, zero-temperature LLM for narrative generation."""
-    return ChatOpenAI(
-        model="gpt-4o",
+    return ChatAnthropic(model=CLAUDE_DEFAULT_MODEL,
         temperature=0,
-        api_key=os.getenv("OPENAI_API_KEY"),
+        api_key=os.getenv("ANTHROPIC_API_KEY"),
     )
 
 # ── Utility ───────────────────────────────────────────────────────────────────
 
 def _now_utc() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _first_present(*values, default=None):
+    """
+    Return the first value that is not None, else the default.
+
+    Why this exists (CONTROL): `state.get(key, default)` returns None when the
+    key is PRESENT with a None value — so `float(state.get(k, 0.0))` crashes on
+    missing bureau data. In a lending pipeline an unhandled crash is a control
+    failure: it kills the run BEFORE the fair-lending HITL gate. Missing data
+    must degrade to a reviewable default, never to an exception.
+    """
+    for v in values:
+        if v is not None:
+            return v
+    return default
+
+
+def _coerce_num(value, cast, default):
+    """Cast to int/float, treating None/invalid as the default (fail-soft)."""
+    try:
+        return cast(value)
+    except (TypeError, ValueError):
+        return cast(default)
+
+
+def fail_safe_node(node_fn):
+    """
+    Decorator: a node exception must NEVER crash the underwriting pipeline.
+
+    FAIL-SAFE ROUTING CONTROL (Agent 12 idiom, applied suite-wide):
+    Any unhandled exception inside a node routes the application to mandatory
+    human review with the error recorded in state and the audit trail. The
+    graph keeps moving toward the HITL gate; it does not die before it.
+    """
+    import functools
+
+    @functools.wraps(node_fn)
+    def wrapper(state):
+        try:
+            return node_fn(state)
+        except Exception as exc:  # noqa: BLE001 — deliberate catch-all at the node boundary
+            node_name = node_fn.__name__
+            err = f"{node_name} failed: {type(exc).__name__}: {exc}"
+            logger.exception("Node %s raised — routing to human review", node_name)
+            errors = list(state.get("errors", [])) + [err]
+            audit = _append_audit(state, node_name, {
+                "status": "NODE_ERROR",
+                "error": err,
+                "fail_safe_action": "ROUTED_TO_HUMAN_REVIEW",
+            })
+            return {
+                "errors": errors,
+                "audit_trail": audit,
+                "human_review_required": True,
+                "human_review_reasons": list(state.get("human_review_reasons", []))
+                + [f"SYSTEM ERROR in {node_name} — manual underwriting review required"],
+                "completed_steps": list(state.get("completed_steps", [])) + [node_name],
+            }
+
+    return wrapper
 
 def _append_audit(state: CreditUnderwritingState, step: str, details: Dict[str, Any]) -> list:
     """Append a timestamped entry to the audit trail. Entries are never modified."""
@@ -225,6 +306,7 @@ def _calculate_monthly_payment(principal: float, annual_rate: float, term_months
 
 # ── Node 1: Application Intake ────────────────────────────────────────────────
 
+@fail_safe_node
 def application_intake_node(state: CreditUnderwritingState) -> Dict[str, Any]:
     """
     Validate and sanitize the incoming application.
@@ -233,7 +315,7 @@ def application_intake_node(state: CreditUnderwritingState) -> Dict[str, Any]:
     """
     application_id = state.get("application_id") or f"APP-{uuid.uuid4().hex[:8].upper()}"
     loan_type = state.get("loan_type", "")
-    requested_amount = float(state.get("requested_amount", 0))
+    requested_amount = _coerce_num(state.get("requested_amount"), float, 0)
     errors = list(state.get("errors", []))
 
     # Validate loan type
@@ -273,6 +355,7 @@ def application_intake_node(state: CreditUnderwritingState) -> Dict[str, Any]:
 
 # ── Node 2: Applicant Profile Lookup ─────────────────────────────────────────
 
+@fail_safe_node
 def applicant_profile_lookup_node(state: CreditUnderwritingState) -> Dict[str, Any]:
     """
     Retrieve applicant relationship history and existing account data.
@@ -311,6 +394,7 @@ def applicant_profile_lookup_node(state: CreditUnderwritingState) -> Dict[str, A
 
 # ── Node 3: Document Verification ────────────────────────────────────────────
 
+@fail_safe_node
 def document_verification_node(state: CreditUnderwritingState) -> Dict[str, Any]:
     """
     Verify that all required documents are present for the loan type.
@@ -352,6 +436,7 @@ def document_verification_node(state: CreditUnderwritingState) -> Dict[str, Any]
 
 # ── Node 4: Credit Bureau Pull ────────────────────────────────────────────────
 
+@fail_safe_node
 def credit_bureau_pull_node(state: CreditUnderwritingState) -> Dict[str, Any]:
     """
     Retrieve credit bureau data and run OFAC screening.
@@ -377,20 +462,29 @@ def credit_bureau_pull_node(state: CreditUnderwritingState) -> Dict[str, Any]:
             profiles = json.load(f)
         bureau_data = profiles.get(applicant_id, {}).get("credit_bureau", {})
 
-    credit_score = int(bureau_data.get("credit_score", state.get("credit_score", 650)))
-    credit_score_model = bureau_data.get("credit_score_model", state.get("credit_score_model", "FICO_8"))
-    derogatory_marks = int(bureau_data.get("derogatory_marks", state.get("derogatory_marks", 0)))
-    bankruptcy_flag = bool(bureau_data.get("bankruptcy_flag", state.get("bankruptcy_flag", False)))
-    bankruptcy_chapter = bureau_data.get("bankruptcy_chapter", state.get("bankruptcy_chapter"))
-    bankruptcy_discharge_years = bureau_data.get("bankruptcy_discharge_years", state.get("bankruptcy_discharge_years", 10.0))
-    foreclosure_flag = bool(bureau_data.get("foreclosure_flag", state.get("foreclosure_flag", False)))
-    collections_count = int(bureau_data.get("collections_count", state.get("collections_count", 0)))
-    collections_balance = float(bureau_data.get("collections_balance", state.get("collections_balance", 0.0)))
-    thin_file_flag = bool(bureau_data.get("thin_file_flag", state.get("thin_file_flag", False)))
-    recent_inquiries_90d = int(bureau_data.get("recent_inquiries_90d", state.get("recent_inquiries_90d", 0)))
+    # None-safe coercion: a key present-with-None in state must behave like
+    # missing data (default applies), never like a float(None) crash.
+    credit_score = _coerce_num(_first_present(bureau_data.get("credit_score"), state.get("credit_score")), int, 650)
+    credit_score_model = _first_present(bureau_data.get("credit_score_model"), state.get("credit_score_model"), default="FICO_8")
+    derogatory_marks = _coerce_num(_first_present(bureau_data.get("derogatory_marks"), state.get("derogatory_marks")), int, 0)
+    bankruptcy_flag = bool(_first_present(bureau_data.get("bankruptcy_flag"), state.get("bankruptcy_flag"), default=False))
+    bankruptcy_chapter = _first_present(bureau_data.get("bankruptcy_chapter"), state.get("bankruptcy_chapter"))
+    bankruptcy_discharge_years = _coerce_num(
+        _first_present(bureau_data.get("bankruptcy_discharge_years"), state.get("bankruptcy_discharge_years")), float, 10.0)
+    foreclosure_flag = bool(_first_present(bureau_data.get("foreclosure_flag"), state.get("foreclosure_flag"), default=False))
+    collections_count = _coerce_num(_first_present(bureau_data.get("collections_count"), state.get("collections_count")), int, 0)
+    collections_balance = _coerce_num(
+        _first_present(bureau_data.get("collections_balance"), state.get("collections_balance")), float, 0.0)
+    thin_file_flag = bool(_first_present(bureau_data.get("thin_file_flag"), state.get("thin_file_flag"), default=False))
+    recent_inquiries_90d = _coerce_num(
+        _first_present(bureau_data.get("recent_inquiries_90d"), state.get("recent_inquiries_90d")), int, 0)
 
     # OFAC check — hard block; cannot be overridden downstream
-    ofac_hit = bool(bureau_data.get("ofac_hit", state.get("ofac_hit", False)))
+    # STICKY CONTROL: an OFAC hit already present in state can NEVER be
+    # cleared by a subsequent (clean) bureau response — only a BSA Officer
+    # can clear a sanctions match, and that happens outside this pipeline.
+    # OR-semantics: hit if EITHER the prior state OR the bureau pull flags it.
+    ofac_hit = bool(state.get("ofac_hit", False)) or bool(bureau_data.get("ofac_hit", False))
     ofac_hit_details = "OFAC SDN match detected" if ofac_hit else None
     if ofac_hit:
         errors.append("OFAC match: application blocked; BSA referral initiated")
@@ -427,18 +521,19 @@ def credit_bureau_pull_node(state: CreditUnderwritingState) -> Dict[str, Any]:
 
 # ── Node 5: Financial Analysis ────────────────────────────────────────────────
 
+@fail_safe_node
 def financial_analysis_node(state: CreditUnderwritingState) -> Dict[str, Any]:
     """
     Calculate all financial metrics — DTI, LTV, DSCR, reserves.
     All calculations are deterministic Python. No LLM involvement.
     """
-    annual_income = float(state.get("annual_income", 0))
+    annual_income = _coerce_num(state.get("annual_income"), float, 0)
     monthly_income = annual_income / 12 if annual_income > 0 else 0.0
-    monthly_debt = float(state.get("monthly_debt_obligations", 0))
-    requested_amount = float(state.get("requested_amount", 0))
-    appraised_value = float(state.get("appraised_value", requested_amount))
-    quoted_rate = float(state.get("quoted_rate", 0.07))
-    requested_term = int(state.get("requested_term", 360))
+    monthly_debt = _coerce_num(state.get("monthly_debt_obligations"), float, 0)
+    requested_amount = _coerce_num(state.get("requested_amount"), float, 0)
+    appraised_value = _coerce_num(state.get("appraised_value"), float, requested_amount)
+    quoted_rate = _coerce_num(state.get("quoted_rate"), float, 0.07)
+    requested_term = _coerce_num(state.get("requested_term"), int, 360)
     loan_type = state.get("loan_type", LoanType.CONSUMER_PERSONAL.value)
 
     # Monthly payment (amortizing)
@@ -495,6 +590,7 @@ def financial_analysis_node(state: CreditUnderwritingState) -> Dict[str, Any]:
 
 # ── Node 6: Fair Lending Check ────────────────────────────────────────────────
 
+@fail_safe_node
 def fair_lending_check_node(state: CreditUnderwritingState) -> Dict[str, Any]:
     """
     ECOA / Fair Housing Act / Reg B screening.
@@ -511,11 +607,11 @@ def fair_lending_check_node(state: CreditUnderwritingState) -> Dict[str, Any]:
     5. CRA-eligible geography flag
     """
     loan_type = state.get("loan_type", "")
-    credit_score = int(state.get("credit_score", 0))
-    total_dti = float(state.get("total_dti_ratio", 1.0))
-    ltv = float(state.get("ltv_ratio", 1.0))
+    credit_score = _coerce_num(state.get("credit_score"), int, 0)
+    total_dti = _coerce_num(state.get("total_dti_ratio"), float, 1.0)
+    ltv = _coerce_num(state.get("ltv_ratio"), float, 1.0)
     census_tract = state.get("property_census_tract", "")
-    quoted_rate = float(state.get("quoted_rate", 0.07))
+    quoted_rate = _coerce_num(state.get("quoted_rate"), float, 0.07)
     property_state = state.get("property_state", "")
 
     fair_lending_flags = list(state.get("fair_lending_flags", []))
@@ -586,6 +682,7 @@ def fair_lending_check_node(state: CreditUnderwritingState) -> Dict[str, Any]:
 
 # ── Node 7: Risk Scoring ──────────────────────────────────────────────────────
 
+@fail_safe_node
 def risk_scoring_node(state: CreditUnderwritingState) -> Dict[str, Any]:
     """
     5-factor composite credit risk score (0.0–1.0).
@@ -605,16 +702,16 @@ def risk_scoring_node(state: CreditUnderwritingState) -> Dict[str, Any]:
       - Chapter 7 bankruptcy discharged < 2 years
       - OFAC match
     """
-    credit_score = int(state.get("credit_score", 0))
-    total_dti = float(state.get("total_dti_ratio", 1.0))
-    ltv = float(state.get("ltv_ratio", 1.0))
+    credit_score = _coerce_num(state.get("credit_score"), int, 0)
+    total_dti = _coerce_num(state.get("total_dti_ratio"), float, 1.0)
+    ltv = _coerce_num(state.get("ltv_ratio"), float, 1.0)
     cash_flow_adequate = bool(state.get("cash_flow_adequate", False))
     dscr = state.get("dscr")
     collateral_type = state.get("collateral_type", CollateralType.UNSECURED.value)
     loan_type = state.get("loan_type", LoanType.CONSUMER_PERSONAL.value)
     bankruptcy_flag = bool(state.get("bankruptcy_flag", False))
     bankruptcy_chapter = state.get("bankruptcy_chapter", "")
-    bankruptcy_discharge_years = float(state.get("bankruptcy_discharge_years", 10.0))
+    bankruptcy_discharge_years = _coerce_num(state.get("bankruptcy_discharge_years"), float, 10.0)
     ofac_hit = bool(state.get("ofac_hit", False))
 
     # ── Factor 1: Credit Score (30%) ──────────────────────────────────────
@@ -821,6 +918,7 @@ def risk_scoring_node(state: CreditUnderwritingState) -> Dict[str, Any]:
 
 # ── Node 8: Routing Decision ──────────────────────────────────────────────────
 
+@fail_safe_node
 def routing_decision_node(state: CreditUnderwritingState) -> Dict[str, Any]:
     """
     Determine HITL requirement and assign reviewer.
@@ -836,7 +934,7 @@ def routing_decision_node(state: CreditUnderwritingState) -> Dict[str, Any]:
     """
     risk_tier = state.get("risk_tier", RiskTier.DECLINE.value)
     fair_lending_review = bool(state.get("fair_lending_review_required", False))
-    requested_amount = float(state.get("requested_amount", 0))
+    requested_amount = _coerce_num(state.get("requested_amount"), float, 0)
     document_exceptions = list(state.get("document_exceptions", []))
     ofac_hit = bool(state.get("ofac_hit", False))
     bankruptcy_flag = bool(state.get("bankruptcy_flag", False))
@@ -974,6 +1072,7 @@ def human_review_gate(state: CreditUnderwritingState) -> Dict[str, Any]:
 
 # ── Node 10: Credit Memo Drafting ─────────────────────────────────────────────
 
+@fail_safe_node
 def credit_memo_drafting_node(state: CreditUnderwritingState) -> Dict[str, Any]:
     """
     LLM generates the credit memorandum narrative and conditions letter.
@@ -1133,6 +1232,7 @@ def credit_memo_drafting_node(state: CreditUnderwritingState) -> Dict[str, Any]:
 
 # ── Node 11: Adverse Action Notice ────────────────────────────────────────────
 
+@fail_safe_node
 def adverse_action_node(state: CreditUnderwritingState) -> Dict[str, Any]:
     """
     LLM drafts the Reg B (ECOA) adverse action notice.
@@ -1206,6 +1306,7 @@ def adverse_action_node(state: CreditUnderwritingState) -> Dict[str, Any]:
 
 # ── Node 12: Finalize Decision ────────────────────────────────────────────────
 
+@fail_safe_node
 def finalize_decision_node(state: CreditUnderwritingState) -> Dict[str, Any]:
     """
     Set the final loan decision, HMDA action taken, SAR referral flag,

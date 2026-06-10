@@ -872,6 +872,6 @@ with tab6:
         st.dataframe(pd.DataFrame(weights_data), use_container_width=True, hide_index=True)
 
         st.subheader("API Keys")
-        st.text_input("OpenAI API Key", type="password", value=os.getenv("OPENAI_API_KEY", ""),
-                      help="Stored in environment variable OPENAI_API_KEY")
+        st.text_input("OpenAI API Key", type="password", value=os.getenv("ANTHROPIC_API_KEY", ""),
+                      help="Stored in environment variable ANTHROPIC_API_KEY")
         st.caption("API keys are managed via environment variables and are not stored in the application.")

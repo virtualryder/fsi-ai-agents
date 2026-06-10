@@ -153,7 +153,7 @@ def create_case(
         "sar_filing_deadline": (detection_date + timedelta(days=30)).strftime("%Y-%m-%d"),
         "bsa_retention_expiry": (detection_date + timedelta(days=1825)).strftime("%Y-%m-%d"),
         "source_system": "AI_INVESTIGATION_AGENT",
-        "ai_model_version": "gpt-4o",
+        "ai_model_version": "claude-sonnet-4-6",
         "human_review_required": True,
         "disposition": None,
         "sar_filed": False,

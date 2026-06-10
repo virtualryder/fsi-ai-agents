@@ -1,7 +1,7 @@
 # tests/test_nodes.py
 # ============================================================
 # Unit tests for all deterministic Python logic.
-# No LLM calls — these tests must run without OPENAI_API_KEY.
+# No LLM calls — these tests must run without ANTHROPIC_API_KEY.
 #
 # Tests cover:
 #   - Financial analysis calculations (DTI, LTV, DSCR, payment)

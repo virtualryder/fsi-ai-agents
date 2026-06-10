@@ -107,15 +107,15 @@ def _mock_llm_enrichment_response():
 class TestFullPipeline:
     """Integration tests for the complete 12-node graph execution."""
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_happy_path_loan_application(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_happy_path_loan_application(self, mock_anthropic_class):
         """
         Full pipeline execution for a residential loan application.
         All 12 nodes must execute, final status must be ROUTED.
         """
         # Configure mock LLM to return appropriate responses
         mock_llm_instance = MagicMock()
-        mock_openai_class.return_value = mock_llm_instance
+        mock_anthropic_class.return_value = mock_llm_instance
 
         extraction_fields = {
             "applicant_name": "Jane Test",
@@ -147,14 +147,14 @@ class TestFullPipeline:
         assert "08-credit-underwriting" in result.get("target_agents", [])
         assert result.get("output_payload") is not None
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_completed_steps_track_all_nodes(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_completed_steps_track_all_nodes(self, mock_anthropic_class):
         """
         After a full successful pipeline run, completed_steps must include
         all 12 node names. This verifies no node was skipped silently.
         """
         mock_llm = MagicMock()
-        mock_openai_class.return_value = mock_llm
+        mock_anthropic_class.return_value = mock_llm
         mock_llm.invoke.side_effect = [
             _mock_llm_classification_response(DocumentType.BANK_STATEMENT.value, 0.88),
             _mock_llm_extraction_response({
@@ -191,14 +191,14 @@ class TestFullPipeline:
         for step in expected_steps:
             assert step in completed, f"Expected step '{step}' not found in completed_steps"
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_audit_trail_grows_through_pipeline(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_audit_trail_grows_through_pipeline(self, mock_anthropic_class):
         """
         The audit_trail must grow with one entry per node. It must never
         shrink or reset. This is the append-only guarantee.
         """
         mock_llm = MagicMock()
-        mock_openai_class.return_value = mock_llm
+        mock_anthropic_class.return_value = mock_llm
         mock_llm.invoke.side_effect = [
             _mock_llm_classification_response(DocumentType.TRADE_CONFIRMATION.value, 0.95),
             _mock_llm_extraction_response({
@@ -236,15 +236,15 @@ class TestSecurityIntegration:
     not just in individual nodes.
     """
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_no_raw_ssn_in_final_state(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_no_raw_ssn_in_final_state(self, mock_anthropic_class):
         """
         CRITICAL SECURITY TEST: After complete pipeline execution, the final
         state must not contain any raw SSN (XXX-XX-XXXX format) in any field.
         This verifies that PII masking is end-to-end — not just in the LLM prompt.
         """
         mock_llm = MagicMock()
-        mock_openai_class.return_value = mock_llm
+        mock_anthropic_class.return_value = mock_llm
 
         # Inject an SSN into the document text via the cache
         doc_hash = hashlib.sha256(b"ssn_test_doc").hexdigest()
@@ -281,8 +281,8 @@ class TestSecurityIntegration:
             f"Raw SSN found in final state after pipeline: {matches}. " \
             "PII masking failed — this is a security violation."
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_llm_cannot_alter_routing_targets(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_llm_cannot_alter_routing_targets(self, mock_anthropic_class):
         """
         SECURITY TEST: Even if the LLM extraction response contains text claiming
         the document should be routed elsewhere, the routing must be determined by
@@ -292,7 +292,7 @@ class TestSecurityIntegration:
         regardless of what the LLM says about routing in its enrichment notes.
         """
         mock_llm = MagicMock()
-        mock_openai_class.return_value = mock_llm
+        mock_anthropic_class.return_value = mock_llm
 
         # LLM enrichment tries to claim this should go to financial-crime
         import json
@@ -332,8 +332,8 @@ class TestSecurityIntegration:
         assert "07-trading-surveillance" in targets, \
             "TRADE_CONFIRMATION must route to trading-surveillance regardless of LLM content"
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_text_cache_cleared_after_processing(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_text_cache_cleared_after_processing(self, mock_anthropic_class):
         """
         SECURITY TEST: The module-level text cache must be cleared after
         audit_finalize_node runs. This ensures extracted document text
@@ -342,7 +342,7 @@ class TestSecurityIntegration:
         from agent.nodes import _get_text_from_cache
 
         mock_llm = MagicMock()
-        mock_openai_class.return_value = mock_llm
+        mock_anthropic_class.return_value = mock_llm
 
         doc_hash = hashlib.sha256(b"cache_clear_test").hexdigest()
         raw_text = "Test document for cache clearing. No PII here."
@@ -384,8 +384,8 @@ class TestHITLGraphBehavior:
     These tests verify that the interrupt_before mechanism works correctly.
     """
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_government_id_pauses_at_hitl_node(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_government_id_pauses_at_hitl_node(self, mock_anthropic_class):
         """
         CRITICAL SECURITY TEST: When processing a GOVERNMENT_ID, the graph
         must pause (interrupt) before the human_review_gate node.
@@ -395,7 +395,7 @@ class TestHITLGraphBehavior:
         from langgraph.checkpoint.memory import MemorySaver
 
         mock_llm = MagicMock()
-        mock_openai_class.return_value = mock_llm
+        mock_anthropic_class.return_value = mock_llm
 
         mock_llm.invoke.side_effect = [
             _mock_llm_classification_response(DocumentType.GOVERNMENT_ID.value, 0.95),
@@ -436,8 +436,8 @@ class TestHITLGraphBehavior:
         assert snapshot.next is not None and len(snapshot.next) > 0, \
             "Graph must be paused (interrupted) for GOVERNMENT_ID — not running to completion"
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_hitl_resume_after_approval(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_hitl_resume_after_approval(self, mock_anthropic_class):
         """
         After a human reviewer approves a GOVERNMENT_ID document,
         the graph must resume and route to KYC/CDD agent.
@@ -445,7 +445,7 @@ class TestHITLGraphBehavior:
         from langgraph.checkpoint.memory import MemorySaver
 
         mock_llm = MagicMock()
-        mock_openai_class.return_value = mock_llm
+        mock_anthropic_class.return_value = mock_llm
 
         # 3 LLM calls: classification, extraction, enrichment (post-approval)
         mock_llm.invoke.side_effect = [
@@ -490,8 +490,8 @@ class TestHITLGraphBehavior:
         assert final_result.get("document_status") == DocumentStatus.ROUTED.value
         assert "03-kyc-cdd-perpetual" in final_result.get("target_agents", [])
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_hitl_reject_ends_at_audit_finalize(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_hitl_reject_ends_at_audit_finalize(self, mock_anthropic_class):
         """
         When a reviewer rejects a document, the graph must route to
         audit_finalize (not enrichment) and final status must be REJECTED.
@@ -499,7 +499,7 @@ class TestHITLGraphBehavior:
         from langgraph.checkpoint.memory import MemorySaver
 
         mock_llm = MagicMock()
-        mock_openai_class.return_value = mock_llm
+        mock_anthropic_class.return_value = mock_llm
 
         mock_llm.invoke.side_effect = [
             _mock_llm_classification_response(DocumentType.SAR_FORM.value, 0.88),
@@ -550,11 +550,11 @@ class TestHITLGraphBehavior:
 class TestOutputPayload:
     """Tests for the output_packaging_node — structured payload for downstream agents."""
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_output_payload_is_present_after_routing(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_output_payload_is_present_after_routing(self, mock_anthropic_class):
         """After successful processing, output_payload must be a non-empty dict."""
         mock_llm = MagicMock()
-        mock_openai_class.return_value = mock_llm
+        mock_anthropic_class.return_value = mock_llm
         mock_llm.invoke.side_effect = [
             _mock_llm_classification_response(DocumentType.FINANCIAL_STATEMENT.value, 0.91),
             _mock_llm_extraction_response({
@@ -577,11 +577,11 @@ class TestOutputPayload:
         assert isinstance(payload, dict), "output_payload must be a dict"
         assert len(payload) > 0, "output_payload must not be empty"
 
-    @patch("agent.nodes.ChatOpenAI")
-    def test_output_payload_includes_routing_instructions(self, mock_openai_class):
+    @patch("agent.nodes.ChatAnthropic")
+    def test_output_payload_includes_routing_instructions(self, mock_anthropic_class):
         """Output payload must include routing_instructions for downstream agents."""
         mock_llm = MagicMock()
-        mock_openai_class.return_value = mock_llm
+        mock_anthropic_class.return_value = mock_llm
         mock_llm.invoke.side_effect = [
             _mock_llm_classification_response(DocumentType.BENEFICIAL_OWNERSHIP_CERT.value, 0.89),
             _mock_llm_extraction_response({

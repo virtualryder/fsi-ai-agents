@@ -18,7 +18,25 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List
 
-from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
+
+# ── Claude model tiers (Anthropic) ───────────────────────────────────────────
+# NARRATIVE tier — Claude Sonnet 4.6: regulatory narratives, SAR/dispute
+#   analysis, anything an examiner, reviewer, or customer will read.
+# FAST tier — Claude Haiku 4.5: high-volume triage, classification, and
+#   scoring-assist nodes where latency and unit cost dominate.
+# Override via env: CLAUDE_NARRATIVE_MODEL / CLAUDE_FAST_MODEL.
+# ── INTEGRATION POINT (production) ───────────────────────────────────────────
+# For VPC-contained inference, swap ChatAnthropic for ChatBedrockConverse
+# (langchain-aws) with Bedrock model IDs:
+#   anthropic.claude-sonnet-4-6-20260601-v1:0  (narrative)
+#   anthropic.claude-haiku-4-5-20251001        (fast)
+# ─────────────────────────────────────────────────────────────────────────────
+import os as _os_llm
+CLAUDE_NARRATIVE_MODEL = _os_llm.getenv("CLAUDE_NARRATIVE_MODEL", "claude-sonnet-4-6")
+CLAUDE_FAST_MODEL = _os_llm.getenv("CLAUDE_FAST_MODEL", "claude-haiku-4-5")
+CLAUDE_DEFAULT_MODEL = CLAUDE_NARRATIVE_MODEL
+
 
 from agent.prompts import (
     DISPOSITION_SYSTEM_PROMPT,
@@ -142,11 +160,10 @@ ASSET_CLASS_ROUTING = {
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def _get_llm() -> ChatOpenAI:
-    return ChatOpenAI(
-        model="gpt-4o",
+def _get_llm() -> ChatAnthropic:
+    return ChatAnthropic(model=CLAUDE_DEFAULT_MODEL,
         temperature=0,
-        api_key=os.getenv("OPENAI_API_KEY"),
+        api_key=os.getenv("ANTHROPIC_API_KEY"),
     )
 
 
@@ -602,7 +619,7 @@ def market_context_node(state: TradingSurveillanceState) -> TradingSurveillanceS
         llm = _get_llm()
         response = llm.invoke(prompt)
         market_context = response.content
-        ai_model = "gpt-4o"
+        ai_model=CLAUDE_DEFAULT_MODEL
     except Exception as e:
         logger.warning(f"Market context LLM failed: {e}")
         market_context = (
@@ -947,7 +964,7 @@ def investigation_node(state: TradingSurveillanceState) -> TradingSurveillanceSt
             HumanMessage(content=INVESTIGATION_USER_PROMPT.format(**prompt_kwargs)),
         ])
         narrative = response.content
-        ai_model = "gpt-4o"
+        ai_model=CLAUDE_DEFAULT_MODEL
     except Exception as e:
         logger.warning(f"Investigation LLM failed: {e}")
         narrative = (
@@ -1096,7 +1113,7 @@ def disposition_node(state: TradingSurveillanceState) -> TradingSurveillanceStat
             HumanMessage(content=DISPOSITION_USER_PROMPT.format(**prompt_kwargs)),
         ])
         memo = response.content
-        ai_model = "gpt-4o"
+        ai_model=CLAUDE_DEFAULT_MODEL
     except Exception as e:
         logger.warning(f"Disposition LLM failed: {e}")
         memo = (

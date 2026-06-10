@@ -10,7 +10,7 @@
 #    Container breakout with root privileges would give an attacker host
 #    root access. Non-root limits the blast radius of a container escape.
 #
-# 2. No OPENAI_API_KEY in image: API keys are injected at runtime via
+# 2. No ANTHROPIC_API_KEY in image: API keys are injected at runtime via
 #    ECS task definition environment variables sourced from AWS Secrets
 #    Manager. Baking secrets into Docker images is a critical security flaw
 #    (images may be pushed to registries, stored in CI caches, etc.).
@@ -80,7 +80,7 @@ USER agent09
 
 # ── Environment Defaults ──────────────────────────────────────────────────────
 # These are non-secret configuration defaults.
-# Sensitive values (OPENAI_API_KEY, DATABASE_URL) are injected at runtime
+# Sensitive values (ANTHROPIC_API_KEY, DATABASE_URL) are injected at runtime
 # by ECS task definition from AWS Secrets Manager.
 ENV LOG_LEVEL=WARNING
 ENV PYTHONUNBUFFERED=1

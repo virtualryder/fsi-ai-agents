@@ -64,7 +64,7 @@ def _init_state():
         "scoring_in_progress": False,
         "current_user_role": "BSA_OFFICER",
         "current_user": "Officer J. Reynolds",
-        "api_key_set": bool(os.getenv("OPENAI_API_KEY")),
+        "api_key_set": bool(os.getenv("ANTHROPIC_API_KEY")),
         "thresholds": {
             "suppress": float(os.getenv("SUPPRESS_THRESHOLD", 85)),
             "downgrade": float(os.getenv("DOWNGRADE_THRESHOLD", 60)),
@@ -101,7 +101,7 @@ with st.sidebar:
     else:
         api_key = st.text_input("OpenAI API Key", type="password", placeholder="sk-...")
         if api_key:
-            os.environ["OPENAI_API_KEY"] = api_key
+            os.environ["ANTHROPIC_API_KEY"] = api_key
             st.session_state.api_key_set = True
             st.rerun()
 

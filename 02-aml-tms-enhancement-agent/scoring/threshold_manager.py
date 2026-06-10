@@ -52,12 +52,17 @@ ALERT_TYPE_OVERRIDES: dict[str, Thresholds] = {
 }
 
 # ── Risk-tier adjustments (applied on top of type-level thresholds) ──────────
-# Higher risk customers → harder to suppress (need more confidence)
+# Higher risk customers → harder to suppress (need more confidence).
+# CONTROL: adjustments are POSITIVE points added to the FP-probability
+# required before an alert may be suppressed or downgraded. A negative sign
+# here would invert the control and make high-risk customers' alerts the
+# EASIEST to auto-suppress — guarded by
+# tests/test_scoring.py::TestThresholdManager::test_very_high_risk_harder_to_suppress.
 RISK_TIER_ADJUSTMENTS: dict[str, float] = {
-    "LOW": 0.0,        # No adjustment
-    "MEDIUM": -2.0,    # Suppress threshold 2 pts harder
-    "HIGH": -5.0,      # 5 pts harder
-    "VERY_HIGH": -12.0, # 12 pts harder — nearly impossible to auto-suppress
+    "LOW": 0.0,         # No adjustment
+    "MEDIUM": 2.0,      # Suppress threshold 2 pts harder
+    "HIGH": 5.0,        # 5 pts harder
+    "VERY_HIGH": 12.0,  # 12 pts harder — nearly impossible to auto-suppress
 }
 
 

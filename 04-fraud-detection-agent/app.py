@@ -118,11 +118,11 @@ with st.sidebar:
     api_key = st.text_input(
         "OpenAI API Key",
         type="password",
-        value=os.getenv("OPENAI_API_KEY", ""),
+        value=os.getenv("ANTHROPIC_API_KEY", ""),
         help="Required for LLM fraud analysis node",
     )
     if api_key:
-        os.environ["OPENAI_API_KEY"] = api_key
+        os.environ["ANTHROPIC_API_KEY"] = api_key
 
     st.divider()
     st.markdown("**Decision Thresholds:**")
@@ -232,7 +232,7 @@ with tab1:
     # Run button
     if st.session_state.selected_transaction:
         if st.button("🚀 Run Fraud Evaluation", type="primary", use_container_width=True):
-            if not os.getenv("OPENAI_API_KEY"):
+            if not os.getenv("ANTHROPIC_API_KEY"):
                 st.warning("OpenAI API key required. Enter it in the sidebar.")
             else:
                 st.session_state.evaluation_running = True
@@ -292,7 +292,7 @@ with tab2:
             ("rule_engine_prescoring", "⚙️ Rule Engine", "Deterministic rules — velocity, geography, MCC"),
             ("device_intelligence", "📱 Device Intelligence", "Device risk, IP reputation, impossible travel"),
             ("behavioral_analysis", "🧠 Behavioral Analysis", "Session anomaly, new payee, ATO signals"),
-            ("llm_fraud_analysis", "🤖 LLM Analysis (GPT-4o)", "Contextual fraud pattern synthesis"),
+            ("llm_fraud_analysis", "🤖 LLM Analysis (Claude Sonnet 4.6)", "Contextual fraud pattern synthesis"),
             ("composite_scoring", "📊 Composite Scoring", "Weighted score: rule 30% + LLM 50% + history 20%"),
         ]
 
