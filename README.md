@@ -652,8 +652,5 @@ All agents are designed for real deployment — customization, security, and ind
 
 **Target buyers:** BSA Officers · Chief Compliance Officers · Financial Crime Operations Leaders · CIOs at banks, credit unions, and broker-dealers
 
-**Relevant to:** Presidio FSI Practice · AWS financial services GTM · AI/ML modernization engagements
-
----
 
 *Part of the [Agentic Application Examples](https://github.com/virtualryder) portfolio — production-shaped LangGraph agents across financial services, healthcare, government, and enterprise domains.*
