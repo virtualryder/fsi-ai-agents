@@ -1,0 +1,65 @@
+{
+  "Comment": "AWS-native Document Intelligence (Agent 09 reference). Step Functions orchestrates deterministic Lambda nodes; the LLM (Strands/Bedrock) only drafts classification/extraction; the HumanReviewGate uses waitForTaskToken as the framework-enforced HITL pause (equivalent to LangGraph interrupt_before).",
+  "StartAt": "PiiMask",
+  "States": {
+    "PiiMask": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${PiiMaskFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload",
+      "Next": "Extract"
+    },
+    "Extract": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${ExtractFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload",
+      "Next": "Validate"
+    },
+    "Validate": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${ValidateFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload",
+      "Next": "Route"
+    },
+    "Route": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${RouteFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload",
+      "Next": "DispositionChoice"
+    },
+    "DispositionChoice": {
+      "Type": "Choice",
+      "Choices": [
+        {"Variable": "$.routing.next", "StringEquals": "HumanReviewGate", "Next": "HumanReviewGate"}
+      ],
+      "Default": "AutoRoute"
+    },
+    "HumanReviewGate": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {
+        "FunctionName": "${HitlNotifyFunctionArn}",
+        "Payload": {"input.$": "$", "task_token.$": "$$.Task.Token"}
+      },
+      "ResultPath": "$.review",
+      "TimeoutSeconds": 604800,
+      "Next": "Finalize"
+    },
+    "AutoRoute": {
+      "Type": "Pass",
+      "Result": {"reviewer_decision": "auto"},
+      "ResultPath": "$.review",
+      "Next": "Finalize"
+    },
+    "Finalize": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${FinalizeFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload",
+      "End": true
+    }
+  }
+}
