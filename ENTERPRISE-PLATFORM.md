@@ -4,6 +4,16 @@
 >
 > This document explains what that platform looks like, why it must be built in a specific order, how each layer maps to regulatory requirements, and how to make the case internally for the investment.
 
+> **Implementation state:** This document is a platform vision and design specification. The table below shows which layers are implemented in the current accelerator vs. designed for Phase-2 delivery. For a full honest-labeling breakdown suitable for a vendor risk questionnaire, see [`offerings/TPRM-DUE-DILIGENCE-PACKET.md`](./offerings/TPRM-DUE-DILIGENCE-PACKET.md).
+>
+> | Platform Layer | Current Accelerator State |
+> |---|---|
+> | Layer 1 — API Access | Design guidance; all connectors run on fixtures in the accelerator (real connectors built per engagement) |
+> | Layer 2 — MCP Authorization Gateway | Architecture designed and documented; not yet built — Phase-2 delivery item |
+> | Layer 3 — Agent Catalog | Design pattern defined; SR 11-7 extension concept — tooling built per engagement |
+> | Layer 4 — A2A Communication | Standard defined; OTel tracing scaffolded in `platform_core/`; full A2A enforcement is Phase-2 |
+> | Layer 5 — The 12 Agents | **Implemented and tested — 712 tests green across all 12 suites** |
+
 ---
 
 ## The Thesis
