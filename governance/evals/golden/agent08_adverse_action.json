@@ -1,0 +1,56 @@
+{
+  "cases": [
+    {
+      "id": "AA-GOLD-001-dti-decline",
+      "state": {
+        "application_id": "APP-2024-5521",
+        "credit_score": 695,
+        "total_dti_ratio": 0.52,
+        "ltv_ratio": 0.85,
+        "cash_flow_adequate": true,
+        "bankruptcy_flag": false
+      },
+      "artifact": {
+        "reasons": [
+          {
+            "code": "EXCESSIVE_DTI",
+            "statement": "Your total debt-to-income ratio exceeds our program maximum."
+          }
+        ],
+        "letter_text": "We are unable to approve your application at this time. The principal reason for this decision is that your total monthly debt obligations relative to your verified income exceed the maximum permitted for this loan program. You have the right to obtain a copy of your credit report and to dispute its accuracy."
+      }
+    },
+    {
+      "id": "AA-GOLD-002-multi-factor",
+      "state": {
+        "application_id": "APP-2024-5530",
+        "credit_score": 612,
+        "total_dti_ratio": 0.47,
+        "ltv_ratio": 0.93,
+        "cash_flow_adequate": false,
+        "bankruptcy_flag": false
+      },
+      "artifact": {
+        "reasons": [
+          {
+            "code": "INSUFFICIENT_CREDIT_SCORE",
+            "statement": "Credit score below program minimum."
+          },
+          {
+            "code": "EXCESSIVE_DTI",
+            "statement": "Debt-to-income ratio above program maximum."
+          },
+          {
+            "code": "HIGH_LTV",
+            "statement": "Requested loan amount too high relative to property value."
+          },
+          {
+            "code": "INSUFFICIENT_CASH_FLOW",
+            "statement": "Residual income below required threshold."
+          }
+        ],
+        "letter_text": "After careful review we are unable to approve your application. The principal reasons are: your credit score is below the program minimum; your debt-to-income ratio exceeds the program maximum; the requested loan-to-value ratio is above our limit; and verified residual income is below the required threshold. You may request the specific credit score used in this decision."
+      }
+    }
+  ]
+}

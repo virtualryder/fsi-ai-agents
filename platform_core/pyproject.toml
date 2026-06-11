@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fsi-agent-platform"
+version = "0.1.0"
+description = "Shared platform layer for the FSI AI Agent Suite: provider-abstracted LLM factory (Anthropic/Bedrock+Guardrails), JWT auth with server-side HITL role enforcement, Secrets Manager retrieval, layered PII masking, OTel node tracing."
+requires-python = ">=3.11"
+dependencies = [
+    "langchain-anthropic>=1.0",
+]
+
+[project.optional-dependencies]
+bedrock = ["langchain-aws>=0.2"]
+auth = ["PyJWT[crypto]>=2.8"]
+aws = ["boto3>=1.34"]
+otel = ["opentelemetry-sdk>=1.25", "opentelemetry-exporter-otlp>=1.25"]
+pii-presidio = ["presidio-analyzer>=2.2"]
+
+[tool.setuptools.packages.find]
+include = ["fsi_agent_platform*"]

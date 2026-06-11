@@ -1,0 +1,54 @@
+{
+  "generated_at": "2026-06-10T20:26:14.382952+00:00",
+  "note": "Prompt content hashes. A CI failure against this file means a prompt changed without an explicit version bump \u2014 update via `python -m governance.prompt_registry --update` IN THE SAME PR, so the prompt change is visible and reviewable as a model-configuration change.",
+  "prompts": {
+    "01-financial-crime-investigation-agent": {
+      "file": "01-financial-crime-investigation-agent/agent/prompts.py",
+      "sha256": "ce78bd080d26bf6511599f4de169a69eb7213703fee9ae053ccce11e21908a88"
+    },
+    "02-aml-tms-enhancement-agent": {
+      "file": "02-aml-tms-enhancement-agent/agent/prompts.py",
+      "sha256": "d1953a45e0a5e245b3e2f2d2d13adb2a040bbdb85a9d4f8f10cb36dd2b33f659"
+    },
+    "03-kyc-cdd-perpetual-agent": {
+      "file": "03-kyc-cdd-perpetual-agent/agent/prompts.py",
+      "sha256": "73d4b532e812713327c0d8b214b170c50037a3ab08833094f68f09db0f588a03"
+    },
+    "04-fraud-detection-agent": {
+      "file": "04-fraud-detection-agent/agent/prompts.py",
+      "sha256": "023ca7db192497f274eec1119532a8de1fc2ccf47727876043b7fc7a96486358"
+    },
+    "05-wealth-rm-copilot": {
+      "file": "05-wealth-rm-copilot/agent/prompts.py",
+      "sha256": "46f5d96e78b2ca6665e3486d2b0c09c563474a31c4991dd2e914bffad73418d5"
+    },
+    "06-regulatory-change-agent": {
+      "file": "06-regulatory-change-agent/agent/prompts.py",
+      "sha256": "c8a14c41836083fd970c3096c7285ec1bc3487fa3fea3043b63940a119628938"
+    },
+    "07-trading-surveillance-agent": {
+      "file": "07-trading-surveillance-agent/agent/prompts.py",
+      "sha256": "cb612ef9cc46a96a991a9371da0f2820f84f7d65efbc6087bda7d6aeb082f924"
+    },
+    "08-credit-underwriting-agent": {
+      "file": "08-credit-underwriting-agent/agent/prompts.py",
+      "sha256": "a26cb3a784051bc139f835a56709fb2aa4603d5d0d719592b5105eee936d2855"
+    },
+    "09-document-intelligence-agent": {
+      "file": "09-document-intelligence-agent/agent/prompts.py",
+      "sha256": "0f577beb366c8dc032a71a2302d94884f2ba2824f40d294befd02c4b70f5b95d"
+    },
+    "10-payments-compliance-agent": {
+      "file": "10-payments-compliance-agent/agent/prompts.py",
+      "sha256": "a81223521a62e85d1cdbc23408b9da2643fd38134c65ce95c24fd5bd94e9ba1c"
+    },
+    "11-model-risk-agent": {
+      "file": "11-model-risk-agent/agent/prompts.py",
+      "sha256": "f621c77d2897ca5b8189e8f06e914a14504b825c40d442a6d3835b97732df624"
+    },
+    "12-collections-recovery-agent": {
+      "file": "12-collections-recovery-agent/agent/prompts.py",
+      "sha256": "21c25136ecb8839f9bd9da8bd90983b1d8962777b38be29e4413702d7f14cd09"
+    }
+  }
+}

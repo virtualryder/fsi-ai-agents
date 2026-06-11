@@ -1,0 +1,72 @@
+{
+  "cases": [
+    {
+      "id": "SAR-GOLD-001-structuring",
+      "state": {
+        "case_id": "FC-2024-1187",
+        "customer_name": "Robert Keller",
+        "account_number_last4": "4471",
+        "transactions": [
+          {
+            "date": "2024-09-03",
+            "amount": 9500,
+            "type": "cash_deposit",
+            "branch": "Oak Street Branch"
+          },
+          {
+            "date": "2024-09-04",
+            "amount": 9400,
+            "type": "cash_deposit",
+            "branch": "Downtown Branch"
+          },
+          {
+            "date": "2024-09-05",
+            "amount": 9450,
+            "type": "cash_deposit",
+            "branch": "Oak Street Branch"
+          }
+        ],
+        "total_amount": 28350,
+        "pattern": "STRUCTURING",
+        "stated_occupation": "retail store owner",
+        "expected_activity": "moderate cash deposits"
+      },
+      "artifact": "This Suspicious Activity Report concerns customer Robert Keller, a retail store owner holding the account ending 4471. Between September 2024 deposits on three consecutive days, the subject conducted cash deposits of $9,500, $9,400, and $9,450 at the Oak Street Branch and Downtown Branch, totaling $28,350. Each deposit was conducted just below the $10,000 currency transaction reporting threshold, a pattern consistent with structuring designed to evade Bank Secrecy Act reporting requirements. The activity is inconsistent with the customer's stated occupation and expected account activity of moderate cash deposits, and the use of multiple branches on consecutive days suggests deliberate evasion. The institution deems this activity suspicious and is filing this report with FinCEN accordingly.",
+      "expect": {
+        "min_words": 80
+      }
+    },
+    {
+      "id": "SAR-GOLD-002-rapid-movement",
+      "state": {
+        "case_id": "FC-2024-1203",
+        "customer_name": "Meridian Imports LLC",
+        "account_number_last4": "8810",
+        "incoming_wire": {
+          "date": "2024-10-12",
+          "amount": 475000,
+          "originator_country": "Cyprus"
+        },
+        "outgoing_wires": [
+          {
+            "date": "2024-10-13",
+            "amount": 240000,
+            "destination_country": "Panama"
+          },
+          {
+            "date": "2024-10-13",
+            "amount": 230000,
+            "destination_country": "British Virgin Islands"
+          }
+        ],
+        "account_age_days": 47,
+        "dormancy_before": "no prior wire activity",
+        "business_purpose": "furniture importing"
+      },
+      "artifact": "This Suspicious Activity Report concerns Meridian Imports LLC, account ending 8810, a furniture importing business. On October 12, 2024, the account received an incoming wire of $475,000 originating from Cyprus. Within one business day, on October 13, 2024, the subject initiated outgoing wire transfers of $240,000 to Panama and $230,000 to the British Virgin Islands, leaving a minimal residual balance. The account was opened 47 days prior and had no prior wire activity, and the rapid movement of nearly the full amount through multiple offshore jurisdictions is inconsistent with the stated business purpose of furniture importing. The velocity, layering pattern across jurisdictions, and lack of apparent economic purpose render the activity suspicious. This report is filed with FinCEN under the Bank Secrecy Act.",
+      "expect": {
+        "min_words": 80
+      }
+    }
+  ]
+}

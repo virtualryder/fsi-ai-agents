@@ -32,6 +32,7 @@
 # ============================================================
 from __future__ import annotations
 
+import os
 import hashlib
 import json
 import logging
@@ -65,6 +66,26 @@ logger = logging.getLogger(__name__)
 # ── Lazy LLM import ───────────────────────────────────────────────────────────
 def _get_llm():
     """Import and instantiate the LLM. Lazy import avoids cost at test time."""
+    # ── Provider switch (Rec 4) ──────────────────────────────────────────────
+    # LLM_PROVIDER=bedrock routes inference through ChatBedrockConverse via a
+    # VPC interface endpoint — model calls stay inside the customer's AWS
+    # account (the data-residency configuration). Optional Guardrails attach
+    # when BEDROCK_GUARDRAIL_ID is set. Canonical implementation:
+    # platform_core/fsi_agent_platform/llm_factory.py (this branch is vendored
+    # so the agent stays independently deployable).
+    if os.getenv("LLM_PROVIDER", "anthropic").strip().lower() == "bedrock":
+        from langchain_aws import ChatBedrockConverse  # lazy optional dep
+        _bedrock_kwargs = dict(
+            model=os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-sonnet-4-6-20260601-v1:0"),
+            temperature=0.0,
+            region_name=os.getenv("BEDROCK_REGION", "us-east-1"),
+        )
+        if os.getenv("BEDROCK_GUARDRAIL_ID"):
+            _bedrock_kwargs["guardrail_config"] = {
+                "guardrailIdentifier": os.environ["BEDROCK_GUARDRAIL_ID"],
+                "guardrailVersion": os.getenv("BEDROCK_GUARDRAIL_VERSION", "DRAFT"),
+            }
+        return ChatBedrockConverse(**_bedrock_kwargs)
     return ChatAnthropic(model=CLAUDE_DEFAULT_MODEL, temperature=0)
 
 

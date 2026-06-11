@@ -60,19 +60,86 @@ jobs:
       - name: Run test suite
         run: python -m pytest tests/ -v --tb=short
 
+
+  platform:
+    name: platform (shared library)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install and test platform_core
+        run: |
+          pip install -e ./platform_core
+          pip install pytest langchain-anthropic
+          python -m pytest platform_core/tests/ -v --tb=short
+
+  governance:
+    name: governance (evals, red-team, fairness, prompt manifest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install suite deps (governance imports agents 08/09 directly)
+        run: |
+          pip install -r 09-document-intelligence-agent/requirements.txt
+          pip install pytest
+      - name: Prompt manifest gate (prompts are model config — no silent changes)
+        run: python -m governance.prompt_registry
+      - name: Governance suites
+        run: python -m pytest governance/ -v --tb=short
+
+  security:
+    name: security (SCA, SBOM, IaC scan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Dependency vulnerability scan (pip-audit, all 12 agents)
+        run: |
+          pip install pip-audit
+          status=0
+          for req in [01]*-*/requirements.txt; do
+            echo "== $req =="
+            pip-audit -r "$req" --strict || status=1
+          done
+          exit $status
+      - name: SBOM (CycloneDX, uploaded as artifact for TPRM packets)
+        run: |
+          pip install cyclonedx-bom pip-requirements-parser
+          mkdir -p sbom
+          for req in [01]*-*/requirements.txt; do
+            agent=$(dirname "$req")
+            cyclonedx-py requirements "$req" -o "sbom/${agent}.cdx.json" || true
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom/
+      - name: IaC scan (checkov on infra/terraform)
+        run: |
+          pip install checkov
+          checkov -d infra/terraform --quiet --compact \
+            --skip-check CKV_AWS_150,CKV_AWS_103 # ALB deletion protection + listener TLS handled per-env
+
   # Single aggregate check for branch protection. Protecting one named check
   # is simpler and safer than enumerating 12 matrix legs in repo settings.
   all-suites-green:
     name: all-suites-green
-    needs: test
+    needs: [test, platform, governance, security]
     runs-on: ubuntu-latest
     if: always()
     steps:
       - name: Verify every agent suite passed
         run: |
-          if [ "${{ needs.test.result }}" != "success" ]; then
+          if [ "${{ needs.test.result }}" != "success" ] || [ "${{ needs.platform.result }}" != "success" ] || [ "${{ needs.governance.result }}" != "success" ] || [ "${{ needs.security.result }}" != "success" ]; then
             echo "::error::One or more agent test suites failed — merge blocked."
             echo "Regulatory control tests are the release gate (see workflow header)."
             exit 1
           fi
-          echo "All 12 agent suites green."
+          echo "All 12 agent suites + platform + governance + security green."
