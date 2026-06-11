@@ -8,27 +8,6 @@
 
 ---
 
-## ⚠️ Asset Classification: Accelerator / Reference Implementation
-
-**This suite is a production-shaped accelerator, not a production product.** It is delivery IP:
-the regulatory control patterns, LangGraph architecture, and GTM collateral are designed to
-compress an SI engagement by months — but a hardening sprint is in scope before any customer
-production deployment. Specifically, in the current codebase:
-
-| Implemented and tested | Documented design — built during hardening |
-|---|---|
-| Deterministic regulatory controls as code (OFAC hard overrides, fail-safe HITL routing, FDCPA/Reg F/SCRA/Reg E rules) | Real connectors (TMS, core banking, watchlist vendors) — all integrations currently run on fixtures |
-| All 12 test suites green in CI (`.github/workflows/ci.yml`); control tests gate merges | MCP tool gateway (architecture documented; servers not yet built) |
-| Claude (Sonnet 4.6 / Haiku 4.5) via Anthropic API, with a documented Bedrock integration point | Bedrock + Guardrails in-VPC inference (required to make the data-residency story literally true) |
-| Durable audit sink + persistent checkpointing, **environment-activated** (`agent/persistence.py`: JSONL write-ahead by default; DynamoDB/S3 Object Lock and PostgresSaver when configured) | Terraform/IaC, Cognito/Okta authentication, Secrets Manager, observability — described per-agent in `docs/aws-deployment-guide.md`, not yet shipped as code |
-| Demo mode without API keys for every regulatory decision path | LLM eval harness, grounding verification, fairness/disparate-impact testing (Agent 08) |
-
-Replace any use of "production-grade" in customer conversations with **"production-shaped,
-hardening-scoped"** — bank technical evaluators will verify claims against the code, and
-credibility is the asset.
-
----
-
 ## The Suite
 
 Financial crime compliance, KYC, and fraud together consume **$274 billion annually** across global institutions. AI agents don't eliminate that cost — they eliminate the manual, repetitive, low-judgment work so your best analysts can focus on the 5% of cases that require human expertise.
@@ -388,6 +367,59 @@ FDCPA/Reg F/SCRA-compliant debt collections automation. Enforces contact time re
 
 ---
 
+## Repository Contents
+
+The 12 agents are the core of this suite, but the repository ships with a full platform layer designed to take those agents from demo to governed production. Here's what's here, who it's for, and why it matters.
+
+### For Engineers and Architects
+
+**[`platform_core/`](./platform_core/)** — Shared Python library used by all 11 LLM-bearing agents. Instead of each agent managing its own LLM connection, PII masking, and auth logic, `platform_core` provides one tested, consistent implementation:
+- `llm_factory.py` — Bedrock/Guardrails LLM factory with documented Anthropic API fallback for local dev
+- `auth.py` — fail-closed JWT verification with HITL role enforcement; verified reviewer identity bound into every audit record
+- `pii.py` — consolidated PII masking (SSN, PAN, account/routing) applied at state-write boundaries before any LLM sees the data
+- `secrets.py` — AWS Secrets Manager integration; no credentials in environment variables
+- `tracing.py` — OpenTelemetry instrumentation scaffolding for A2A trace propagation
+
+**[`infra/terraform/`](./infra/terraform/)** — AWS reference infrastructure as code, organized as composable modules:
+- `modules/network/` — VPC with no internet route in agent subnets; egress via VPC endpoints only
+- `modules/security/` — IAM task roles with least-privilege scoping (audit table: PutItem-only; Bedrock invoke: scoped to two model IDs)
+- `modules/data/` — Aurora PostgreSQL (LangGraph checkpoints), DynamoDB (append-only audit), S3 Object Lock COMPLIANCE (WORM retention)
+- `modules/agent_service/` — ECS Fargate task definition with Bedrock VPC endpoint, Cognito pre-auth at ALB
+- `envs/dev/` — wired dev environment referencing all four modules
+
+The Terraform enforces at the IAM level the controls the application code promises — the audit trail cannot be overwritten even under a compromised container.
+
+### For Security, AI Risk, and Model Risk Reviewers
+
+**[`governance/`](./governance/)** — The LLM governance suite that runs in CI on every commit, making AI quality and safety claims checkable rather than asserted:
+- `grounding.py` — verifies LLM narrative outputs cite evidence actually present in the agent's state; flags unverifiable claims before they reach a human reviewer
+- `prompt_registry.py` + `prompt_manifest.json` — every system prompt versioned and hashed; CI fails if a prompt changes without a manifest update (prevents silent prompt drift in SAR narratives or adverse action language)
+- `redteam/test_prompt_injection.py` — 5 structural injection tests across the Agent 09 → downstream chain; validates that hostile document content cannot redirect agent routing or bypass HITL gates
+- `fairness/test_agent08_disparate_impact.py` — matched-pair blindness tests and four-fifths AIR harness for Agent 08 (Credit Underwriting); designed to run against client HMDA-coded data during pilot
+- `evals/` — golden-case eval harness with reference SAR narratives (Agent 01) and adverse action notices (Agent 08); structure, grounding, and reason-accuracy checked on every build
+
+### For Operations and Compliance Teams
+
+**[`runbooks/`](./runbooks/)** — Four executable operational procedures, each referencing mechanisms that actually exist in the codebase rather than describing hypothetical processes:
+- [`INCIDENT-RESPONSE.md`](./runbooks/INCIDENT-RESPONSE.md) — AI-specific incident response: hallucinated filing content, injection detection, model outage → manual-queue fallback, regulator notification thresholds
+- [`DR-RUNBOOK.md`](./runbooks/DR-RUNBOOK.md) — Disaster recovery: RTO/RPO definitions, Aurora failover, ECS multi-AZ cutover, audit trail reconstruction
+- [`HITL-QUEUE-OPERATIONS.md`](./runbooks/HITL-QUEUE-OPERATIONS.md) — Day-to-day operations for BSA Officers, Compliance Officers, and supervisors managing the human review gates across all 12 agents
+- [`MODEL-DEGRADATION-RESPONSE.md`](./runbooks/MODEL-DEGRADATION-RESPONSE.md) — What to do when Agent 11 flags PSI drift or performance degradation; escalation path to Model Risk Officer and CRO
+- [`README.md`](./runbooks/README.md) — Index with unified operating calendar (daily checks, weekly reviews, monthly validation cycles, quarterly access reviews)
+
+### For Practice Leads, Sales, and TPRM Reviewers
+
+**[`offerings/`](./offerings/)** — Three SI engagement documents designed to be attached directly to customer conversations:
+- [`ASSESSMENT-OFFERING.md`](./offerings/ASSESSMENT-OFFERING.md) — The entry-point engagement: what a structured assessment covers, what it delivers, and how it sets up a pilot
+- [`PILOT-OFFERING.md`](./offerings/PILOT-OFFERING.md) — Pilot scope, workstreams, success criteria, and the transition path to a production-assist engagement
+- [`TPRM-DUE-DILIGENCE-PACKET.md`](./offerings/TPRM-DUE-DILIGENCE-PACKET.md) — Pre-answered vendor risk questionnaire covering data residency, encryption, auth, least privilege, audit retention, subprocessors, AI governance, vulnerability management, and BCP/DR. Written to be attached directly to a client's vendor questionnaire response. Includes the full STRIDE threat model and penetration test plan.
+
+### For CIOs, CCOs, and Executive Sponsors
+
+**[`ENTERPRISE-PLATFORM.md`](./ENTERPRISE-PLATFORM.md)** — The platform vision document. Explains the five-layer infrastructure that turns AI agents from experimental pilots into governed operating infrastructure: API access, MCP authorization gateway, federated identity, agent catalog, and A2A communication standards. Maps each layer to its regulatory requirement (SR 11-7, FFIEC, NIST AI RMF, GLBA, NIST SP 800-207). Includes an implementation-state table distinguishing what's built today from what's designed for Phase-2. This is the document to share before an executive briefing.
+
+---
+
 ## Architecture Principles
 
 Every agent in this suite is built on the same opinionated architecture. Customers learn it once and deploy it everywhere.
@@ -641,6 +673,24 @@ docker compose up
 | 10 · Payments Compliance | 8510 |
 | 11 · Model Risk Management | 8511 |
 | 12 · Collections & Recovery | 8512 |
+
+---
+
+## Asset Classification: Accelerator / Reference Implementation
+
+This suite is a production-shaped accelerator, not a production product. The regulatory control patterns, LangGraph architecture, and platform collateral are designed to compress an SI engagement by months — but a hardening sprint is in scope before any customer production deployment.
+
+| Implemented and tested | Designed — built per engagement or Phase-2 |
+|---|---|
+| All 12 agent suites — deterministic regulatory controls as code (OFAC hard overrides, fail-safe HITL routing, FDCPA/Reg F/SCRA/Reg E rules) | Real connectors (TMS, core banking, watchlist vendors) — all integrations run on fixtures in the accelerator |
+| 712 tests green in CI across all 12 suites, platform library, and governance; control tests gate merges | MCP tool gateway (architecture in `ENTERPRISE-PLATFORM.md`; servers built per engagement) |
+| `governance/` — grounding verification, prompt manifest gate, structural injection red-team, Agent 08 fairness/disparate-impact testing, golden-case eval harness | Bedrock + Guardrails in-VPC inference (required for data-residency guarantee; IaC reference in `infra/terraform/`) |
+| `platform_core/` — shared LLM factory, fail-closed JWT auth, PII masking, Secrets Manager, OTel tracing | Cognito/Okta authentication, full observability stack — described in architecture; not pre-wired |
+| `infra/terraform/` — five AWS reference modules (network, security, data, agent_service, dev env) | Operational runbooks and DR procedures — now shipped in `runbooks/`; RTO/RPO defined per client tier in pilot |
+| `runbooks/` — incident response, DR, HITL queue ops, model degradation response | Live-model red-team against production deployment (pen-test plan in `offerings/TPRM-DUE-DILIGENCE-PACKET.md §4`) |
+| Demo mode without API keys for every regulatory decision path | SOC 2 report — roadmap; single-tenant in-client-account deployment inherits most controls from client's own AWS posture |
+
+In customer conversations: **"production-shaped, hardening-scoped"** — bank technical evaluators will verify claims against the code, and credibility is the asset.
 
 ---
 
