@@ -16,6 +16,33 @@
 
 ---
 
+## Executive Summary (for CROs, CIOs, and CCOs)
+
+**The one-line thesis.** AI agents can only act safely on systems that have clean APIs, strong identity, least-privilege access, and auditable trails. That makes the agent the business case for the modernization that compliance, operations, and finance will actually fund. Without modernization, agents stay stuck at chat and summarization; with it, they assist real regulated workflows while humans stay accountable.
+
+**What this is.** A financial services **agentic AI modernization accelerator**: twelve working, regulator-aware agents (AML, KYC/CDD, fraud, surveillance, credit, payments, model risk, collections, document intelligence, regulatory change, wealth) plus a platform layer that makes them governable — a shared Python core, an in-CI governance suite, AWS reference infrastructure as code, operational runbooks, per-persona reviewer guides, and ready-to-use engagement collateral.
+
+**What it is not.** A production-ready regulated platform. It is production-shaped and hardening-scoped. Evaluate every claim against the maturity ladder (Documented → Demonstrated → Deployable → Production-ready) in the main README.
+
+**The five platform layers (and their state today).**
+
+1. **API access** — modernize legacy interfaces into clean, standardized APIs so agents can reach systems of record. *Design guidance + fixtures today.*
+2. **MCP authorization gateway** — agents reach tools through governed, short-lived, least-privilege tokens, never standing service accounts. *Designed; Phase-2 build.*
+3. **Agent catalog** — an SR 11-7-style inventory and approval workflow for every agent and model. *Design pattern; per-engagement tooling.*
+4. **Agent-to-agent coordination** — signed, schema-validated handoffs that preserve accountability, traceability, and lineage; no agent can instruct another to skip human review. *Standard defined; OTel scaffolded; Phase-2 enforcement.*
+5. **The 12 agents** — the proof points. *Implemented and tested (700+ tests green; deterministic gates, framework-enforced human review).*
+
+**Why the order matters.** The load-bearing layers (API access, then the authorization gateway) come first. The agents are valuable on day one as demos and assistants, but their *governed-production* value is unlocked by the layers beneath them — which is exactly the modernization work an integrator is positioned to lead.
+
+**Regulatory alignment.** Each layer maps to a named requirement: SR 11-7 (model inventory, human oversight), FFIEC (API governance, access rights), NIST SP 800-207 zero-trust (per-request authorization, short-lived tokens), GLBA (PII safeguards, least privilege), and NIST AI RMF (govern/measure). These are framework references to validate against the institution's charter and examiner expectations — not compliance guarantees.
+
+**The investment ask.** A bounded hardening sprint converts the accelerator from demo-ready to MVP-ready and then production-ready: close the highest-stakes control gaps (done — see `CONTROL-INTEGRITY-CHANGELOG.md`), build a connector abstraction and one AWS-native reference implementation, stand up the MCP authorization gateway in front of one agent, and complete observability and security validation. Most of the output is reusable IP that compounds across engagements.
+
+**The first 90 days.** *30 days:* leadership go/no-go; control-integrity fixes; sales kit. *60 days:* connector interface + one AWS-native reference agent; MCP gateway in front of the document-intelligence agent; first executive briefings. *90 days:* deployed reference environment + observability; a Document-Intelligence or AML/KYC MVP with a design-partner institution; pen-test / SOC 2 roadmap underway.
+
+
+---
+
 ## The Thesis
 
 Financial institutions are heading toward a future where AI agents handle the majority of repetitive, evidence-based, and document-heavy work across compliance, fraud, lending, collections, and trading operations — with human professionals reserving their judgment for the decisions that are genuinely ambiguous, high-stakes, or relationship-driven.

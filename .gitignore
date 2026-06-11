@@ -38,3 +38,4 @@ Presidio_FSI_Playbook/
 var/
 *.egg-info/
 __pycache__/
+.claude/
