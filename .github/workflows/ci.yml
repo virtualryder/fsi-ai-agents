@@ -85,10 +85,13 @@ jobs:
           python-version: "3.12"
       - name: Install suite deps (governance imports agents 08/09 directly; HITL gate test imports all agent graphs)
         run: |
-          pip install -r 09-document-intelligence-agent/requirements.txt
-          # HITL gate test (test_hitl_gates.py) compiles LangGraph graphs from all 12 agents.
-          # Install shared graph-layer deps so imports succeed without installing each agent's full stack.
-          pip install langgraph langchain-anthropic pytest
+          # Install all 12 agent requirement sets so test_hitl_gates.py can import
+          # every agent graph. Duplicates resolve harmlessly; conflicts are a signal
+          # that pinned versions need reconciliation across agents.
+          for req in [01]*-*/requirements.txt; do
+            pip install -r "$req" --quiet || true
+          done
+          pip install pytest
       - name: Prompt manifest gate (prompts are model config — no silent changes)
         run: python -m governance.prompt_registry
       - name: Governance suites

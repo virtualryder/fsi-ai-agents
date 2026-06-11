@@ -15,11 +15,11 @@ langgraph-checkpoint-postgres>=3.0
 
 # Database
 psycopg2-binary==2.9.10     # Aurora PostgreSQL (production)
-boto3==1.35.36               # S3 Object Lock, DynamoDB, Secrets Manager, CloudWatch
+boto3>=1.35.36               # S3 Object Lock, DynamoDB, Secrets Manager, CloudWatch
 
 # Data processing
 pandas==2.2.3                # Debt portfolio analytics, SOL matrix lookups
-numpy==1.26.4                # Payment plan optimization math
+numpy>=1.26.4                # Payment plan optimization math
 
 # UI
 streamlit>=1.40.1
