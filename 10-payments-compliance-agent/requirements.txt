@@ -4,16 +4,16 @@
 # before deploying to production.
 
 # ── LangGraph / LangChain ─────────────────────────────────────────────────────
-langgraph==0.2.28
-langchain==0.3.7
+langgraph>=0.2.28
+langchain>=0.3.7
 langchain-anthropic>=0.2.0
-langchain-core==0.3.15
+langchain-core>=0.3.15
 
 # ── OpenAI ────────────────────────────────────────────────────────────────────
 anthropic>=0.40.0
 
 # ── Streamlit Dashboard ───────────────────────────────────────────────────────
-streamlit==1.40.1
+streamlit>=1.40.1
 
 # ── Date / Time (SLA deadline calculations) ──────────────────────────────────
 python-dateutil==2.9.0.post0
