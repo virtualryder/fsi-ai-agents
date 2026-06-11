@@ -407,12 +407,23 @@ The Terraform enforces at the IAM level the controls the application code promis
 - [`MODEL-DEGRADATION-RESPONSE.md`](./runbooks/MODEL-DEGRADATION-RESPONSE.md) — What to do when Agent 11 flags PSI drift or performance degradation; escalation path to Model Risk Officer and CRO
 - [`README.md`](./runbooks/README.md) — Index with unified operating calendar (daily checks, weekly reviews, monthly validation cycles, quarterly access reviews)
 
+### For BSA Officers, Compliance Teams, Operations, and Auditors
+
+**[`docs/user-guides/`](./docs/user-guides/)** — Five per-persona guides that tell reviewers exactly what to do at each human review gate and, critically, which claims they can verify rather than trust. Start with `REVIEWER-FUNDAMENTALS.md` — everyone reads it first.
+
+- [`REVIEWER-FUNDAMENTALS.md`](./docs/user-guides/REVIEWER-FUNDAMENTALS.md) — The two-layer mental model (Python decides, LLM drafts), what an approval legally constitutes, the "unsure routes up, never through" rule, and the evidence-preserving "stop, don't retry" procedure. Mandatory reading before any role-specific guide.
+- [`GUIDE-BSA-AML.md`](./docs/user-guides/GUIDE-BSA-AML.md) — For BSA Officers and AML analysts: reading "component disagreement" flags, the four-pass SAR narrative review, and the operationally important distinction that suppressed ≠ deleted in the exam file.
+- [`GUIDE-CREDIT-FAIR-LENDING.md`](./docs/user-guides/GUIDE-CREDIT-FAIR-LENDING.md) — For credit reviewers and fair-lending officers: reason-accuracy per CFPB Circular 2022-03 as the first-order check, the portfolio-level lens, and the 0.80 AIR stop-the-line rule stated as non-negotiable.
+- [`GUIDE-OPERATIONS.md`](./docs/user-guides/GUIDE-OPERATIONS.md) — For payments and collections ops teams: OFAC hold semantics ("the system holds when it can't clear, not only when it can match") and the insight that a blocked action is usually the law enforcing itself, not a bug.
+- [`GUIDE-AUDITOR.md`](./docs/user-guides/GUIDE-AUDITOR.md) — For internal audit and examiners: the 15-minute decision-reconstruction procedure (pilot success criterion #3, documented so auditors can execute it unassisted), five sampling programs, and a findings taxonomy keyed to the incident classes.
+
 ### For Practice Leads, Sales, and TPRM Reviewers
 
-**[`offerings/`](./offerings/)** — Three SI engagement documents designed to be attached directly to customer conversations:
-- [`ASSESSMENT-OFFERING.md`](./offerings/ASSESSMENT-OFFERING.md) — The entry-point engagement: what a structured assessment covers, what it delivers, and how it sets up a pilot
-- [`PILOT-OFFERING.md`](./offerings/PILOT-OFFERING.md) — Pilot scope, workstreams, success criteria, and the transition path to a production-assist engagement
-- [`TPRM-DUE-DILIGENCE-PACKET.md`](./offerings/TPRM-DUE-DILIGENCE-PACKET.md) — Pre-answered vendor risk questionnaire covering data residency, encryption, auth, least privilege, audit retention, subprocessors, AI governance, vulnerability management, and BCP/DR. Written to be attached directly to a client's vendor questionnaire response. Includes the full STRIDE threat model and penetration test plan.
+**[`offerings/`](./offerings/)** — Four SI engagement documents designed to be used directly in customer conversations:
+- [`EXECUTIVE-BRIEFING.pptx`](./offerings/EXECUTIVE-BRIEFING.pptx) — 9-slide deck. Problem stats → "AI drafts, rules decide, humans approve" thesis → 12-agent map → examiner-grade controls → in-account data-residency architecture → honest built-vs-roadmap slide → priced assessment/pilot/scale path → the 3–4-week ask. Every claim traces to something in this repo. Share before an executive briefing.
+- [`ASSESSMENT-OFFERING.md`](./offerings/ASSESSMENT-OFFERING.md) — The entry-point engagement: what a structured assessment covers, what it delivers, and how it sets up a pilot.
+- [`PILOT-OFFERING.md`](./offerings/PILOT-OFFERING.md) — Pilot scope, workstreams, success criteria, and the transition path to a production-assist engagement.
+- [`TPRM-DUE-DILIGENCE-PACKET.md`](./offerings/TPRM-DUE-DILIGENCE-PACKET.md) — Pre-answered vendor risk questionnaire covering data residency, encryption, auth, least privilege, audit retention, subprocessors, AI governance, vulnerability management, and BCP/DR. Includes the full STRIDE threat model and penetration test plan. Attach directly to a client's vendor questionnaire response.
 
 ### For CIOs, CCOs, and Executive Sponsors
 
@@ -688,7 +699,9 @@ This suite is a production-shaped accelerator, not a production product. The reg
 | `platform_core/` — shared LLM factory, fail-closed JWT auth, PII masking, Secrets Manager, OTel tracing | Cognito/Okta authentication, full observability stack — described in architecture; not pre-wired |
 | `infra/terraform/` — five AWS reference modules (network, security, data, agent_service, dev env) | Operational runbooks and DR procedures — now shipped in `runbooks/`; RTO/RPO defined per client tier in pilot |
 | `runbooks/` — incident response, DR, HITL queue ops, model degradation response | Live-model red-team against production deployment (pen-test plan in `offerings/TPRM-DUE-DILIGENCE-PACKET.md §4`) |
-| Demo mode without API keys for every regulatory decision path | SOC 2 report — roadmap; single-tenant in-client-account deployment inherits most controls from client's own AWS posture |
+| `docs/user-guides/` — five per-persona reviewer guides (BSA/AML, credit/fair-lending, ops, auditor) + fundamentals | SOC 2 report — roadmap; single-tenant in-client-account deployment inherits most controls from client's own AWS posture |
+| `offerings/EXECUTIVE-BRIEFING.pptx` — 9-slide exec deck, every claim traced to the repo | — |
+| Demo mode without API keys for every regulatory decision path | — |
 
 In customer conversations: **"production-shaped, hardening-scoped"** — bank technical evaluators will verify claims against the code, and credibility is the asset.
 
