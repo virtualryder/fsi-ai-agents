@@ -67,6 +67,103 @@
       "expect": {
         "min_words": 80
       }
+    },
+    {
+      "id": "SAR-GOLD-003-funnel-account",
+      "state": {
+        "case_id": "FC-2024-1310",
+        "customer_name": "Apex Logistics LLC",
+        "account_number_last4": "3302",
+        "deposits": [
+          {
+            "date": "2024-11-04",
+            "amount": 8000,
+            "branch": "Midtown Branch"
+          },
+          {
+            "date": "2024-11-05",
+            "amount": 8000,
+            "branch": "Midtown Branch"
+          },
+          {
+            "date": "2024-11-06",
+            "amount": 8000,
+            "branch": "Midtown Branch"
+          }
+        ],
+        "total_deposits": 24000,
+        "outgoing_wire": {
+          "date": "2024-11-07",
+          "amount": 23500,
+          "destination_country": "Mexico"
+        },
+        "stated_occupation": "regional trucking",
+        "expected_activity": "fuel and payroll transactions"
+      },
+      "artifact": "This Suspicious Activity Report concerns customer Apex Logistics LLC, a regional trucking business holding the account ending 3302. During November 2024, over three consecutive days, the subject made structured cash deposits of $8,000 each at the Midtown Branch, totaling $24,000. On the following business day the customer initiated an outgoing wire transfer of $23,500 to Mexico, moving nearly the full balance out of the account. This funnel-account pattern of rapid pass-through is inconsistent with the customer's stated occupation and expected activity of fuel and payroll transactions, and the deposits were structured below the $10,000 reporting threshold in a manner consistent with evasion of Bank Secrecy Act requirements. The institution deems this transaction activity suspicious and is filing this report with FinCEN.",
+      "expect": {
+        "min_words": 80
+      }
+    },
+    {
+      "id": "SAR-GOLD-004-elder-exploitation",
+      "state": {
+        "case_id": "FC-2024-1355",
+        "customer_name": "Dorothy Mills",
+        "account_number_last4": "7788",
+        "wires": [
+          {
+            "date": "2024-12-02",
+            "amount": 15000,
+            "beneficiary": "Quick Cash Services"
+          },
+          {
+            "date": "2024-12-09",
+            "amount": 15000,
+            "beneficiary": "Quick Cash Services"
+          }
+        ],
+        "total_amount": 30000,
+        "customer_age": 81,
+        "history": "no prior wire activity in 10 years",
+        "expected_activity": "social security deposits and small withdrawals"
+      },
+      "artifact": "This Suspicious Activity Report concerns customer Dorothy Mills, an account holder using the account ending 7788. In December 2024 the subject initiated two wire transfers of $15,000 each, totaling $30,000, to a beneficiary identified as Quick Cash Services. This activity is inconsistent with the customer's account history of social security deposits and small withdrawals, with no prior wire activity in the preceding period. The sudden movement of funds to an unfamiliar payee, combined with the customer profile, is consistent with possible elder financial exploitation. The institution deems this transaction activity suspicious and unusual, lacked apparent economic purpose, and is filing this report with FinCEN under the Bank Secrecy Act.",
+      "expect": {
+        "min_words": 80
+      }
+    },
+    {
+      "id": "SAR-GOLD-005-trade-based",
+      "state": {
+        "case_id": "FC-2024-1402",
+        "customer_name": "Global Trade Partners Inc",
+        "account_number_last4": "5566",
+        "outgoing_wires": [
+          {
+            "date": "2024-08-14",
+            "amount": 50000,
+            "destination_country": "Hong Kong"
+          },
+          {
+            "date": "2024-08-21",
+            "amount": 50000,
+            "destination_country": "Hong Kong"
+          },
+          {
+            "date": "2024-08-28",
+            "amount": 50000,
+            "destination_country": "Hong Kong"
+          }
+        ],
+        "total_amount": 150000,
+        "declared_trade_volume": "low-volume consumer goods importer",
+        "expected_activity": "occasional small supplier payments"
+      },
+      "artifact": "This Suspicious Activity Report concerns customer Global Trade Partners Inc, account ending 5566. During August 2024 the subject initiated three round-dollar wire transfers of $50,000 each, totaling $150,000, to suppliers located in Hong Kong. The round-amount transfers and their frequency are inconsistent with the customer's declared profile as a low-volume consumer goods importer and the expected activity of occasional small supplier payments. The pattern is consistent with trade-based money laundering through potential over-invoicing, and the activity has no apparent legitimate economic purpose proportionate to the stated business. The institution deems this transaction activity suspicious and is filing this report with FinCEN under the Bank Secrecy Act.",
+      "expect": {
+        "min_words": 80
+      }
     }
   ]
 }

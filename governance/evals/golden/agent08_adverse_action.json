@@ -51,6 +51,74 @@
         ],
         "letter_text": "After careful review we are unable to approve your application. The principal reasons are: your credit score is below the program minimum; your debt-to-income ratio exceeds the program maximum; the requested loan-to-value ratio is above our limit; and verified residual income is below the required threshold. You may request the specific credit score used in this decision."
       }
+    },
+    {
+      "id": "AA-GOLD-003-bankruptcy",
+      "state": {
+        "application_id": "APP-2024-5588",
+        "credit_score": 640,
+        "total_dti_ratio": 0.38,
+        "ltv_ratio": 0.8,
+        "cash_flow_adequate": true,
+        "bankruptcy_flag": true
+      },
+      "artifact": {
+        "reasons": [
+          {
+            "code": "RECENT_BANKRUPTCY",
+            "statement": "A bankruptcy appears on your credit file within the lookback period."
+          },
+          {
+            "code": "INSUFFICIENT_CREDIT_SCORE",
+            "statement": "Credit score below program minimum."
+          }
+        ],
+        "letter_text": "We are unable to approve your application at this time. The principal reasons are a recent bankruptcy on your credit file and a credit score below our program minimum. You have the right to a free copy of your credit report and to dispute inaccurate information."
+      }
+    },
+    {
+      "id": "AA-GOLD-004-high-ltv",
+      "state": {
+        "application_id": "APP-2024-5601",
+        "credit_score": 720,
+        "total_dti_ratio": 0.35,
+        "ltv_ratio": 0.96,
+        "cash_flow_adequate": true,
+        "bankruptcy_flag": false
+      },
+      "artifact": {
+        "reasons": [
+          {
+            "code": "HIGH_LTV",
+            "statement": "The requested loan amount is too high relative to the appraised property value."
+          }
+        ],
+        "letter_text": "After reviewing your application we are unable to approve it as requested. The principal reason is that the requested loan amount is too high relative to the appraised value of the collateral. You may request the specific information used in this decision."
+      }
+    },
+    {
+      "id": "AA-GOLD-005-thin-file-income",
+      "state": {
+        "application_id": "APP-2024-5634",
+        "credit_score": 705,
+        "total_dti_ratio": 0.4,
+        "ltv_ratio": 0.82,
+        "cash_flow_adequate": true,
+        "bankruptcy_flag": false
+      },
+      "artifact": {
+        "reasons": [
+          {
+            "code": "LIMITED_CREDIT_HISTORY",
+            "statement": "Your credit file reflects limited established history."
+          },
+          {
+            "code": "INSUFFICIENT_INCOME",
+            "statement": "Verified income is insufficient for the requested amount."
+          }
+        ],
+        "letter_text": "We are unable to approve your application at this time. The principal reasons are a limited established credit history and verified income that is insufficient for the requested loan amount. You have the right to obtain the specific reasons and a copy of any credit report used."
+      }
     }
   ]
 }
