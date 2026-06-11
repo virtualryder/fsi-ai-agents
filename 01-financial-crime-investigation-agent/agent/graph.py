@@ -255,9 +255,29 @@ def build_investigation_graph(use_memory: bool = True):
         # graph invocations, enabling human-in-the-loop interrupts.
         # In production, use PostgresSaver for durable persistence.
         checkpointer = get_checkpointer()  # PostgresSaver when DATABASE_URL is set; MemorySaver fallback (dev)
-        compiled_graph = workflow.compile(checkpointer=checkpointer)
+        # ── HITL ENFORCEMENT (control-integrity fix) ─────────────────────────
+        # interrupt_before=["human_review_gate"] pauses the graph BEFORE the
+        # human-review node on every run that routes there (the SAR path and
+        # the ambiguous 30-70 path). The pause is enforced by the LangGraph
+        # runtime — no application code can bypass it. A BSA Officer must update
+        # state through the checkpointer and explicitly resume before the case
+        # is finalized or any SAR is filed. This matches the suite-wide pattern
+        # in agents 03, 05, 06, 07, 08, 09, 10, 11, 12 and closes the flagship
+        # assessment finding (Agent 01 previously compiled WITHOUT this
+        # interrupt, leaving its SAR gate procedural rather than
+        # framework-enforced).
+        #
+        # The low-risk path (score < 30 -> close_case -> finalize_case) never
+        # routes through human_review_gate, so it is unaffected: auto-closure of
+        # clearly non-suspicious alerts does not require human sign-off.
+        compiled_graph = workflow.compile(
+            checkpointer=checkpointer,
+            interrupt_before=["human_review_gate"],
+        )
     else:
-        # No checkpointing — used for testing
+        # No checkpointing — used for testing and the automated demo flow.
+        # LangGraph ignores interrupts without a checkpointer, so interrupt_before
+        # is intentionally omitted here (the graph runs to completion).
         compiled_graph = workflow.compile()
 
     logger.info("AML investigation workflow graph built successfully.")

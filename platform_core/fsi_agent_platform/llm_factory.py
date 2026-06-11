@@ -30,8 +30,10 @@ Env reference:
     BEDROCK_NARRATIVE_MODEL_ID  default anthropic.claude-sonnet-4-6-20260601-v1:0
     BEDROCK_FAST_MODEL_ID       default anthropic.claude-haiku-4-5-20251001
     BEDROCK_REGION              default us-east-1
-    BEDROCK_GUARDRAIL_ID        optional — activates Guardrails
+    BEDROCK_GUARDRAIL_ID        optional in dev — REQUIRED in production
     BEDROCK_GUARDRAIL_VERSION   default DRAFT
+    ENVIRONMENT                 production|prod -> guardrail is mandatory
+    REQUIRE_BEDROCK_GUARDRAIL   1|true|yes -> guardrail is mandatory
 """
 from __future__ import annotations
 
@@ -81,6 +83,21 @@ def get_llm(role: Role = "narrative", temperature: float = 0.0, max_tokens: int 
                 "guardrailVersion": os.getenv("BEDROCK_GUARDRAIL_VERSION", "DRAFT"),
             }
         else:
+            # Guardrails are a production control. In a production environment
+            # (or when REQUIRE_BEDROCK_GUARDRAIL is set) refuse to start without
+            # one, rather than silently running un-guardrailed inference on
+            # regulated data. Dev/demo only warns. (Control-integrity, Phase 1.5.)
+            require = (
+                os.getenv("REQUIRE_BEDROCK_GUARDRAIL", "").strip().lower() in ("1", "true", "yes")
+                or os.getenv("ENVIRONMENT", "").strip().lower() in ("production", "prod")
+            )
+            if require:
+                raise RuntimeError(
+                    "Bedrock provider active WITHOUT Guardrails (BEDROCK_GUARDRAIL_ID unset) "
+                    "in a production environment. Configure a guardrail (infra/terraform/"
+                    "modules/security) and set BEDROCK_GUARDRAIL_ID, or unset ENVIRONMENT/"
+                    "REQUIRE_BEDROCK_GUARDRAIL for dev."
+                )
             logger.warning(
                 "Bedrock provider active WITHOUT Guardrails (BEDROCK_GUARDRAIL_ID unset). "
                 "Production deployments must configure a guardrail — see infra/terraform."

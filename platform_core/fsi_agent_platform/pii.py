@@ -18,7 +18,9 @@ Consolidates the best of the per-agent regex sets into one layered masker:
 
 Contract: `mask(text) -> (masked_text, sorted list of PII types found)`.
 Mask at EVERY state-write boundary, not just intake (the Agent 09 preview
-leak is the canonical example of why).
+leak is the canonical example of why). For structured records, use
+`scrub_for_persistence(record)` / `mask_obj(obj)` so masking is enforced by
+the persistence path rather than left to per-field discipline. (Phase 1.4.)
 """
 from __future__ import annotations
 
@@ -139,3 +141,50 @@ def mask(text: str) -> Tuple[str, List[str]]:
 
     masked, found = _layer2(masked, found)
     return masked, sorted(set(found))
+
+
+# ── Boundary enforcement middleware (Phase 1.4) ──────────────────────────────
+# `mask()` only helps if it is actually called at every state-write boundary.
+# These helpers make that a one-liner for structured records (audit entries,
+# state snapshots, checkpoints) so raw PII cannot reach a durable sink simply
+# because a developer forgot to mask an individual field. Wire
+# `scrub_for_persistence()` into the audit/persistence layer so masking is the
+# default path, not a discretionary call.
+
+def mask_obj(obj):
+    """
+    Recursively mask PII in every string within a nested dict / list / tuple.
+
+    Non-string scalars (int, float, bool, None) pass through unchanged. Dict
+    KEYS are preserved (they are structural field names, not data); only VALUES
+    are masked. Returns (masked_copy, sorted PII type labels found anywhere in
+    the structure).
+    """
+    found: List[str] = []
+
+    def _walk(o):
+        if isinstance(o, str):
+            m, f = mask(o)
+            found.extend(f)
+            return m
+        if isinstance(o, dict):
+            return {k: _walk(v) for k, v in o.items()}
+        if isinstance(o, list):
+            return [_walk(v) for v in o]
+        if isinstance(o, tuple):
+            return tuple(_walk(v) for v in o)
+        return o
+
+    masked = _walk(obj)
+    return masked, sorted(set(found))
+
+
+def scrub_for_persistence(record):
+    """
+    Boundary helper: return a PII-masked deep copy of `record` that is safe to
+    write to an audit log, checkpoint, or state store. Call this at EVERY
+    state-write boundary (the Agent 09 preview leak is the canonical example of
+    why intake-only masking is insufficient).
+    """
+    masked, _ = mask_obj(record)
+    return masked

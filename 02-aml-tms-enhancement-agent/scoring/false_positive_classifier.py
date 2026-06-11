@@ -223,3 +223,48 @@ def compute_composite_score(
 
     breakdown["composite_fp_score"] = round(composite, 1)
     return round(composite, 1), breakdown
+
+
+# ── Deterministic-only score (control-integrity, Phase 1.3) ──────────────────
+# Weights for the deterministic gate (rule-based + historical, LLM EXCLUDED),
+# renormalized so they sum to 1.0 on their own.
+_DET_WEIGHT_TOTAL = WEIGHT_RULE_BASED + WEIGHT_HISTORICAL          # 0.50
+_DET_WEIGHT_RULE = WEIGHT_RULE_BASED / _DET_WEIGHT_TOTAL           # 0.60
+_DET_WEIGHT_HISTORICAL = WEIGHT_HISTORICAL / _DET_WEIGHT_TOTAL     # 0.40
+
+
+def compute_deterministic_score(
+    rule_based_score: float,
+    features: ScoringFeatures,
+) -> tuple[float, dict[str, float]]:
+    """
+    Deterministic-only false-positive score: the rule-based pre-score plus
+    historical base rates, renormalized to 0-100. The LLM contextual score is
+    deliberately EXCLUDED.
+
+    This is the score that GATES SUPPRESSION — the only disposition that removes
+    an alert from human review (see agent/nodes.py::determine_routing). Routing
+    an alert out of the analyst queue must never depend on a model-generated
+    number; it must rest on deterministic rules and statistical base rates that
+    an examiner can reproduce. The LLM still authors the suppression
+    justification narrative and can still force ESCALATE, but it can never be
+    the reason an alert disappears.
+
+    Returns (deterministic_fp_score, breakdown).
+    """
+    historical_score = compute_historical_score(features)
+    score = (
+        rule_based_score * _DET_WEIGHT_RULE
+        + historical_score * _DET_WEIGHT_HISTORICAL
+    )
+    breakdown = {
+        "rule_based_score": rule_based_score,
+        "rule_based_weight": round(_DET_WEIGHT_RULE, 4),
+        "rule_based_contribution": round(rule_based_score * _DET_WEIGHT_RULE, 2),
+        "historical_score": historical_score,
+        "historical_weight": round(_DET_WEIGHT_HISTORICAL, 4),
+        "historical_contribution": round(historical_score * _DET_WEIGHT_HISTORICAL, 2),
+        "llm_excluded": True,
+        "deterministic_fp_score": round(score, 1),
+    }
+    return round(score, 1), breakdown

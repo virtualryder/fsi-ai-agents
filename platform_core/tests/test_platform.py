@@ -174,3 +174,92 @@ class TestTracing:
     def test_case_id_extraction_priority(self):
         assert tracing._case_id({"alert_id": "A-7"}) == "A-7"
         assert tracing._case_id({}) == "unknown"
+
+
+# ── PII boundary enforcement (Phase 1.4) ──────────────────────────────────────
+class TestPIIBoundary:
+    def test_mask_obj_masks_nested_strings(self):
+        record = {
+            "case_id": "C-1",
+            "subject": {"name_note": "SSN 123-45-6789", "age": 41, "flagged": True},
+            "events": ["wire to a@b.com", "ref 9999"],
+        }
+        masked, types = pii.mask_obj(record)
+        flat = repr(masked)
+        assert "123-45-6789" not in flat and "a@b.com" not in flat
+        assert "SSN" in types and "EMAIL" in types
+        # structure + non-string scalars preserved
+        assert masked["subject"]["age"] == 41 and masked["subject"]["flagged"] is True
+        assert masked["case_id"] == "C-1"
+
+    def test_scrub_for_persistence_blocks_raw_pii(self):
+        audit_entry = {
+            "action": "SUPPRESS",
+            "details": {"narrative": "Customer SSN 987-65-4321, card 4111 1111 1111 1111"},
+        }
+        safe = pii.scrub_for_persistence(audit_entry)
+        blob = repr(safe)
+        assert "987-65-4321" not in blob
+        assert "4111 1111 1111 1111" not in blob and "4111111111111111" not in blob
+
+    def test_scrub_is_idempotent_and_lossless_for_clean_records(self):
+        clean = {"x": 1, "y": ["ok", "fine"], "z": None}
+        assert pii.scrub_for_persistence(clean) == clean
+
+
+# ── secrets: fail-closed (Phase 1.5) ──────────────────────────────────────────
+class TestSecretsFailClosed:
+    def _failing_boto(self):
+        fake_boto = MagicMock()
+        fake_boto.client.return_value.get_secret_value.side_effect = RuntimeError("no creds")
+        return fake_boto
+
+    def test_fail_closed_flag_raises_instead_of_env_fallback(self, monkeypatch):
+        monkeypatch.setenv("SECRETS_MANAGER_PREFIX", "fsi/agents")
+        monkeypatch.setenv("SECRETS_FAIL_CLOSED", "true")
+        monkeypatch.setenv("FALLBACK_KEY", "env-value")
+        secrets._cache.clear()
+        with patch.dict("sys.modules", {"boto3": self._failing_boto()}):
+            with pytest.raises(secrets.SecretsUnavailableError):
+                secrets.get_secret("FALLBACK_KEY")
+
+    def test_production_environment_fails_closed(self, monkeypatch):
+        monkeypatch.setenv("SECRETS_MANAGER_PREFIX", "fsi/agents")
+        monkeypatch.delenv("SECRETS_FAIL_CLOSED", raising=False)
+        monkeypatch.setenv("ENVIRONMENT", "production")
+        monkeypatch.setenv("FALLBACK_KEY", "env-value")
+        secrets._cache.clear()
+        with patch.dict("sys.modules", {"boto3": self._failing_boto()}):
+            with pytest.raises(secrets.SecretsUnavailableError):
+                secrets.get_secret("FALLBACK_KEY")
+
+    def test_dev_still_falls_back(self, monkeypatch):
+        monkeypatch.setenv("SECRETS_MANAGER_PREFIX", "fsi/agents")
+        monkeypatch.delenv("SECRETS_FAIL_CLOSED", raising=False)
+        monkeypatch.delenv("ENVIRONMENT", raising=False)
+        monkeypatch.setenv("FALLBACK_KEY", "env-value")
+        secrets._cache.clear()
+        with patch.dict("sys.modules", {"boto3": self._failing_boto()}):
+            assert secrets.get_secret("FALLBACK_KEY") == "env-value"
+
+
+# ── llm_factory: guardrail required in production (Phase 1.5) ──────────────────
+class TestGuardrailRequiredInProd:
+    def test_production_without_guardrail_raises(self, monkeypatch):
+        monkeypatch.setenv("LLM_PROVIDER", "bedrock")
+        monkeypatch.delenv("BEDROCK_GUARDRAIL_ID", raising=False)
+        monkeypatch.setenv("ENVIRONMENT", "production")
+        fake_mod = MagicMock()
+        with patch.dict("sys.modules", {"langchain_aws": fake_mod}):
+            with pytest.raises(RuntimeError):
+                llm_factory.get_llm("narrative")
+
+    def test_require_flag_without_guardrail_raises(self, monkeypatch):
+        monkeypatch.setenv("LLM_PROVIDER", "bedrock")
+        monkeypatch.delenv("BEDROCK_GUARDRAIL_ID", raising=False)
+        monkeypatch.delenv("ENVIRONMENT", raising=False)
+        monkeypatch.setenv("REQUIRE_BEDROCK_GUARDRAIL", "true")
+        fake_mod = MagicMock()
+        with patch.dict("sys.modules", {"langchain_aws": fake_mod}):
+            with pytest.raises(RuntimeError):
+                llm_factory.get_llm("fast")

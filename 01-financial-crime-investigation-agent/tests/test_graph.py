@@ -149,6 +149,21 @@ class TestGraphConstruction:
         graph = build_investigation_graph(use_memory=True)
         assert graph is not None
 
+    def test_human_review_gate_is_framework_enforced(self):
+        """
+        Control-integrity: with a checkpointer, the SAR human-review gate MUST
+        be a framework-enforced interrupt, not a procedural convention. AI may
+        never finalize a case or file a SAR without a BSA Officer resuming the
+        paused graph. Regression here re-opens the flagship assessment finding.
+        """
+        graph = build_investigation_graph(use_memory=True)
+        assert "human_review_gate" in list(graph.interrupt_before_nodes)
+
+    def test_no_interrupt_without_checkpointer(self):
+        """Without a checkpointer (tests/demo), the graph runs to completion."""
+        graph = build_investigation_graph(use_memory=False)
+        assert "human_review_gate" not in list(getattr(graph, "interrupt_before_nodes", []))
+
     def test_graph_visualization_returns_string(self):
         """Graph visualization returns a Mermaid string."""
         viz = get_graph_visualization()

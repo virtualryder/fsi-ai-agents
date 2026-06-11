@@ -38,6 +38,7 @@ from scoring.false_positive_classifier import (
     check_regulatory_override,
     compute_rule_based_score,
     compute_composite_score,
+    compute_deterministic_score,
 )
 from scoring.feature_extractor import extract_features
 from scoring.threshold_manager import ThresholdManager
@@ -467,8 +468,17 @@ def compute_composite_score_node(state: AlertScoringState) -> AlertScoringState:
         features=state["scoring_features"],
     )
 
+    # Deterministic-only score (rule + historical, LLM excluded). Gates
+    # SUPPRESSION in determine_routing so no alert leaves human review on the
+    # strength of a model-generated number. (Control-integrity, Phase 1.3)
+    deterministic, det_breakdown = compute_deterministic_score(
+        rule_based_score=state.get("rule_based_fp_score", 50.0),
+        features=state["scoring_features"],
+    )
+
     notes = list(state.get("scoring_notes", []))
     notes.append(f"Composite FP score: {composite:.0f}/100")
+    notes.append(f"Deterministic FP score (suppression gate): {deterministic:.0f}/100")
 
     audit = _append_audit(
         state, "COMPOSITE_SCORE_COMPUTED",
@@ -480,6 +490,8 @@ def compute_composite_score_node(state: AlertScoringState) -> AlertScoringState:
         **state,
         "composite_fp_score": composite,
         "score_breakdown": breakdown,
+        "deterministic_fp_score": deterministic,
+        "deterministic_breakdown": det_breakdown,
         "scoring_notes": notes,
         "audit_trail": audit,
     }
@@ -531,6 +543,27 @@ def determine_routing(state: AlertScoringState) -> AlertScoringState:
         regulatory_override_reason=reg_override_reason,
     )
 
+    # ── DETERMINISTIC SUPPRESSION GATE (control-integrity, Phase 1.3) ──────
+    # SUPPRESS is the only disposition that removes an alert from human review.
+    # It may fire ONLY when the deterministic-only score (rule pre-score +
+    # historical base rates, LLM EXCLUDED) independently clears the suppress
+    # threshold. If the blended composite reached SUPPRESS on the strength of
+    # the LLM contextual score but the deterministic score does not support it,
+    # the alert is NOT suppressed: it is routed to a human-visible queue
+    # (DOWNGRADE, or PASS_THROUGH when even the downgrade line is not met). The
+    # model can author the justification and can ESCALATE; it can never be the
+    # reason an alert disappears from the analyst queue.
+    deterministic_score = float(state.get("deterministic_fp_score", composite))
+    suppression_gate_note = ""
+    if decision == "SUPPRESS" and deterministic_score < thresholds.suppress:
+        decision = "DOWNGRADE" if deterministic_score >= thresholds.downgrade else "PASS_THROUGH"
+        suppression_gate_note = (
+            f"Suppression gate: deterministic score {deterministic_score:.0f} < suppress "
+            f"threshold {thresholds.suppress:.0f}; the LLM-influenced composite "
+            f"{composite:.0f} is insufficient to remove this alert from review — "
+            f"routed to {decision} (human-visible)."
+        )
+
     # ── LLM-agreement guard (conservative, one-direction) ─────────────────
     # An alert may be auto-suppressed or auto-downgraded ONLY when the LLM
     # contextual layer itself supports the false-positive determination.
@@ -551,6 +584,9 @@ def determine_routing(state: AlertScoringState) -> AlertScoringState:
     else:
         pass_through_factors = state.get("llm_pass_through_factors", [])
 
+    if suppression_gate_note:
+        pass_through_factors = list(pass_through_factors) + [suppression_gate_note]
+
     # Determine recommended priority for queued alerts
     recommended_priority = _recommend_priority(composite, decision, features)
 
@@ -569,12 +605,18 @@ def determine_routing(state: AlertScoringState) -> AlertScoringState:
 
     notes = list(state.get("scoring_notes", []))
     notes.append(
-        f"ROUTING DECISION: {decision} | FP={composite:.0f}% | priority={recommended_priority}"
+        f"ROUTING DECISION: {decision} | composite={composite:.0f}% | "
+        f"deterministic(gate)={deterministic_score:.0f}% | priority={recommended_priority}"
     )
+    if suppression_gate_note:
+        notes.append(suppression_gate_note)
 
     audit = _append_audit(
         state, "ROUTING_DECISION_MADE",
         {"decision": decision, "composite_fp_score": composite,
+         "deterministic_fp_score": deterministic_score,
+         "routing_basis": "deterministic_suppression_gate",
+         "suppression_gate_applied": bool(suppression_gate_note),
          "regulatory_override": reg_override,
          "effective_suppress_threshold": thresholds.suppress,
          "effective_downgrade_threshold": thresholds.downgrade},
