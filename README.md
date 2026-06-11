@@ -444,11 +444,16 @@ The Terraform enforces at the IAM level the controls the application code promis
 
 ### For Practice Leads, Sales, and TPRM Reviewers
 
-**[`offerings/`](./offerings/)** — Four SI engagement documents designed to be used directly in customer conversations:
+**[`offerings/`](./offerings/)** — SI engagement and sales-enablement documents designed to be used directly in customer conversations:
 - [`EXECUTIVE-BRIEFING.pptx`](./offerings/EXECUTIVE-BRIEFING.pptx) — 9-slide deck. Problem stats → "AI drafts, rules decide, humans approve" thesis → 12-agent map → examiner-grade controls → in-account data-residency architecture → honest built-vs-roadmap slide → priced assessment/pilot/scale path → the 3–4-week ask. Every claim traces to something in this repo. Share before an executive briefing.
 - [`ASSESSMENT-OFFERING.md`](./offerings/ASSESSMENT-OFFERING.md) — The entry-point engagement: what a structured assessment covers, what it delivers, and how it sets up a pilot.
 - [`PILOT-OFFERING.md`](./offerings/PILOT-OFFERING.md) — Pilot scope, workstreams, success criteria, and the transition path to a production-assist engagement.
 - [`TPRM-DUE-DILIGENCE-PACKET.md`](./offerings/TPRM-DUE-DILIGENCE-PACKET.md) — Pre-answered vendor risk questionnaire covering data residency, encryption, auth, least privilege, audit retention, subprocessors, AI governance, vulnerability management, and BCP/DR. Includes the full STRIDE threat model and penetration test plan. Attach directly to a client's vendor questionnaire response.
+- [`POC-OFFERING.md`](./offerings/POC-OFFERING.md) — 2-week proof-of-concept (one agent, sanitized data, one measured outcome). The low-commitment door-opener for buyers not yet ready to fund an assessment.
+- [`MANAGED-SERVICE-OFFERING.md`](./offerings/MANAGED-SERVICE-OFFERING.md) — Presidio operates the deployed agents in the client's account (fully-managed / co-managed / platform-only). Converts a one-time build into recurring revenue and opens smaller institutions.
+- [`COST-ROI-MODEL.md`](./offerings/COST-ROI-MODEL.md) — Transparent, rebuild-on-client-data ROI model with an $8B-bank worked example. The structure to turn illustrative numbers into the client's own.
+- [`COMPETITIVE-POSITIONING.md`](./offerings/COMPETITIVE-POSITIONING.md) — Evenhanded build-vs-buy and vs-point-solution / vs-copilot / vs-advisory framing, with talk tracks by buyer.
+- [`OBJECTION-HANDLING.md`](./offerings/OBJECTION-HANDLING.md) — The ten objections by buyer persona, each answered with the repo proof point their engineers can verify.
 
 ### For CIOs, CCOs, and Executive Sponsors
 
