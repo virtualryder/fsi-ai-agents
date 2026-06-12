@@ -1,0 +1,7 @@
+{
+  "transaction": {
+    "txn_id": "T-1",
+    "amount": 4200,
+    "mcc": "5999"
+  }
+}
