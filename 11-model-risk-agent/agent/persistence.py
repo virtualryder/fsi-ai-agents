@@ -58,6 +58,67 @@ def _now_utc() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+# ── PII masking at the audit-write boundary (Phase 1.4, suite-wide rollout) ───
+# Every durable audit write is masked here so raw PII can never reach the JSONL,
+# DynamoDB, or S3 WORM sink — masking is the enforced default of the persistence
+# path, not a per-field discretionary call. Prefers the shared platform boundary
+# middleware (fsi_agent_platform.pii.mask_obj); falls back to a self-contained
+# recursive masker so each agent remains independently deployable.
+import re as _re
+
+_PII_SSN = _re.compile(r"\b(?!000|666)\d{3}[-\s]?\d{2}[-\s]?\d{4}\b")
+_PII_ACCT = _re.compile(r"\b(?:account|acct|routing|aba)\s*(?:no\.?|number|#)?[:\s]*\d{6,17}\b", _re.I)
+_PII_EMAIL = _re.compile(r"\b[\w.+-]+@[\w-]+\.[\w.-]+\b")
+_PII_CARD = _re.compile(r"\b(?:\d[ -]?){13,19}\b")
+
+
+def _luhn_ok(digits: str) -> bool:
+    ds = [int(c) for c in digits if c.isdigit()]
+    if len(ds) < 13:
+        return False
+    checksum, parity = 0, len(ds) % 2
+    for i, d in enumerate(ds):
+        if i % 2 == parity:
+            d *= 2
+            if d > 9:
+                d -= 9
+        checksum += d
+    return checksum % 10 == 0
+
+
+def _mask_str(text: str) -> str:
+    text = _PII_SSN.sub("[SSN-MASKED]", text)
+    text = _PII_ACCT.sub("[ACCOUNT-MASKED]", text)
+    text = _PII_EMAIL.sub("[EMAIL-MASKED]", text)
+    text = _PII_CARD.sub(lambda m: "[CARD-MASKED]" if _luhn_ok(m.group(0)) else m.group(0), text)
+    return text
+
+
+def _local_mask(obj):
+    if isinstance(obj, str):
+        return _mask_str(obj)
+    if isinstance(obj, dict):
+        return {k: _local_mask(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_local_mask(v) for v in obj]
+    if isinstance(obj, tuple):
+        return tuple(_local_mask(v) for v in obj)
+    return obj
+
+
+def _scrub_pii(obj):
+    """Return a PII-masked copy of a structured record for durable persistence.
+
+    Fail-open to the local masker (never raise) — an audit write must not be
+    blocked — but it must never persist raw PII.
+    """
+    try:
+        from fsi_agent_platform.pii import mask_obj  # shared boundary middleware
+        return mask_obj(obj)[0]
+    except Exception:
+        return _local_mask(obj)
+
+
 class AuditSink:
     """Write-ahead audit sink. Thread-safe. Fail-closed in DynamoDB mode."""
 
@@ -93,6 +154,8 @@ class AuditSink:
             "recorded_at": _now_utc(),
             **entry,
         }
+        # Boundary enforcement: mask PII before any durable write (Phase 1.4).
+        record = _scrub_pii(record)
         payload = json.dumps(record, default=str, separators=(",", ":"))
 
         # Best-effort local JSONL (always on)
@@ -128,7 +191,7 @@ class AuditSink:
         self._s3.put_object(
             Bucket=self._s3_bucket,
             Key=key,
-            Body=json.dumps(audit_trail, default=str).encode("utf-8"),
+            Body=json.dumps(_scrub_pii(audit_trail), default=str).encode("utf-8"),
             ContentType="application/json",
             # Retention is enforced by the bucket's Object Lock COMPLIANCE-mode
             # default retention policy — set per artifact class in IaC.
