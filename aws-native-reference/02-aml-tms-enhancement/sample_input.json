@@ -1,0 +1,9 @@
+{
+  "raw_alert": {
+    "alert_id": "A-1",
+    "alert_type": "VELOCITY",
+    "amount": 9500,
+    "customer_id": "CUST-001",
+    "triggered_rule": "CASH-SUB-10K"
+  }
+}

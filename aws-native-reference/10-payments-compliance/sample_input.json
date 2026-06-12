@@ -1,0 +1,7 @@
+{
+  "payment_event": {
+    "payment_id": "P-1",
+    "event_type": "ACH_RETURN",
+    "return_code": "R10"
+  }
+}
