@@ -6,6 +6,8 @@ The agent's deterministic gates, HITL logic, and regulatory controls are
 unchanged — only the host changes. Inference runs in-account via Amazon Bedrock
 (with Guardrails); the shared runtime is in [`../_shared/`](../_shared/).
 
+> **This agent also has a full native rebuild** in this folder (`core.py`, `strands_agent.py`, `stepfunctions/`, `lambdas/`, `infra/`, `tests/`) using **Strands + Step Functions** with a `waitForTaskToken` HITL gate — see [`README.md`](./README.md). This container path is the lift-and-shift alternative.
+
 ## 1. Build the ARM64 image (from the repo root)
 
 ```bash

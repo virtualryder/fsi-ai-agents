@@ -1,0 +1,21 @@
+{
+  "Comment": "AWS-native Wealth & RM Copilot. Deterministic Reg BI / FINRA 2111 suitability decides; UNSUITABLE recommendations are blocked and never reach the client; everything else is drafted by the LLM and approved by an RM via waitForTaskToken.",
+  "StartAt": "Intake",
+  "States": {
+    "Intake": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${IntakeFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "Suitability"},
+    "Suitability": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${SuitabilityFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "SuitabilityChoice"},
+    "SuitabilityChoice": {
+      "Type": "Choice",
+      "Choices": [{"Variable": "$.suitability.next", "StringEquals": "BlockUnsuitable", "Next": "BlockUnsuitable"}],
+      "Default": "Recommend"
+    },
+    "BlockUnsuitable": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${BlockUnsuitableFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "Finalize"},
+    "Recommend": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${RecommendFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "RMApprovalGate"},
+    "RMApprovalGate": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {"FunctionName": "${RmNotifyFunctionArn}", "Payload": {"input.$": "$", "task_token.$": "$$.Task.Token"}},
+      "ResultPath": "$.review", "TimeoutSeconds": 2592000, "Next": "Finalize"
+    },
+    "Finalize": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${FinalizeFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "End": true}
+  }
+}
