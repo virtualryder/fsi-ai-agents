@@ -404,6 +404,7 @@ The 12 agents are the core of this suite, but the repository ships with a full p
 - `pii.py` — consolidated PII masking (SSN, PAN, account/routing) applied at state-write boundaries before any LLM sees the data
 - `secrets.py` — AWS Secrets Manager integration; no credentials in environment variables
 - `tracing.py` — OpenTelemetry instrumentation scaffolding for A2A trace propagation
+- `mcp_gateway/` — deny-by-default MCP authorization gateway: authenticates callers, authorizes via least-privilege-as-intersection (agent grants ∩ user entitlements), gates high-risk writes behind human approval, mints short-lived scoped tokens (5-min TTL), and writes every attempt to an append-only PII-masked audit log. Fails closed. Maps to Bedrock AgentCore Gateway / Amazon Verified Permissions (Cedar) / STS for production. 81 tests green across the full platform suite.
 
 **[`infra/terraform/`](./infra/terraform/)** — AWS reference infrastructure as code, organized as composable modules:
 - `modules/network/` — VPC with no internet route in agent subnets; egress via VPC endpoints only
@@ -724,7 +725,8 @@ This suite is a production-shaped accelerator, not a production product. The reg
 | Implemented and tested | Designed — built per engagement or Phase-2 |
 |---|---|
 | All 12 agent suites — deterministic regulatory controls as code (OFAC hard overrides, fail-safe HITL routing, FDCPA/Reg F/SCRA/Reg E rules) | Real connectors (TMS, core banking, watchlist vendors) — all integrations run on fixtures in the accelerator |
-| 712 tests green in CI across all 12 suites, platform library, and governance; control tests gate merges | MCP tool gateway (architecture in `ENTERPRISE-PLATFORM.md`; servers built per engagement) |
+| 712 tests green in CI across all 12 suites, platform library, and governance; control tests gate merges | MCP server connectors (per-system integrations — TMS, core banking, watchlist — built per engagement using the `platform_core/connectors/` abstraction layer) |
+| `platform_core/mcp_gateway/` — deny-by-default authorization gateway reference implementation: least-privilege-as-intersection enforcement, scoped HMAC tokens, append-only PII-masked audit, fail-closed; 26 tests + 81-test platform suite | Production MCP gateway deployment (wired to real IdP, Amazon Verified Permissions / Cedar, DynamoDB PutItem-only + S3 Object Lock) — stand-up in pilot sprint |
 | `governance/` — grounding verification, prompt manifest gate, structural injection red-team, Agent 08 fairness/disparate-impact testing, golden-case eval harness | Bedrock + Guardrails in-VPC inference (required for data-residency guarantee; IaC reference in `infra/terraform/`) |
 | `platform_core/` — shared LLM factory, fail-closed JWT auth, PII masking, Secrets Manager, OTel tracing | Cognito/Okta authentication, full observability stack — described in architecture; not pre-wired |
 | `infra/terraform/` — five AWS reference modules (network, security, data, agent_service, dev env) | Operational runbooks and DR procedures — now shipped in `runbooks/`; RTO/RPO defined per client tier in pilot |
