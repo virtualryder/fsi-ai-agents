@@ -8,31 +8,6 @@
 
 ---
 
-## How to Evaluate This Repository
-
-> **This repository should be evaluated as a financial services agentic AI modernization accelerator: a repeatable demo, architecture, and GTM foundation showing how regulated workflows can be redesigned with secure agents, governed tool access, AWS-native deployment patterns, human review, and auditable modernization.**
-
-It is a **production-shaped accelerator**, not a production-ready regulated platform. Read every capability below against this maturity ladder:
-
-| Level | Meaning |
-|---|---|
-| **Documented** | Described in the README or docs; not necessarily implemented. |
-| **Demonstrated** | Implemented enough to run in a local demo (this is where most agents sit today). |
-| **Deployable** | Can be deployed to AWS with documented, repeatable steps (Terraform reference + per-agent guides). |
-| **Production-ready** | Security hardening, identity, authorization, observability, testing, CI/CD, runbooks, auditability, failure handling, and customer-specific integrations are all present. The suite reaches this only after the per-engagement hardening sprint. |
-
-Use the phrase **agentic AI modernization accelerator** in leadership and customer conversations unless specific repository evidence supports a stronger claim. Do not position the suite as a production-ready regulated platform.
-
-### Control-integrity hardening (June 2026)
-
-A structured review hardened the two highest-stakes control gaps and added a CI guard so they cannot regress. See [`CONTROL-INTEGRITY-CHANGELOG.md`](./CONTROL-INTEGRITY-CHANGELOG.md) for details.
-
-- **Agent 01 (Financial Crime Investigation)** now compiles with `interrupt_before=["human_review_gate"]`, so its SAR human-review gate is framework-enforced — matching the rest of the suite. A new CI guard (`governance/tests/test_hitl_gates.py`) fails the build if any gate-bearing agent regresses to a procedural-only gate.
-- **Agent 02 (AML/TMS Enhancement)** now gates suppression on a **deterministic-only** score (rule pre-score + historical base rates, LLM excluded). The model can author justification and escalate, but can never be the reason an alert is removed from human review. Every routing decision records the deterministic basis in the audit trail.
-- **Platform** adds PII-masking boundary middleware (`scrub_for_persistence`), secrets fail-closed mode, and mandatory Bedrock Guardrails in production.
-
----
-
 ## The Suite
 
 Financial crime compliance, KYC, and fraud together consume **$274 billion annually** across global institutions. AI agents don't eliminate that cost — they eliminate the manual, repetitive, low-judgment work so your best analysts can focus on the 5% of cases that require human expertise.
@@ -737,8 +712,31 @@ This suite is a production-shaped accelerator, not a production product. The reg
 
 In customer conversations: **"production-shaped, hardening-scoped"** — bank technical evaluators will verify claims against the code, and credibility is the asset.
 
----
 
+## How to Evaluate This Repository
+
+> **This repository should be evaluated as a financial services agentic AI modernization accelerator: a repeatable demo, architecture, and GTM foundation showing how regulated workflows can be redesigned with secure agents, governed tool access, AWS-native deployment patterns, human review, and auditable modernization.**
+
+It is a **production-shaped accelerator**, not a production-ready regulated platform. Read every capability below against this maturity ladder:
+
+| Level | Meaning |
+|---|---|
+| **Documented** | Described in the README or docs; not necessarily implemented. |
+| **Demonstrated** | Implemented enough to run in a local demo (this is where most agents sit today). |
+| **Deployable** | Can be deployed to AWS with documented, repeatable steps (Terraform reference + per-agent guides). |
+| **Production-ready** | Security hardening, identity, authorization, observability, testing, CI/CD, runbooks, auditability, failure handling, and customer-specific integrations are all present. The suite reaches this only after the per-engagement hardening sprint. |
+
+Use the phrase **agentic AI modernization accelerator** in leadership and customer conversations unless specific repository evidence supports a stronger claim. Do not position the suite as a production-ready regulated platform.
+
+### Control-integrity hardening (June 2026)
+
+A structured review hardened the two highest-stakes control gaps and added a CI guard so they cannot regress. See [`CONTROL-INTEGRITY-CHANGELOG.md`](./CONTROL-INTEGRITY-CHANGELOG.md) for details.
+
+- **Agent 01 (Financial Crime Investigation)** now compiles with `interrupt_before=["human_review_gate"]`, so its SAR human-review gate is framework-enforced — matching the rest of the suite. A new CI guard (`governance/tests/test_hitl_gates.py`) fails the build if any gate-bearing agent regresses to a procedural-only gate.
+- **Agent 02 (AML/TMS Enhancement)** now gates suppression on a **deterministic-only** score (rule pre-score + historical base rates, LLM excluded). The model can author justification and escalate, but can never be the reason an alert is removed from human review. Every routing decision records the deterministic basis in the audit trail.
+- **Platform** adds PII-masking boundary middleware (`scrub_for_persistence`), secrets fail-closed mode, and mandatory Bedrock Guardrails in production.
+
+---
 ## About
 
 Built by [David Ryder](https://github.com/virtualryder) as an art-of-the-possible, production-shaped agentic AI accelerator portfolio for financial services.
