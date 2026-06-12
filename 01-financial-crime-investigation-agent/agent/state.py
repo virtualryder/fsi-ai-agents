@@ -91,6 +91,13 @@ class InvestigationState(TypedDict, total=False):
     customer_id: str
     # Internal customer identifier from core banking system
 
+    # ── Acting User (Phase 3 gateway adoption) ─────────────────────────────────
+    # Verified IdP claims for the human on whose behalf this investigation runs.
+    # Gateway-backed tools (tools/gateway_tools.py) require these to authorize
+    # any system-of-record access; absent them, the MCP gateway denies the call
+    # (fail-closed). Shape: {"sub": str, "custom:bsa_role": str | [str], ...}.
+    acting_user_claims: Dict[str, Any]
+
     account_ids: List[str]
     # All account numbers associated with this investigation
     # Multiple accounts are common for structuring across accounts

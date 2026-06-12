@@ -125,3 +125,21 @@ hits = res.result["hits"] if res.allowed else []
 
 Recommended first adoption: Agent 09 (the front door), then the AML loop
 (02 → 01), matching the pilot wedge.
+
+### Reference adoption (implemented)
+
+Agent 01 (Financial Crime Investigation) ships a gateway-backed tools module as
+the concrete reference:
+
+- `01-financial-crime-investigation-agent/tools/gateway_tools.py` — `screen_watchlist`,
+  `get_customer`, `get_transactions`, `get_alert` (reads) and
+  `update_alert_disposition` (high-risk write, needs approval), each routing
+  through the gateway on behalf of the acting user. Fails closed
+  (`GatewayUnavailable`) if the platform is not installed — never silent fixtures.
+- `agent/state.py` carries `acting_user_claims` (verified IdP claims) so nodes
+  can pass user context to the gateway.
+- `platform_core/tests/test_agent01_gateway_adoption.py` exercises the full
+  agent → gateway → connector path (ALLOW / DENY / approval / audit / PII-mask).
+
+The existing fixture tools remain for the no-platform demo; the gateway-backed
+module is the production path an engagement switches to.
