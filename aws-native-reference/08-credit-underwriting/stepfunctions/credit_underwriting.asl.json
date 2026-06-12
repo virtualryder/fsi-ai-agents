@@ -1,0 +1,26 @@
+{
+  "Comment": "AWS-native Credit Underwriting. Deterministic evaluation (FICO/DTI/LTV, hard declines, ECOA reason codes) decides; the LLM only drafts the adverse-action letter body; an underwriter/compliance gate uses waitForTaskToken. OFAC is a hard block; fair-lending flags force review.",
+  "StartAt": "Verify",
+  "States": {
+    "Verify": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${VerifyFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "Evaluate"},
+    "Evaluate": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${EvaluateFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "FairLending"},
+    "FairLending": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${FairLendingFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "Route"},
+    "Route": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${RouteFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "DispositionChoice"},
+    "DispositionChoice": {
+      "Type": "Choice",
+      "Choices": [
+        {"Variable": "$.routing.next", "StringEquals": "GenerateAdverseAction", "Next": "GenerateAdverseAction"},
+        {"Variable": "$.routing.next", "StringEquals": "UnderwriterReviewGate", "Next": "UnderwriterReviewGate"}
+      ],
+      "Default": "AutoApprove"
+    },
+    "GenerateAdverseAction": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${GenerateAdverseActionFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "UnderwriterReviewGate"},
+    "UnderwriterReviewGate": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {"FunctionName": "${UnderwriterNotifyFunctionArn}", "Payload": {"input.$": "$", "task_token.$": "$$.Task.Token"}},
+      "ResultPath": "$.review", "TimeoutSeconds": 2592000, "Next": "Finalize"
+    },
+    "AutoApprove": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${AutoApproveFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "Finalize"},
+    "Finalize": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${FinalizeFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "End": true}
+  }
+}

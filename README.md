@@ -409,7 +409,7 @@ The Terraform enforces at the IAM level the controls the application code promis
 
 **[`aws-native-reference/`](./aws-native-reference/)** — AWS-native deployment of every agent, two paths per agent:
 - **Lift the LangGraph agent** (all 12) — containerize each agent's existing graph and run it on Amazon Bedrock AgentCore Runtime or ECS Fargate (AgentCore contract: `/invocations` + `/ping`, ARM64). One folder per agent with a `Dockerfile`, Terraform vars, a sample input, and a `DEPLOY.md`; the reusable engine is in [`_shared/`](./aws-native-reference/_shared/). See [`DEPLOY-ALL.md`](./aws-native-reference/DEPLOY-ALL.md).
-- **Native rebuild** (Agents 01 SAR, 02 AML/TMS, 09 Document Intelligence) — deterministic core in Lambdas + Strands Agents SDK drafting on Bedrock + Step Functions orchestration with a `waitForTaskToken` human gate. Highest-fidelity managed/serverless target; each has its own `core.py`, `strands_agent.py`, `lambdas/`, `stepfunctions/`, `infra/`, tests, and `README.md`.
+- **Native rebuild** (Agents 01 SAR, 02 AML/TMS, 08 Credit, 09 Document Intelligence, 10 Payments) — deterministic core in Lambdas + Strands Agents SDK drafting on Bedrock + Step Functions orchestration with a `waitForTaskToken` human gate. Highest-fidelity managed/serverless target; each has its own `core.py`, `strands_agent.py`, `lambdas/`, `stepfunctions/`, `infra/`, tests, and `README.md`.
 
 ### For Security, AI Risk, and Model Risk Reviewers
 
