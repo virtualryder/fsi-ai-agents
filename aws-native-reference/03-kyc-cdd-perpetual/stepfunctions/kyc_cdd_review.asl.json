@@ -1,0 +1,20 @@
+{
+  "Comment": "AWS-native KYC/CDD Perpetual Monitoring. Deterministic OFAC/PEP screening + risk rescoring decide; OFAC forces ESCALATE; PEP forces EDD; a Compliance Officer approves any risk-rating change via waitForTaskToken. The LLM only drafts the EDD package.",
+  "StartAt": "Screen",
+  "States": {
+    "Screen": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${ScreenFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "Rescore"},
+    "Rescore": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${RescoreFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "ReviewChoice"},
+    "ReviewChoice": {
+      "Type": "Choice",
+      "Choices": [{"Variable": "$.rescore.next", "StringEquals": "ComplianceReviewGate", "Next": "DraftEDD"}],
+      "Default": "Finalize"
+    },
+    "DraftEDD": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${DraftEddFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "ComplianceReviewGate"},
+    "ComplianceReviewGate": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {"FunctionName": "${ComplianceNotifyFunctionArn}", "Payload": {"input.$": "$", "task_token.$": "$$.Task.Token"}},
+      "ResultPath": "$.review", "TimeoutSeconds": 2592000, "Next": "Finalize"
+    },
+    "Finalize": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${FinalizeFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "End": true}
+  }
+}

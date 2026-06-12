@@ -15,9 +15,8 @@ a step-by-step `DEPLOY.md`. The reusable engine lives in [`_shared/`](./_shared/
 2. **Native rebuild** (Agent 09 reference) — the deterministic core in Lambdas +
    **Strands Agents SDK** drafting on Bedrock + **Step Functions** orchestration
    with a `waitForTaskToken` HITL gate. Highest fidelity to the managed,
-   serverless target. **Available for Agents 01 (SAR), 02 (AML/TMS), 08 (Credit), 09 (Document
-   Intelligence), and 10 (Payments)** — see each agent's `README.md`. The other 7 agents
-   have the container path today; their native rebuild is a per-agent follow-up.
+   serverless target. **Available for Agents 01–05, 08, 09, and 10 (eight of twelve)** — see each agent's `README.md`. The other 4 agents (06, 07, 11, 12) have the container path today; their
+   native rebuild is a per-agent follow-up.
 
 ## Agent registry
 
@@ -25,9 +24,9 @@ a step-by-step `DEPLOY.md`. The reusable engine lives in [`_shared/`](./_shared/
 |---|---|---|---|
 | 01 · Financial Crime Investigation | [`01-financial-crime-investigation/`](./01-financial-crime-investigation/) | `01-financial-crime-investigation-agent` | **Container + Native rebuild (Strands + Step Functions)** |
 | 02 · AML/TMS Enhancement | [`02-aml-tms-enhancement/`](./02-aml-tms-enhancement/) | `02-aml-tms-enhancement-agent` | **Container + Native rebuild (Strands + Step Functions)** |
-| 03 · KYC/CDD Perpetual | [`03-kyc-cdd-perpetual/`](./03-kyc-cdd-perpetual/) | `03-kyc-cdd-perpetual-agent` | Container |
-| 04 · Fraud Detection | [`04-fraud-detection/`](./04-fraud-detection/) | `04-fraud-detection-agent` | Container |
-| 05 · Wealth & RM Copilot | [`05-wealth-rm-copilot/`](./05-wealth-rm-copilot/) | `05-wealth-rm-copilot` | Container |
+| 03 · KYC/CDD Perpetual | [`03-kyc-cdd-perpetual/`](./03-kyc-cdd-perpetual/) | `03-kyc-cdd-perpetual-agent` | **Container + Native rebuild (Strands + Step Functions)** |
+| 04 · Fraud Detection | [`04-fraud-detection/`](./04-fraud-detection/) | `04-fraud-detection-agent` | **Container + Native rebuild (Strands + Step Functions)** |
+| 05 · Wealth & RM Copilot | [`05-wealth-rm-copilot/`](./05-wealth-rm-copilot/) | `05-wealth-rm-copilot` | **Container + Native rebuild (Strands + Step Functions)** |
 | 06 · Regulatory Change | [`06-regulatory-change/`](./06-regulatory-change/) | `06-regulatory-change-agent` | Container |
 | 07 · Trading Surveillance | [`07-trading-surveillance/`](./07-trading-surveillance/) | `07-trading-surveillance-agent` | Container |
 | 08 · Credit Underwriting | [`08-credit-underwriting/`](./08-credit-underwriting/) | `08-credit-underwriting-agent` | **Container + Native rebuild (Strands + Step Functions)** |

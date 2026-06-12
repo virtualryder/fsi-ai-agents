@@ -1,0 +1,26 @@
+{
+  "Comment": "AWS-native Real-Time Fraud Detection. Deterministic rule engine + composite decide (LLM excluded from routing); hard-block rules force BLOCK; the LLM only drafts Reg E / analyst context; an analyst-review gate uses waitForTaskToken.",
+  "StartAt": "Intake",
+  "States": {
+    "Intake": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${IntakeFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "Score"},
+    "Score": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${ScoreFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "DispositionChoice"},
+    "DispositionChoice": {
+      "Type": "Choice",
+      "Choices": [
+        {"Variable": "$.decision.next", "StringEquals": "DraftRegE", "Next": "DraftRegE"},
+        {"Variable": "$.decision.next", "StringEquals": "StepUp", "Next": "StepUp"},
+        {"Variable": "$.decision.next", "StringEquals": "AnalystReviewGate", "Next": "AnalystReviewGate"}
+      ],
+      "Default": "Allow"
+    },
+    "DraftRegE": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${DraftRegEFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "Finalize"},
+    "StepUp": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${StepUpFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "Finalize"},
+    "AnalystReviewGate": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {"FunctionName": "${AnalystNotifyFunctionArn}", "Payload": {"input.$": "$", "task_token.$": "$$.Task.Token"}},
+      "ResultPath": "$.review", "TimeoutSeconds": 604800, "Next": "Finalize"
+    },
+    "Allow": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${AllowFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "Finalize"},
+    "Finalize": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${FinalizeFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "End": true}
+  }
+}
