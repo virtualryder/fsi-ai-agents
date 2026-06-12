@@ -1,0 +1,67 @@
+{
+  "Comment": "AWS-native Financial Crime Investigation (SAR). Step Functions orchestrates deterministic Lambda nodes; the LLM (Strands/Bedrock) only drafts the SAR narrative; the BSA-Officer gate uses waitForTaskToken (framework-enforced HITL). OFAC/SDN match forces the SAR path; >70 SAR, 30-70 review, <30 close.",
+  "StartAt": "Screen",
+  "States": {
+    "Screen": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${ScreenFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload",
+      "Next": "Score"
+    },
+    "Score": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${ScoreFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload",
+      "Next": "Route"
+    },
+    "Route": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${RouteFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload",
+      "Next": "DispositionChoice"
+    },
+    "DispositionChoice": {
+      "Type": "Choice",
+      "Choices": [
+        {"Variable": "$.routing.next", "StringEquals": "GenerateSAR", "Next": "GenerateSAR"},
+        {"Variable": "$.routing.next", "StringEquals": "HumanReviewGate", "Next": "HumanReviewGate"}
+      ],
+      "Default": "CloseCase"
+    },
+    "GenerateSAR": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${GenerateSarFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload",
+      "Next": "HumanReviewGate"
+    },
+    "HumanReviewGate": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {
+        "FunctionName": "${HitlNotifyFunctionArn}",
+        "Payload": {"input.$": "$", "task_token.$": "$$.Task.Token"}
+      },
+      "ResultPath": "$.review",
+      "TimeoutSeconds": 2592000,
+      "Next": "Finalize"
+    },
+    "CloseCase": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${CloseCaseFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload",
+      "Next": "Finalize"
+    },
+    "Finalize": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${FinalizeFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload",
+      "End": true
+    }
+  }
+}

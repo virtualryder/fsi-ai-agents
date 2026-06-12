@@ -15,14 +15,16 @@ a step-by-step `DEPLOY.md`. The reusable engine lives in [`_shared/`](./_shared/
 2. **Native rebuild** (Agent 09 reference) — the deterministic core in Lambdas +
    **Strands Agents SDK** drafting on Bedrock + **Step Functions** orchestration
    with a `waitForTaskToken` HITL gate. Highest fidelity to the managed,
-   serverless target. See [`09-document-intelligence/`](./09-document-intelligence/).
+   serverless target. **Available for Agents 01 (SAR), 02 (AML/TMS), and 09
+   (Document Intelligence)** — see each agent's `README.md`. The other 9 agents
+   have the container path today; their native rebuild is a per-agent follow-up.
 
 ## Agent registry
 
 | Agent | Folder | Source agent | Paths available |
 |---|---|---|---|
-| 01 · Financial Crime Investigation | [`01-financial-crime-investigation/`](./01-financial-crime-investigation/) | `01-financial-crime-investigation-agent` | Container |
-| 02 · AML/TMS Enhancement | [`02-aml-tms-enhancement/`](./02-aml-tms-enhancement/) | `02-aml-tms-enhancement-agent` | Container |
+| 01 · Financial Crime Investigation | [`01-financial-crime-investigation/`](./01-financial-crime-investigation/) | `01-financial-crime-investigation-agent` | **Container + Native rebuild (Strands + Step Functions)** |
+| 02 · AML/TMS Enhancement | [`02-aml-tms-enhancement/`](./02-aml-tms-enhancement/) | `02-aml-tms-enhancement-agent` | **Container + Native rebuild (Strands + Step Functions)** |
 | 03 · KYC/CDD Perpetual | [`03-kyc-cdd-perpetual/`](./03-kyc-cdd-perpetual/) | `03-kyc-cdd-perpetual-agent` | Container |
 | 04 · Fraud Detection | [`04-fraud-detection/`](./04-fraud-detection/) | `04-fraud-detection-agent` | Container |
 | 05 · Wealth & RM Copilot | [`05-wealth-rm-copilot/`](./05-wealth-rm-copilot/) | `05-wealth-rm-copilot` | Container |
