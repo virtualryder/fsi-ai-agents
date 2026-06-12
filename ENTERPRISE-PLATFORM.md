@@ -9,7 +9,7 @@
 > | Platform Layer | Current Accelerator State |
 > |---|---|
 > | Layer 1 — API Access | Design guidance; all connectors run on fixtures in the accelerator (real connectors built per engagement) |
-> | Layer 2 — MCP Authorization Gateway | Architecture designed and documented; not yet built — Phase-2 delivery item |
+> | Layer 2 — MCP Authorization Gateway | **Reference implementation built and tested** — `platform_core/fsi_agent_platform/mcp_gateway/` (deny-by-default, least-privilege-as-intersection, scoped tokens, append-only audit, 26 tests green); production deployment (real IdP + Amazon Verified Permissions + DynamoDB Object Lock) is pilot-sprint work |
 > | Layer 3 — Agent Catalog | Design pattern defined; SR 11-7 extension concept — tooling built per engagement |
 > | Layer 4 — A2A Communication | Standard defined; OTel tracing scaffolded in `platform_core/`; full A2A enforcement is Phase-2 |
 > | Layer 5 — The 12 Agents | **Implemented and tested — 712 tests green across all 12 suites** |
@@ -27,7 +27,7 @@
 **The five platform layers (and their state today).**
 
 1. **API access** — modernize legacy interfaces into clean, standardized APIs so agents can reach systems of record. *Design guidance + fixtures today.*
-2. **MCP authorization gateway** — agents reach tools through governed, short-lived, least-privilege tokens, never standing service accounts. *Designed; Phase-2 build.*
+2. **MCP authorization gateway** — agents reach tools through governed, short-lived, least-privilege tokens, never standing service accounts. *Reference implementation built (`platform_core/mcp_gateway/`); production deployment (real IdP + Cedar + Object Lock) in pilot sprint.*
 3. **Agent catalog** — an SR 11-7-style inventory and approval workflow for every agent and model. *Design pattern; per-engagement tooling.*
 4. **Agent-to-agent coordination** — signed, schema-validated handoffs that preserve accountability, traceability, and lineage; no agent can instruct another to skip human review. *Standard defined; OTel scaffolded; Phase-2 enforcement.*
 5. **The 12 agents** — the proof points. *Implemented and tested (700+ tests green; deterministic gates, framework-enforced human review).*
@@ -38,7 +38,7 @@
 
 **The investment ask.** A bounded hardening sprint converts the accelerator from demo-ready to MVP-ready and then production-ready: close the highest-stakes control gaps (done — see `CONTROL-INTEGRITY-CHANGELOG.md`), build a connector abstraction and one AWS-native reference implementation, stand up the MCP authorization gateway in front of one agent, and complete observability and security validation. Most of the output is reusable IP that compounds across engagements.
 
-**The first 90 days.** *30 days:* leadership go/no-go; control-integrity fixes; sales kit. *60 days:* connector interface + one AWS-native reference agent; MCP gateway in front of the document-intelligence agent; first executive briefings. *90 days:* deployed reference environment + observability; a Document-Intelligence or AML/KYC MVP with a design-partner institution; pen-test / SOC 2 roadmap underway.
+**The first 90 days.** *30 days:* leadership go/no-go; control-integrity fixes; sales kit. *60 days:* connector interface + one AWS-native reference agent; MCP gateway reference implementation is already built — wire it to the document-intelligence agent and stand up the AWS deployment (Verified Permissions + Object Lock); first executive briefings. *90 days:* deployed reference environment + observability; a Document-Intelligence or AML/KYC MVP with a design-partner institution; pen-test / SOC 2 roadmap underway.
 
 
 ---
