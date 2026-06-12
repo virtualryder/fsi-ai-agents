@@ -1,0 +1,20 @@
+{
+  "Comment": "AWS-native Model Risk Management (SR 11-7). Deterministic Gini/KS/PSI + degradation + HITL conditions decide; PSI>0.25 and HIGH-tier validations always require review; the LLM only drafts the validation narrative; the Model Risk Officer (or CRO) signs via waitForTaskToken.",
+  "StartAt": "Inventory",
+  "States": {
+    "Inventory": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${InventoryFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "Assess"},
+    "Assess": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${AssessFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "ValidationChoice"},
+    "ValidationChoice": {
+      "Type": "Choice",
+      "Choices": [{"Variable": "$.validation.next", "StringEquals": "ModelRiskReviewGate", "Next": "Narrative"}],
+      "Default": "Finalize"
+    },
+    "Narrative": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${NarrativeFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "ModelRiskReviewGate"},
+    "ModelRiskReviewGate": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {"FunctionName": "${MroNotifyFunctionArn}", "Payload": {"input.$": "$", "task_token.$": "$$.Task.Token"}},
+      "ResultPath": "$.review", "TimeoutSeconds": 2592000, "Next": "Finalize"
+    },
+    "Finalize": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${FinalizeFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "End": true}
+  }
+}
