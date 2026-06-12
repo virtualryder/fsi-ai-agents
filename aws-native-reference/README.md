@@ -15,8 +15,7 @@ a step-by-step `DEPLOY.md`. The reusable engine lives in [`_shared/`](./_shared/
 2. **Native rebuild** (Agent 09 reference) — the deterministic core in Lambdas +
    **Strands Agents SDK** drafting on Bedrock + **Step Functions** orchestration
    with a `waitForTaskToken` HITL gate. Highest fidelity to the managed,
-   serverless target. **Available for Agents 01–05, 08, 09, and 10 (eight of twelve)** — see each agent's `README.md`. The other 4 agents (06, 07, 11, 12) have the container path today; their
-   native rebuild is a per-agent follow-up.
+   serverless target. **Available for Agents 01–10 (ten of twelve).** Agents 11 (Model Risk) and 12 (Collections) have the container path today; their native rebuild is a per-agent follow-up. — see each agent's `README.md`. 
 
 ## Agent registry
 
@@ -27,8 +26,8 @@ a step-by-step `DEPLOY.md`. The reusable engine lives in [`_shared/`](./_shared/
 | 03 · KYC/CDD Perpetual | [`03-kyc-cdd-perpetual/`](./03-kyc-cdd-perpetual/) | `03-kyc-cdd-perpetual-agent` | **Container + Native rebuild (Strands + Step Functions)** |
 | 04 · Fraud Detection | [`04-fraud-detection/`](./04-fraud-detection/) | `04-fraud-detection-agent` | **Container + Native rebuild (Strands + Step Functions)** |
 | 05 · Wealth & RM Copilot | [`05-wealth-rm-copilot/`](./05-wealth-rm-copilot/) | `05-wealth-rm-copilot` | **Container + Native rebuild (Strands + Step Functions)** |
-| 06 · Regulatory Change | [`06-regulatory-change/`](./06-regulatory-change/) | `06-regulatory-change-agent` | Container |
-| 07 · Trading Surveillance | [`07-trading-surveillance/`](./07-trading-surveillance/) | `07-trading-surveillance-agent` | Container |
+| 06 · Regulatory Change | [`06-regulatory-change/`](./06-regulatory-change/) | `06-regulatory-change-agent` | **Container + Native rebuild (Strands + Step Functions)** |
+| 07 · Trading Surveillance | [`07-trading-surveillance/`](./07-trading-surveillance/) | `07-trading-surveillance-agent` | **Container + Native rebuild (Strands + Step Functions)** |
 | 08 · Credit Underwriting | [`08-credit-underwriting/`](./08-credit-underwriting/) | `08-credit-underwriting-agent` | **Container + Native rebuild (Strands + Step Functions)** |
 | 09 · Document Intelligence | [`09-document-intelligence/`](./09-document-intelligence/) | `09-document-intelligence-agent` | **Container + Native rebuild (Strands + Step Functions)** |
 | 10 · Payments Compliance | [`10-payments-compliance/`](./10-payments-compliance/) | `10-payments-compliance-agent` | **Container + Native rebuild (Strands + Step Functions)** |
