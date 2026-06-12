@@ -62,7 +62,7 @@ jobs:
 
 
   platform:
-    name: platform (shared library)
+    name: platform (shared library — incl. connectors, MCP gateway, PII/auth)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -132,19 +132,70 @@ jobs:
           checkov -d infra/terraform --quiet --compact \
             --skip-check CKV_AWS_150,CKV_AWS_103 # ALB deletion protection + listener TLS handled per-env
 
+  aws-native-rebuilds:
+    name: "aws-native rebuild (${{ matrix.rebuild }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rebuild:
+          - 01-financial-crime-investigation
+          - 02-aml-tms-enhancement
+          - 03-kyc-cdd-perpetual
+          - 04-fraud-detection
+          - 05-wealth-rm-copilot
+          - 06-regulatory-change
+          - 07-trading-surveillance
+          - 08-credit-underwriting
+          - 09-document-intelligence
+          - 10-payments-compliance
+          - 11-model-risk
+          - 12-collections-recovery
+    defaults:
+      run:
+        working-directory: aws-native-reference/${{ matrix.rebuild }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps (demo mode — Strands/Bedrock are lazy, not needed here)
+        run: pip install pytest pytz
+      - name: Run native-rebuild suite (deterministic core + Lambda pipeline + ASL)
+        env:
+          EXTRACT_MODE: demo
+        run: python -m pytest tests/ -v --tb=short
+
+  aws-native-deploy-kit:
+    name: aws-native deploy kit (loads all 12 agents)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install all 12 agent deps (the shared runtime imports every agent graph)
+        run: |
+          for req in [01]*-*/requirements.txt; do
+            pip install -r "$req" --quiet || true
+          done
+          pip install pytest
+      - name: Shared runtime + per-agent folder structure tests
+        run: python -m pytest aws-native-reference/_shared/tests/ -v --tb=short
+
   # Single aggregate check for branch protection. Protecting one named check
   # is simpler and safer than enumerating 12 matrix legs in repo settings.
   all-suites-green:
     name: all-suites-green
-    needs: [test, platform, governance, security]
+    needs: [test, platform, governance, security, aws-native-rebuilds, aws-native-deploy-kit]
     runs-on: ubuntu-latest
     if: always()
     steps:
       - name: Verify every agent suite passed
         run: |
-          if [ "${{ needs.test.result }}" != "success" ] || [ "${{ needs.platform.result }}" != "success" ] || [ "${{ needs.governance.result }}" != "success" ] || [ "${{ needs.security.result }}" != "success" ]; then
+          if [ "${{ needs.test.result }}" != "success" ] || [ "${{ needs.platform.result }}" != "success" ] || [ "${{ needs.governance.result }}" != "success" ] || [ "${{ needs.security.result }}" != "success" ] || [ "${{ needs.aws-native-rebuilds.result }}" != "success" ] || [ "${{ needs.aws-native-deploy-kit.result }}" != "success" ]; then
             echo "::error::One or more agent test suites failed — merge blocked."
             echo "Regulatory control tests are the release gate (see workflow header)."
             exit 1
           fi
-          echo "All 12 agent suites + platform + governance + security green."
+          echo "All 12 agent suites + platform + governance + security + aws-native (rebuilds + deploy kit) green."
