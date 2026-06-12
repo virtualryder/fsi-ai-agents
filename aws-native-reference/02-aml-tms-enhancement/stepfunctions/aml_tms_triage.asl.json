@@ -1,0 +1,49 @@
+{
+  "Comment": "AWS-native AML/TMS false-positive triage. Routing is the deterministic suppression gate (rule+historical, LLM excluded); the LLM only drafts an advisory justification. SUPPRESS — the only disposition that removes an alert from review — routes to a sampled BSA-Officer waitForTaskToken gate.",
+  "StartAt": "Ingest",
+  "States": {
+    "Ingest": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${IngestFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload", "Next": "Justify"
+    },
+    "Justify": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${JustifyFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload", "Next": "Route"
+    },
+    "Route": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${RouteFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload", "Next": "DispositionChoice"
+    },
+    "DispositionChoice": {
+      "Type": "Choice",
+      "Choices": [
+        {"Variable": "$.routing.next", "StringEquals": "SuppressionReviewGate", "Next": "SuppressionReviewGate"},
+        {"Variable": "$.routing.next", "StringEquals": "Escalate", "Next": "Escalate"}
+      ],
+      "Default": "RecordDisposition"
+    },
+    "SuppressionReviewGate": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {"FunctionName": "${SuppressionNotifyFunctionArn}", "Payload": {"input.$": "$", "task_token.$": "$$.Task.Token"}},
+      "ResultPath": "$.review", "TimeoutSeconds": 2592000, "Next": "Finalize"
+    },
+    "RecordDisposition": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${RecordDispositionFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload", "Next": "Finalize"
+    },
+    "Escalate": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${EscalateFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload", "Next": "Finalize"
+    },
+    "Finalize": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${FinalizeFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload", "End": true
+    }
+  }
+}

@@ -30,7 +30,7 @@ correct — run in CI without AWS.
 | Path | What | When |
 |---|---|---|
 | **Lift the LangGraph agent** (this kit) | containerize the existing graph; run on AgentCore Runtime / Fargate; Bedrock inference + Guardrails; identity + audit | every agent, fastest route to AWS; keeps LangGraph |
-| **Native rebuild** (Agent 09 reference) | deterministic core in Lambdas + Strands drafting + Step Functions HITL | when you want managed orchestration, durable `waitForTaskToken` HITL, per-node scaling |
+| **Native rebuild** (Agents 01, 02, 09) | deterministic core in Lambdas + Strands drafting + Step Functions HITL | when you want managed orchestration, durable `waitForTaskToken` HITL, per-node scaling |
 
 Both preserve the thesis — deterministic Python decides, the model drafts,
 humans are accountable — and map to the same AWS services.

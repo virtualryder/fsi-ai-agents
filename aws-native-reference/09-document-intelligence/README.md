@@ -116,3 +116,7 @@ HITL flow before enabling live Bedrock inference — de-risking the first deploy
 
 The deterministic core (`core.py`) is identical in spirit across both, so the
 controls an examiner cares about do not change with the runtime.
+
+## Sibling native rebuilds
+
+Agents **01 (SAR)** and **02 (AML/TMS)** now have the same Strands + Step Functions native rebuild — see [`../01-financial-crime-investigation/`](../01-financial-crime-investigation/) and [`../02-aml-tms-enhancement/`](../02-aml-tms-enhancement/). All three follow the identical pattern: deterministic core in Lambdas, Strands/Bedrock drafting, and a framework-enforced `waitForTaskToken` human gate.
