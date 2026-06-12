@@ -1,0 +1,20 @@
+{
+  "Comment": "AWS-native Regulatory Change Management. Deterministic 5-factor impact scoring + tier + hard overrides decide; enforcement actions force HITL + a HIGH floor; the LLM only drafts the gap analysis; the CCO approves via waitForTaskToken.",
+  "StartAt": "Intake",
+  "States": {
+    "Intake": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${IntakeFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "Impact"},
+    "Impact": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${ImpactFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "ImpactChoice"},
+    "ImpactChoice": {
+      "Type": "Choice",
+      "Choices": [{"Variable": "$.impact.next", "StringEquals": "GapAnalysis", "Next": "GapAnalysis"}],
+      "Default": "Finalize"
+    },
+    "GapAnalysis": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${GapAnalysisFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "CCOReviewGate"},
+    "CCOReviewGate": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {"FunctionName": "${CcoNotifyFunctionArn}", "Payload": {"input.$": "$", "task_token.$": "$$.Task.Token"}},
+      "ResultPath": "$.review", "TimeoutSeconds": 2592000, "Next": "Finalize"
+    },
+    "Finalize": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${FinalizeFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "End": true}
+  }
+}

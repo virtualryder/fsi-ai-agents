@@ -1,0 +1,22 @@
+{
+  "Comment": "AWS-native Trading Surveillance. Deterministic pattern detection + severity + SAR determination ($5k AND suspicious) decide; insider/info-barrier/cross-market are always CRITICAL + HITL; the LLM only drafts the disposition memo / SAR narrative (never tips off the subject); a compliance officer approves via waitForTaskToken.",
+  "StartAt": "Intake",
+  "States": {
+    "Intake": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${IntakeFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "Detect"},
+    "Detect": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${DetectFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "Score"},
+    "Score": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${ScoreFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "DispositionChoice"},
+    "DispositionChoice": {
+      "Type": "Choice",
+      "Choices": [{"Variable": "$.scoring.next", "StringEquals": "ComplianceReviewGate", "Next": "DraftMemo"}],
+      "Default": "Disposition"
+    },
+    "DraftMemo": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${DraftMemoFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "ComplianceReviewGate"},
+    "ComplianceReviewGate": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {"FunctionName": "${ComplianceNotifyFunctionArn}", "Payload": {"input.$": "$", "task_token.$": "$$.Task.Token"}},
+      "ResultPath": "$.review", "TimeoutSeconds": 2592000, "Next": "Finalize"
+    },
+    "Disposition": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${DispositionFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "Next": "Finalize"},
+    "Finalize": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "Parameters": {"FunctionName": "${FinalizeFunctionArn}", "Payload.$": "$"}, "OutputPath": "$.Payload", "End": true}
+  }
+}
