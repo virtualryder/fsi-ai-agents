@@ -15,8 +15,8 @@ a step-by-step `DEPLOY.md`. The reusable engine lives in [`_shared/`](./_shared/
 2. **Native rebuild** (Agent 09 reference) — the deterministic core in Lambdas +
    **Strands Agents SDK** drafting on Bedrock + **Step Functions** orchestration
    with a `waitForTaskToken` HITL gate. Highest fidelity to the managed,
-   serverless target. **Available for Agents 01 (SAR), 02 (AML/TMS), and 09
-   (Document Intelligence)** — see each agent's `README.md`. The other 9 agents
+   serverless target. **Available for Agents 01 (SAR), 02 (AML/TMS), 08 (Credit), 09 (Document
+   Intelligence), and 10 (Payments)** — see each agent's `README.md`. The other 7 agents
    have the container path today; their native rebuild is a per-agent follow-up.
 
 ## Agent registry
@@ -30,9 +30,9 @@ a step-by-step `DEPLOY.md`. The reusable engine lives in [`_shared/`](./_shared/
 | 05 · Wealth & RM Copilot | [`05-wealth-rm-copilot/`](./05-wealth-rm-copilot/) | `05-wealth-rm-copilot` | Container |
 | 06 · Regulatory Change | [`06-regulatory-change/`](./06-regulatory-change/) | `06-regulatory-change-agent` | Container |
 | 07 · Trading Surveillance | [`07-trading-surveillance/`](./07-trading-surveillance/) | `07-trading-surveillance-agent` | Container |
-| 08 · Credit Underwriting | [`08-credit-underwriting/`](./08-credit-underwriting/) | `08-credit-underwriting-agent` | Container |
+| 08 · Credit Underwriting | [`08-credit-underwriting/`](./08-credit-underwriting/) | `08-credit-underwriting-agent` | **Container + Native rebuild (Strands + Step Functions)** |
 | 09 · Document Intelligence | [`09-document-intelligence/`](./09-document-intelligence/) | `09-document-intelligence-agent` | **Container + Native rebuild (Strands + Step Functions)** |
-| 10 · Payments Compliance | [`10-payments-compliance/`](./10-payments-compliance/) | `10-payments-compliance-agent` | Container |
+| 10 · Payments Compliance | [`10-payments-compliance/`](./10-payments-compliance/) | `10-payments-compliance-agent` | **Container + Native rebuild (Strands + Step Functions)** |
 | 11 · Model Risk Management | [`11-model-risk/`](./11-model-risk/) | `11-model-risk-agent` | Container |
 | 12 · Collections & Recovery | [`12-collections-recovery/`](./12-collections-recovery/) | `12-collections-recovery-agent` | Container |
 
