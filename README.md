@@ -5,6 +5,21 @@
 
 > **The agents are not the product. The platform that makes them governable is the product.**
 > Read [ENTERPRISE-PLATFORM.md](./ENTERPRISE-PLATFORM.md) for the full platform story: API modernization, MCP authorization gateway, federated identity, agent catalog governance, and A2A audit standards — and how each layer maps to SR 11-7, FFIEC, NIST AI RMF, and GLBA.
+>
+> ## How to Evaluate This Repository
+
+> **This repository should be evaluated as a financial services agentic AI modernization accelerator: a repeatable demo, architecture, and GTM foundation showing how regulated workflows can be redesigned with secure agents, governed tool access, AWS-native deployment patterns, human review, and auditable modernization.**
+
+It is a **production-shaped accelerator**, not a production-ready regulated platform. Read every capability below against this maturity ladder:
+
+| Level | Meaning |
+|---|---|
+| **Documented** | Described in the README or docs; not necessarily implemented. |
+| **Demonstrated** | Implemented enough to run in a local demo (this is where most agents sit today). |
+| **Deployable** | Can be deployed to AWS with documented, repeatable steps (Terraform reference + per-agent guides). |
+| **Production-ready** | Security hardening, identity, authorization, observability, testing, CI/CD, runbooks, auditability, failure handling, and customer-specific integrations are all present. The suite reaches this only after the per-engagement hardening sprint. |
+
+Use the phrase **agentic AI modernization accelerator** in leadership and customer conversations unless specific repository evidence supports a stronger claim. Do not position the suite as a production-ready regulated platform.
 
 ---
 
@@ -712,21 +727,6 @@ This suite is a production-shaped accelerator, not a production product. The reg
 
 In customer conversations: **"production-shaped, hardening-scoped"** — bank technical evaluators will verify claims against the code, and credibility is the asset.
 
-
-## How to Evaluate This Repository
-
-> **This repository should be evaluated as a financial services agentic AI modernization accelerator: a repeatable demo, architecture, and GTM foundation showing how regulated workflows can be redesigned with secure agents, governed tool access, AWS-native deployment patterns, human review, and auditable modernization.**
-
-It is a **production-shaped accelerator**, not a production-ready regulated platform. Read every capability below against this maturity ladder:
-
-| Level | Meaning |
-|---|---|
-| **Documented** | Described in the README or docs; not necessarily implemented. |
-| **Demonstrated** | Implemented enough to run in a local demo (this is where most agents sit today). |
-| **Deployable** | Can be deployed to AWS with documented, repeatable steps (Terraform reference + per-agent guides). |
-| **Production-ready** | Security hardening, identity, authorization, observability, testing, CI/CD, runbooks, auditability, failure handling, and customer-specific integrations are all present. The suite reaches this only after the per-engagement hardening sprint. |
-
-Use the phrase **agentic AI modernization accelerator** in leadership and customer conversations unless specific repository evidence supports a stronger claim. Do not position the suite as a production-ready regulated platform.
 
 ### Control-integrity hardening (June 2026)
 
