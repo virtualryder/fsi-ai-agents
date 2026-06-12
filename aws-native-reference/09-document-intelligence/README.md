@@ -92,6 +92,9 @@ print(ev['routing']['next'], ev['routing']['human_review_reason'])
 
 ## Deploy (with an AWS account)
 
+Full step-by-step is in **[`DEPLOYMENT-RUNBOOK.md`](./DEPLOYMENT-RUNBOOK.md)** (prerequisites, demo-mode-first apply, HITL walkthrough, the integration-test harness in [`tests/integration/`](./tests/integration/), a production-hardening checklist, rollback/teardown, and cost notes). In short:
+
+
 ```bash
 cd infra
 terraform init
