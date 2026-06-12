@@ -15,7 +15,7 @@ a step-by-step `DEPLOY.md`. The reusable engine lives in [`_shared/`](./_shared/
 2. **Native rebuild** (Agent 09 reference) — the deterministic core in Lambdas +
    **Strands Agents SDK** drafting on Bedrock + **Step Functions** orchestration
    with a `waitForTaskToken` HITL gate. Highest fidelity to the managed,
-   serverless target. **Available for Agents 01–10 (ten of twelve).** Agents 11 (Model Risk) and 12 (Collections) have the container path today; their native rebuild is a per-agent follow-up. — see each agent's `README.md`. 
+   serverless target. **Available for ALL 12 agents.** Every agent ships both the container lift-and-shift path and a Strands + Step Functions native rebuild (deterministic core in Lambdas, Bedrock drafting, and a `waitForTaskToken` human gate). — see each agent's `README.md`. 
 
 ## Agent registry
 
@@ -31,8 +31,8 @@ a step-by-step `DEPLOY.md`. The reusable engine lives in [`_shared/`](./_shared/
 | 08 · Credit Underwriting | [`08-credit-underwriting/`](./08-credit-underwriting/) | `08-credit-underwriting-agent` | **Container + Native rebuild (Strands + Step Functions)** |
 | 09 · Document Intelligence | [`09-document-intelligence/`](./09-document-intelligence/) | `09-document-intelligence-agent` | **Container + Native rebuild (Strands + Step Functions)** |
 | 10 · Payments Compliance | [`10-payments-compliance/`](./10-payments-compliance/) | `10-payments-compliance-agent` | **Container + Native rebuild (Strands + Step Functions)** |
-| 11 · Model Risk Management | [`11-model-risk/`](./11-model-risk/) | `11-model-risk-agent` | Container |
-| 12 · Collections & Recovery | [`12-collections-recovery/`](./12-collections-recovery/) | `12-collections-recovery-agent` | Container |
+| 11 · Model Risk Management | [`11-model-risk/`](./11-model-risk/) | `11-model-risk-agent` | **Container + Native rebuild (Strands + Step Functions)** |
+| 12 · Collections & Recovery | [`12-collections-recovery/`](./12-collections-recovery/) | `12-collections-recovery-agent` | **Container + Native rebuild (Strands + Step Functions)** |
 
 ## Deploy
 
